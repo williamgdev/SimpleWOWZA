@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">SimpleWOWZA</string>
     <string name="broadcast">Broadcats</string>
+    <string name="stop_broadcast">Stop Broadcast</string>
 </resources>
