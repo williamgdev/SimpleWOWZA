@@ -1,5 +1,7 @@
 <resources>
-    <string name="app_name">SimpleWOWZA</string>
-    <string name="broadcast">Broadcats</string>
-    <string name="stop_broadcast">Stop Broadcast</string>
+    <string name="app_name">My Simple Broadcast Wowza</string>
+    <string name="start_broadcast">Start broadcast</string>
+    <string name="play_recording">Play recording</string>
+    <string name="stop_broadcast">Stop broadcast</string>
+    <string name="stop_recording">Stop recording</string>
 </resources>

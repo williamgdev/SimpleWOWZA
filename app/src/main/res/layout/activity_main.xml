@@ -12,21 +12,31 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.github.williamgdev.examples.simplewowza.MainActivity">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!" />
 
-<Button
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/main_button"
-    android:text="@string/broadcast"
-    android:onClick="onClick"
-    />
+    <Button
+        android:id="@+id/broadcast_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="startBroadcast"
+        android:text="@string/start_broadcast" />
 
-<com.wowza.gocoder.sdk.api.devices.WZCameraView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/main_camera_view"
-    wowza:scaleMode="fill"
-    wowza:defaultCamera="back"
-    wowza:frameSizePreset="frameSize1280x720"
-    />
+    <Button
+        android:id="@+id/play_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:onClick="playMagic"
+        android:text="@string/play_recording" />
+
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:onClick="stopMagic"
+        android:text="@string/stop_recording" />
 </LinearLayout>
