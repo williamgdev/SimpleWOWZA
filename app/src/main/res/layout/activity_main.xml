@@ -41,23 +41,10 @@
         android:text="@string/stop_recording" />
 
     <Button
-        android:id="@+id/play_path_button"
+        android:id="@+id/Player"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="playFromPath"
-        android:text="@string/play_from_path" />
+        android:onClick="openPlayer"
+        android:text="@string/open_player" />
 
-    <io.vov.vitamio.widget.CenterLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:id="@+id/video_layer">
-
-        <io.vov.vitamio.widget.VideoView
-            android:id="@+id/buffer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true" />
-    </io.vov.vitamio.widget.CenterLayout>
 </LinearLayout>
