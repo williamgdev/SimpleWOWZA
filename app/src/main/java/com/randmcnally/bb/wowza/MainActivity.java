@@ -1,14 +1,13 @@
-package com.github.williamgdev.examples.simplewowza;
+package com.randmcnally.bb.wowza;
 
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -27,17 +26,13 @@ import com.wowza.gocoder.sdk.api.status.WZStatus;
 import com.wowza.gocoder.sdk.api.status.WZStatusCallback;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import io.vov.vitamio.LibsChecker;
-import io.vov.vitamio.widget.MediaController;
-import io.vov.vitamio.widget.VideoView;
-
-
 public class MainActivity extends AppCompatActivity implements WZStatusCallback {
     private static final String TAG = "MainActivity ->";
+    public static final String urlRSTP = "rtsp://f3bcf3.entrypoint.cloud.wowza.com:1935/app-9bba/0eea2fb3";
+
     // The top level GoCoder API interface
     private WowzaGoCoder goCoder;
 
@@ -59,24 +54,13 @@ public class MainActivity extends AppCompatActivity implements WZStatusCallback 
 
     private MediaPlayer mediaPlayer;
 
-    private static String path;
-    private boolean isFirst_Loading_Complete;
-    private boolean is_playing_firstTime;
-    private boolean isStart;
-
-    private VideoView videoView;
-    private io.vov.vitamio.widget.CenterLayout centerLayout;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
         setContentView(R.layout.activity_main);
 
-
         // Initialize the GoCoder SDK
-        goCoder = WowzaGoCoder.init(getApplicationContext(), "GOSK-4543-0103-D362-C86D-BACE");
+        goCoder = WowzaGoCoder.init(getApplicationContext(), "GOSK-5943-0103-A15E-86A3-BA36");
 
         if (goCoder == null) {
             // If initialization failed, retrieve the last error and display it
@@ -97,10 +81,10 @@ public class MainActivity extends AppCompatActivity implements WZStatusCallback 
         goCoderBroadcastConfig = new WZBroadcastConfig();
 
         // Set the connection properties for the target Wowza Streaming Engine server or Wowza Cloud account
-        goCoderBroadcastConfig.setHostAddress("c2a38e.entrypoint.cloud.wowza.com");
+        goCoderBroadcastConfig.setHostAddress("f3bcf3.entrypoint.cloud.wowza.com");
         goCoderBroadcastConfig.setPortNumber(1935);
-        goCoderBroadcastConfig.setApplicationName("app-2343");
-        goCoderBroadcastConfig.setStreamName("e643fd43");
+        goCoderBroadcastConfig.setApplicationName("app-9bba");
+        goCoderBroadcastConfig.setStreamName("a1abd153");
 
         // Disable video
         goCoderBroadcastConfig.setVideoEnabled(false);
@@ -245,10 +229,9 @@ public class MainActivity extends AppCompatActivity implements WZStatusCallback 
         toggleBroadcast();
     }
 
-
     public void openPlayer(View view) {
         Intent intent = new Intent(this, PlayerActivity.class);
+        intent.putExtra("url", urlRSTP);
         startActivity(intent);
-
     }
 }

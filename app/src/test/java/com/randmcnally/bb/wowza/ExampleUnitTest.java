@@ -1,4 +1,4 @@
-package com.github.williamgdev.examples.simplewowza;
+package com.randmcnally.bb.wowza;
 
 import org.junit.Test;
 

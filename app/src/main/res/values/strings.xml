@@ -4,6 +4,5 @@
     <string name="play_recording">Play recording</string>
     <string name="stop_broadcast">Stop broadcast</string>
     <string name="stop_recording">Stop recording</string>
-    <string name="play_from_path">Play from Path</string>
     <string name="open_player">Open Player</string>
 </resources>

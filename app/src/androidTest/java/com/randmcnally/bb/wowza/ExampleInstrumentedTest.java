@@ -1,4 +1,4 @@
-package com.github.williamgdev.examples.simplewowza;
+package com.randmcnally.bb.wowza;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.github.williamgdev.examples.simplewowza", appContext.getPackageName());
+        assertEquals("com.randmcnally.bb.wowza", appContext.getPackageName());
     }
 }

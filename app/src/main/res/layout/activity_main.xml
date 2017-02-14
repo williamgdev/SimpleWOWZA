@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:wowza="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.github.williamgdev.examples.simplewowza.MainActivity">
+    tools:context="com.randmcnally.bb.wowza.MainActivity">
 
     <TextView
         android:layout_width="wrap_content"
@@ -40,8 +39,9 @@
         android:onClick="stopMagic"
         android:text="@string/stop_recording" />
 
+
     <Button
-        android:id="@+id/Player"
+        android:id="@+id/player_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="openPlayer"
