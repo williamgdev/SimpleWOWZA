@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza;
+package com.randmcnally.bb.wowza.view;
 
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -13,6 +13,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.randmcnally.bb.wowza.R;
+import com.randmcnally.bb.wowza.callbacks.StreamStatusCallback;
+import com.randmcnally.bb.wowza.networks.ServiceFactory;
+import com.randmcnally.bb.wowza.service.ApiService;
 import com.wowza.gocoder.sdk.api.WowzaGoCoder;
 import com.wowza.gocoder.sdk.api.broadcast.WZBroadcast;
 import com.wowza.gocoder.sdk.api.broadcast.WZBroadcastConfig;
@@ -29,7 +33,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity implements WZStatusCallback {
+public class MainActivity extends AppCompatActivity implements MainView, WZStatusCallback {
     private static final String TAG = "MainActivity ->";
     public static final String urlRSTP = "rtsp://f3bcf3.entrypoint.cloud.wowza.com:1935/app-9bba/0eea2fb3";
 
@@ -58,6 +62,10 @@ public class MainActivity extends AppCompatActivity implements WZStatusCallback 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ApiService apiService = ServiceFactory.createAPiService();
+//        apiService.startLiveStream(ServiceFactory.STREAM_ID).enqueue(new StreamStatusCallback());
+        apiService.stopLiveStream(ServiceFactory.STREAM_ID).enqueue(new StreamStatusCallback());
 
         // Initialize the GoCoder SDK
         goCoder = WowzaGoCoder.init(getApplicationContext(), "GOSK-5943-0103-A15E-86A3-BA36");
@@ -233,5 +241,25 @@ public class MainActivity extends AppCompatActivity implements WZStatusCallback 
         Intent intent = new Intent(this, PlayerActivity.class);
         intent.putExtra("url", urlRSTP);
         startActivity(intent);
+    }
+
+    @Override
+    public void showText(String text) {
+
+    }
+
+    @Override
+    public void showProgress() {
+
+    }
+
+    @Override
+    public void hideProgress() {
+
+    }
+
+    @Override
+    public void showError(String error) {
+
     }
 }
