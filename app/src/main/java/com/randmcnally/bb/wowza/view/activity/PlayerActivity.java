@@ -65,7 +65,7 @@ public class PlayerActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
-    public void showText(String text) {
+    public void showMessage(String text) {
 
     }
 

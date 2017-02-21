@@ -1,12 +1,8 @@
 package com.randmcnally.bb.wowza.callback;
 
 
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.randmcnally.bb.wowza.view.activity.MainActivity;
 import com.wowza.gocoder.sdk.api.status.WZState;
 import com.wowza.gocoder.sdk.api.status.WZStatus;
 import com.wowza.gocoder.sdk.api.status.WZStatusCallback;
@@ -52,7 +48,7 @@ public class WowzaStatusCallback implements WZStatusCallback {
 //        new Handler(Looper.getMainLooper()).post(new Runnable() {
 //            @Override
 //            public void run() {
-//                Toast.makeText(MainActivity.this, statusMessage, Toast.LENGTH_LONG).show();
+//                Toast.makeText(HomeActivity.this, statusMessage, Toast.LENGTH_LONG).show();
 //            }
 //        });
     }
@@ -66,7 +62,7 @@ public class WowzaStatusCallback implements WZStatusCallback {
 //        new Handler(Looper.getMainLooper()).post(new Runnable() {
 //            @Override
 //            public void run() {
-//                Toast.makeText(MainActivity.this,
+//                Toast.makeText(HomeActivity.this,
 //                        "Streaming error: " + goCoderStatus.getLastError().getErrorDescription(),
 //                        Toast.LENGTH_LONG).show();
 //            }

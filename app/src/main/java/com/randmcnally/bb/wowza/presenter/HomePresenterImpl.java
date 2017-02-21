@@ -25,9 +25,9 @@ import com.wowza.gocoder.sdk.api.mp4.WZMP4Writer;
 
 import java.io.File;
 
-public class MainPresenterImpl implements MainPresenter, StreamStatusCallback.ResultStreamStatusCallback{
+public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.ResultStreamStatusCallback{
     public static final String urlRSTP = "rtsp://f3bcf3.entrypoint.cloud.wowza.com:1935/app-9bba/0eea2fb3";
-    private static final String TAG = "MainPresenterImpl";
+    private static final String TAG = "HomePresenterImpl";
 
     // The top level GoCoder API interface
     private WowzaGoCoder goCoder;
@@ -54,7 +54,7 @@ public class MainPresenterImpl implements MainPresenter, StreamStatusCallback.Re
 
     MainView mainView;
 
-    public MainPresenterImpl(Context context) {
+    public HomePresenterImpl(Context context) {
         this.context = context;
 
         // Initialize the GoCoder SDK
@@ -171,18 +171,22 @@ public class MainPresenterImpl implements MainPresenter, StreamStatusCallback.Re
     }
 
     @Override
-    public void streamStarted(int resultCallback) {
+    public void notifyStreamStatus(int resultCallback) {
         switch (resultCallback){
             case StreamStatusCallback.ResultStreamStatusCallback.DONE:
                 goCoderBroadcaster.startBroadcast(goCoderBroadcastConfig, statusCallback);
-
+                mainView.showMessage(streamStatusCallback.message);
                 break;
 
             case StreamStatusCallback.ResultStreamStatusCallback.ERROR:
                 stopBroadcastandStream();
-                mainView.showError("Error");
+                mainView.showError(streamStatusCallback.message);
                 break;
         }
+
+    }
+
+    public void startBroadcast() {
 
     }
 }
