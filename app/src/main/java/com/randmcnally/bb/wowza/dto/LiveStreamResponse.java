@@ -1,16 +1,13 @@
 
-package com.randmcnally.bb.wowza.model.dto;
+package com.randmcnally.bb.wowza.dto;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class LiveStreamPojo {
+public class LiveStreamResponse extends BaseResponse{
     @SerializedName("live_stream")
     @Expose
     private LiveStream liveStream;
-    @SerializedName("meta")
-    @Expose
-    private Meta meta;
 
     public LiveStream getLiveStream() {
         return liveStream;
@@ -18,14 +15,6 @@ public class LiveStreamPojo {
 
     public void setLiveStream(LiveStream liveStream) {
         this.liveStream = liveStream;
-    }
-
-    public Meta getMeta() {
-        return meta;
-    }
-
-    public void setMeta(Meta meta) {
-        this.meta = meta;
     }
 
 }

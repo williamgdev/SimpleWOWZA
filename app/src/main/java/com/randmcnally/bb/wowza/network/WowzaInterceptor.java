@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza.networks;
+package com.randmcnally.bb.wowza.network;
 
 import java.io.IOException;
 

@@ -1,7 +1,6 @@
-package com.randmcnally.bb.wowza.networks;
+package com.randmcnally.bb.wowza.network;
 
-import com.randmcnally.bb.wowza.callbacks.StreamStatusCallback;
-import com.randmcnally.bb.wowza.service.ApiService;
+import com.randmcnally.bb.wowza.restservice.ApiService;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

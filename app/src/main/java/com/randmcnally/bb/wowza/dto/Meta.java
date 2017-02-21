@@ -1,15 +1,11 @@
-package com.randmcnally.bb.wowza.model.dto;
+package com.randmcnally.bb.wowza.dto;
 
-/**
- * Created by wgutierrez on 2/16/17.
- */
-
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Meta {
+import java.util.List;
 
+public class Meta extends BaseDto{
     @SerializedName("status")
     @Expose
     private Integer status;

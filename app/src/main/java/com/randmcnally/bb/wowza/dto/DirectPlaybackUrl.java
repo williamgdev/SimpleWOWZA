@@ -1,11 +1,12 @@
 
-package com.randmcnally.bb.wowza.model.dto;
+package com.randmcnally.bb.wowza.dto;
 
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class DirectPlaybackUrl {
+import java.util.List;
+
+public class DirectPlaybackUrl extends BaseDto{
 
     @SerializedName("rtmp")
     @Expose

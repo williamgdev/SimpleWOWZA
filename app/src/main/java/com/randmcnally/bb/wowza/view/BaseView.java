@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza;
+package com.randmcnally.bb.wowza.view;
 
 public interface BaseView {
     void showProgress();

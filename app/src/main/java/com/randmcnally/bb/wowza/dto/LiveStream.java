@@ -1,11 +1,12 @@
 
-package com.randmcnally.bb.wowza.model.dto;
+package com.randmcnally.bb.wowza.dto;
 
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class LiveStream {
+import java.util.List;
+
+public class LiveStream  extends BaseDto{
 
     @SerializedName("aspect_ratio_height")
     @Expose

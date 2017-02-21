@@ -1,10 +1,10 @@
 
-package com.randmcnally.bb.wowza.model.dto;
+package com.randmcnally.bb.wowza.dto;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Wowz {
+public class Rtmp extends BaseDto{
 
     @SerializedName("name")
     @Expose

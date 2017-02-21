@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza.view;
+package com.randmcnally.bb.wowza.view.activity;
 
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -10,10 +10,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.randmcnally.bb.wowza.R;
+import com.randmcnally.bb.wowza.view.MainView;
 
 import java.io.IOException;
 
-public class PlayerActivity extends AppCompatActivity implements MainView{
+public class PlayerActivity extends AppCompatActivity implements MainView {
 
     TextView txtTitle;
     Button bClose;
@@ -65,7 +66,7 @@ public class PlayerActivity extends AppCompatActivity implements MainView{
 
     @Override
     public void showText(String text) {
-        
+
     }
 
     @Override
