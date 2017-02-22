@@ -11,6 +11,7 @@ import android.widget.Toast;
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.callback.StreamStatusCallback;
 import com.randmcnally.bb.wowza.callback.WowzaStatusCallback;
+import com.randmcnally.bb.wowza.database.Channel;
 import com.randmcnally.bb.wowza.network.ServiceFactory;
 import com.randmcnally.bb.wowza.restservice.ApiService;
 import com.randmcnally.bb.wowza.util.FileUtil;

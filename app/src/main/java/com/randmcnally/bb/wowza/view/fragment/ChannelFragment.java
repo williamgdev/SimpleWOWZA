@@ -1,5 +1,6 @@
 package com.randmcnally.bb.wowza.view.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -16,10 +17,11 @@ import com.randmcnally.bb.wowza.presenter.ChannelPresenterImpl;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ChannelFragment extends Fragment {
+public class ChannelFragment extends Fragment implements DialogTextFragment.ListenerDialogFragment{
     private FloatingActionButton fab;
     ChannelPresenterImpl presenter;
     RecyclerView recyclerView;
+    DialogTextFragment dialogFragment;
 
     public ChannelFragment() {
         // Required empty public constructor
@@ -38,11 +40,17 @@ public class ChannelFragment extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogTextFragment dialogFragment = new DialogTextFragment();
-                dialogFragment.show(getActivity().getSupportFragmentManager(), "channel_dialog_text");
+                showDialog();
             }
         });
         return view;
+    }
+
+    private void showDialog() {
+        dialogFragment = new DialogTextFragment();
+        dialogFragment.show(getActivity().getSupportFragmentManager(), "channel_dialog_text");
+        dialogFragment.setListenerDialogFragment(this);
+
     }
 
     public void updateUI() {
@@ -51,5 +59,11 @@ public class ChannelFragment extends Fragment {
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setAdapter(mAdapter);
 
+    }
+
+
+    @Override
+    public void sendText(String text) {
+        presenter.addChannel(text);
     }
 }

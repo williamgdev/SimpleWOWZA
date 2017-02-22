@@ -2,7 +2,6 @@ package com.randmcnally.bb.wowza.view.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -16,8 +15,11 @@ import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.adapter.PagerAdapter;
+import com.randmcnally.bb.wowza.database.Channel;
 import com.randmcnally.bb.wowza.presenter.HomePresenterImpl;
 import com.randmcnally.bb.wowza.view.MainView;
+import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
+import com.randmcnally.bb.wowza.view.fragment.DialogTextFragment;
 
 
 public class HomeActivity extends AppCompatActivity implements MainView {
@@ -29,7 +31,11 @@ public class HomeActivity extends AppCompatActivity implements MainView {
 
     private ProgressBar progressBar;
 
-    private HomePresenterImpl mainPresenter;
+    public HomePresenterImpl mainPresenter;
+
+    TabLayout tabLayout;
+    ViewPager viewPager;
+    PagerAdapter pagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,15 +45,15 @@ public class HomeActivity extends AppCompatActivity implements MainView {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Channel"));
         tabLayout.addTab(tabLayout.newTab().setText("Contacts"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        final PagerAdapter adapter = new PagerAdapter
+        pagerAdapter = new PagerAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(adapter);
+        viewPager.setAdapter(pagerAdapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -164,4 +170,5 @@ public class HomeActivity extends AppCompatActivity implements MainView {
         int ERROR = -1;
         int START = 1;
     }
+
 }

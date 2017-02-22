@@ -1,5 +1,6 @@
 package com.randmcnally.bb.wowza.view.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -9,12 +10,15 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.randmcnally.bb.wowza.R;
+import com.randmcnally.bb.wowza.presenter.MainPresenter;
+import com.randmcnally.bb.wowza.view.activity.HomeActivity;
 
 
 public class DialogTextFragment extends DialogFragment {
     private EditText txtEdit;
     private Button bSave;
-    private String title, text;
+    private String title;
+    ListenerDialogFragment listenerDialogFragment;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -28,20 +32,24 @@ public class DialogTextFragment extends DialogFragment {
         bSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                text = txtEdit.getText().toString();
-                getDialog().dismiss();
+                if (listenerDialogFragment != null)
+                    listenerDialogFragment.sendText(txtEdit.getText().toString());
+                dismiss();
             }
         });
 
         return rootView;
     }
 
+    public void setListenerDialogFragment(ListenerDialogFragment listenerDialogFragment){
+        this.listenerDialogFragment = listenerDialogFragment;
+    }
+
     public void setTitle(String title){
         this.title = title;
     }
 
-    public String getText(){
-        return text;
+    public interface ListenerDialogFragment{
+        void sendText(String text);
     }
-
 }

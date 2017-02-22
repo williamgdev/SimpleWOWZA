@@ -44,4 +44,5 @@ public class Channel {
     public void setName(@NotNull String name) {
         this.name = name;
     }
+
 }
