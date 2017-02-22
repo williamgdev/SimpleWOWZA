@@ -2,13 +2,17 @@ package com.randmcnally.bb.wowza.view.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.adapter.PagerAdapter;
@@ -31,6 +35,7 @@ public class HomeActivity extends AppCompatActivity implements MainView {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -70,6 +75,23 @@ public class HomeActivity extends AppCompatActivity implements MainView {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            Toast.makeText(this, "Setting", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     public void updateUI(int state) {
         switch (state){
             case StateUI.STOP:
@@ -88,18 +110,17 @@ public class HomeActivity extends AppCompatActivity implements MainView {
     }
 
     public void startBroadcast(View view) {
-        mainPresenter.startBroadcast();
-        switch (mainPresenter.changeStatusBroadcast()){
-            case -1:
-            case 0:
-                updateUI(StateUI.STOP);
-                break;
-
-            case 1:
-                updateUI(StateUI.START);
-                break;
-
-        }
+//        switch (mainPresenter.startBroadcast()){
+//            case :
+//            case 0:
+//                updateUI(StateUI.STOP);
+//                break;
+//
+//            case 1:
+//                updateUI(StateUI.START);
+//                break;
+//
+//        }
     }
 
     public void openPlayer(View view) {

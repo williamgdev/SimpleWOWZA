@@ -24,7 +24,7 @@ public class StreamStatusCallback implements Callback<LiveStreamResponse> {
             if (response.body().getLiveStream() != null) {
                 Log.d(TAG, "onResponse: State: " + response.body().getLiveStream().getState());
                 if (response.body().getLiveStream().getState().equals("starting")) {
-                    resultCallback.notifyStreamStatus(ResultStreamStatusCallback.DONE);
+                    resultCallback.listenerStreamStatus(ResultStreamStatusCallback.DONE);
                 }
                 message = response.body().getLiveStream().getState();
             }
@@ -38,13 +38,13 @@ public class StreamStatusCallback implements Callback<LiveStreamResponse> {
     @Override
     public void onFailure(Call<LiveStreamResponse> call, Throwable t) {
         Log.e(TAG, "onFailure: error: ", t);
-        resultCallback.notifyStreamStatus(ResultStreamStatusCallback.ERROR);
+        resultCallback.listenerStreamStatus(ResultStreamStatusCallback.ERROR);
         message = t.getMessage();
     }
 
     //Notify the result for the Callback
     public interface ResultStreamStatusCallback{
-        void notifyStreamStatus(int resultCallback);
+        void listenerStreamStatus(int resultCallback);
         int DONE = 1, ERROR = 0;
     }
 

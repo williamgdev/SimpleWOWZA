@@ -57,6 +57,13 @@ public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.Re
     public HomePresenterImpl(Context context) {
         this.context = context;
 
+        if (!initializeGoCoderSDK(context)) return;
+
+        apiService = ServiceFactory.createAPiService();
+
+    }
+
+    private boolean initializeGoCoderSDK(Context context) {
         // Initialize the GoCoder SDK
         goCoder = WowzaGoCoder.init(context, "GOSK-5943-0103-A15E-86A3-BA36");
 
@@ -66,7 +73,7 @@ public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.Re
             Toast.makeText(context,
                     "GoCoder SDK error: " + goCoderInitError.getErrorDescription(),
                     Toast.LENGTH_LONG).show();
-            return;
+            return true;
         }
 
         // Create an audio device instance for capturing and broadcasting audio
@@ -96,8 +103,7 @@ public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.Re
         goCoderBroadcastConfig.registerVideoSink(mp4Writer);
         goCoderBroadcastConfig.setVideoEnabled(false);
 
-        apiService = ServiceFactory.createAPiService();
-
+        return true;
     }
 
 
@@ -133,7 +139,7 @@ public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.Re
 
     private void stopBroadcastandStream() {
         goCoderBroadcaster.endBroadcast(statusCallback);
-        apiService.stopLiveStream(ServiceFactory.STREAM_ID).enqueue(streamStatusCallback);
+//        apiService.stopLiveStream(ServiceFactory.STREAM_ID).enqueue(streamStatusCallback);
     }
 
     public String getUrlStream() {
@@ -171,7 +177,7 @@ public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.Re
     }
 
     @Override
-    public void notifyStreamStatus(int resultCallback) {
+    public void listenerStreamStatus(int resultCallback) {
         switch (resultCallback){
             case StreamStatusCallback.ResultStreamStatusCallback.DONE:
                 goCoderBroadcaster.startBroadcast(goCoderBroadcastConfig, statusCallback);
@@ -186,7 +192,27 @@ public class HomePresenterImpl implements MainPresenter, StreamStatusCallback.Re
 
     }
 
-    public void startBroadcast() {
+    public boolean startBroadcast() {
+        if (!goCoderBroadcaster.getStatus().isRunning()){
+            // Start streaming
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+            File outputFile = FileUtil.getOutputMediaFile(savedFile, "Wowza");
+            if (outputFile != null)
+                mp4Writer.setFilePath(outputFile.toString());
+            else {
+                Log.w(TAG, "changeStatusBroadcast: " + "Could not create or access the directory in which to store the MP");
+                mainView.showError("Could not create or access the directory in which to store the MP");
+            }
+
+            apiService.startLiveStream(ServiceFactory.STREAM_ID).enqueue(streamStatusCallback);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void stopBroadcast(){
+
 
     }
 }

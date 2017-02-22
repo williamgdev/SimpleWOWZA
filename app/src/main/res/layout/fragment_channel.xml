@@ -1,14 +1,23 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.design.widget.CoordinatorLayout
+android:id="@+id/main_content"
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="match_parent"
+android:layout_height="match_parent">
+
+<android.support.v7.widget.RecyclerView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.randmcnally.bb.wowza.view.fragment.ChannelFragment"
-    android:background="@android:color/holo_blue_light">
+    android:id="@+id/channel_recycler_view"/>
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+<android.support.design.widget.FloatingActionButton
+    android:layout_width="wrap_content"
+    android:id="@+id/channel_fab"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|right"
+    android:layout_margin="@dimen/fab_margin"
+    android:src="@android:drawable/stat_sys_phone_call"
+    app:layout_anchor="@id/channel_recycler_view"
+    app:layout_anchorGravity="bottom|right|end" />
 
-</FrameLayout>
+</android.support.design.widget.CoordinatorLayout>

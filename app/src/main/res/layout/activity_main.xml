@@ -27,14 +27,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hello World!" />
+            android:name="Hello World!" />
 
         <Button
             android:id="@+id/broadcast_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="startBroadcast"
-            android:text="@string/start_broadcast" />
+            android:name="@string/start_broadcast" />
 
         <Button
             android:id="@+id/play_button"
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:onClick="playMagic"
-            android:text="@string/play_recording" />
+            android:name="@string/play_recording" />
 
         <Button
             android:id="@+id/stop_button"
@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:onClick="stopMagic"
-            android:text="@string/stop_recording" />
+            android:name="@string/stop_recording" />
 
 
         <Button
@@ -58,6 +58,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="openPlayer"
-            android:text="@string/open_player" />
+            android:name="@string/open_player" />
     </LinearLayout>
 </RelativeLayout>
