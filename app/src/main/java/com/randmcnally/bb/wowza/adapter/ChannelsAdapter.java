@@ -6,13 +6,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.database.Channel;
+import com.randmcnally.bb.wowza.util.GoCoderSDK;
+import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
 
 import java.util.List;
 
-public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.ChannelViewHolder>{
+public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.ChannelViewHolder> {
     Context context;
     List<Channel> channels;
 
@@ -21,7 +24,7 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
         this.channels = channels;
     }
 
-    public void setChannels(List<Channel> channels){
+    public void setChannels(List<Channel> channels) {
         this.channels = channels;
     }
 
@@ -33,11 +36,25 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
     }
 
     @Override
-    public void onBindViewHolder(ChannelViewHolder holder, int position) {
+    public void onBindViewHolder(ChannelViewHolder holder, final int position) {
         holder.setName(channels.get(position).getName());
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                ChannelFragment.openBroadcastActivity(context, channels.get(position).getName());
+                ChannelFragment.openBroadcastActivity(context, "a1abd153");
+            }
+        });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                ChannelFragment.openReceiverActivity(context, GoCoderSDK.getUrlStream());
+                return true;
+            }
+        });
     }
 
-    public Channel getChannel(int position){
+    public Channel getChannel(int position) {
         return channels.get(position);
     }
 
@@ -54,8 +71,11 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
             txtName = (TextView) view.findViewById(R.id.channel_item_name);
         }
 
-        public void setName(String name){
+        public void setName(String name) {
             txtName.setText(name);
         }
+
+
     }
+
 }

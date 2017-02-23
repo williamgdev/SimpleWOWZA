@@ -1,16 +1,25 @@
 package com.randmcnally.bb.wowza.callback;
 
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.randmcnally.bb.wowza.view.activity.HomeActivity;
 import com.wowza.gocoder.sdk.api.status.WZState;
 import com.wowza.gocoder.sdk.api.status.WZStatus;
 import com.wowza.gocoder.sdk.api.status.WZStatusCallback;
 
 
 public class WowzaStatusCallback implements WZStatusCallback {
-
+    Context context;
     private static final String TAG = "WowzaStatusCallback";
+
+    public WowzaStatusCallback(Context context) {
+        this.context = context;
+    }
 
     // The callback invoked upon changes to the state of the steaming broadcast
     @Override
@@ -45,12 +54,12 @@ public class WowzaStatusCallback implements WZStatusCallback {
 
         Log.d(TAG, "onWZStatus: " + statusMessage);
         // Display the status message using the U/I thread
-//        new Handler(Looper.getMainLooper()).post(new Runnable() {
-//            @Override
-//            public void run() {
-//                Toast.makeText(HomeActivity.this, statusMessage, Toast.LENGTH_LONG).show();
-//            }
-//        });
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, statusMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     // The callback invoked when an error occurs during a broadcast
@@ -59,13 +68,13 @@ public class WowzaStatusCallback implements WZStatusCallback {
         Log.d(TAG, "onWZError: " + goCoderStatus.getLastError().getErrorDescription());
         // If an error is reported by the GoCoder SDK, display a message
         // containing the error details using the U/I thread
-//        new Handler(Looper.getMainLooper()).post(new Runnable() {
-//            @Override
-//            public void run() {
-//                Toast.makeText(HomeActivity.this,
-//                        "Streaming error: " + goCoderStatus.getLastError().getErrorDescription(),
-//                        Toast.LENGTH_LONG).show();
-//            }
-//        });
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context,
+                        "Streaming error: " + goCoderStatus.getLastError().getErrorDescription(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

@@ -15,23 +15,16 @@ import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.adapter.PagerAdapter;
-import com.randmcnally.bb.wowza.database.Channel;
 import com.randmcnally.bb.wowza.presenter.HomePresenterImpl;
 import com.randmcnally.bb.wowza.view.MainView;
-import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
-import com.randmcnally.bb.wowza.view.fragment.DialogTextFragment;
 
 
 public class HomeActivity extends AppCompatActivity implements MainView {
     private static final String TAG = "HomeActivity ->";
 
-    private Button broadcastButton;
-    private Button playButton;
-    private Button stopButton;
-
     private ProgressBar progressBar;
 
-    public HomePresenterImpl mainPresenter;
+    public HomePresenterImpl presenter;
 
     TabLayout tabLayout;
     ViewPager viewPager;
@@ -72,11 +65,9 @@ public class HomeActivity extends AppCompatActivity implements MainView {
             }
         });
 
-        mainPresenter = new HomePresenterImpl(getApplicationContext());
+        presenter = new HomePresenterImpl(getApplicationContext());
+        presenter.attachView(this);
 
-        broadcastButton = (Button) findViewById(R.id.broadcast_button);
-        playButton = (Button) findViewById(R.id.play_button);
-        stopButton = (Button) findViewById(R.id.stop_button);
         progressBar = (ProgressBar) findViewById(R.id.main_progress);
 
     }
@@ -98,51 +89,6 @@ public class HomeActivity extends AppCompatActivity implements MainView {
         return super.onOptionsItemSelected(item);
     }
 
-    public void updateUI(int state) {
-        switch (state){
-            case StateUI.STOP:
-                broadcastButton.setText(R.string.start_broadcast);
-                playButton.setEnabled(true);
-                stopButton.setEnabled(true);
-                break;
-
-            case StateUI.START:
-                broadcastButton.setText(R.string.stop_broadcast);
-                break;
-
-            case StateUI.ERROR:
-                break;
-        }
-    }
-
-    public void startBroadcast(View view) {
-//        switch (mainPresenter.startBroadcast()){
-//            case :
-//            case 0:
-//                updateUI(StateUI.STOP);
-//                break;
-//
-//            case 1:
-//                updateUI(StateUI.START);
-//                break;
-//
-//        }
-    }
-
-    public void openPlayer(View view) {
-        Intent intent = new Intent(this, PlayerActivity.class);
-        intent.putExtra("url", mainPresenter.getUrlStream());
-        startActivity(intent);
-    }
-
-    public void playMagic(View view) {
-        mainPresenter.startListen();
-    }
-
-    public void stopMagic(View view) {
-        mainPresenter.stopListen();
-    }
-
     @Override
     public void showMessage(String text) {
 
@@ -162,13 +108,14 @@ public class HomeActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showError(String error) {
-        updateUI(StateUI.ERROR);
+
     }
 
-    public interface StateUI {
-        int STOP = 0;
-        int ERROR = -1;
-        int START = 1;
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        presenter.detachView();
     }
 
 }
