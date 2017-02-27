@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_broadcast"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical|center_horizontal"
+    android:orientation="vertical"
+    android:background="@color/colorGray"
+    tools:context="com.randmcnally.bb.wowza.view.activity.ChannelActivity">
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:id="@+id/channel_layout_speaker"
+        android:layout_weight="3">
+        <com.randmcnally.bb.wowza.view.custom.PlayGifView
+            android:id="@+id/channel_view_gif"
+            android:visibility="gone"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/channel_img_microphone"
+            android:src="@drawable/ic_icon_speaker_disabled"
+            android:visibility="visible"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        android:gravity="center"
+        android:id="@+id/channel_layout_broadcast"
+        android:orientation="vertical"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_icon_broadcast"
+                android:id="@+id/channel_icon_broadcast"
+                android:layout_marginLeft="18dp"
+                android:layout_marginTop="10dp"
+                android:visibility="invisible"/>
+
+            <TextView
+                android:id="@+id/channel_txt_state"
+                android:textSize="@dimen/channel_text"
+                android:text="@string/ready"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:layout_marginRight="60dp"
+                android:layout_toRightOf="@id/channel_icon_broadcast"/>
+
+
+        </RelativeLayout>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:src="@drawable/icon_microphone_ready"
+            android:id="@+id/channel_img_broadcast"
+            android:layout_height="0dp"
+            android:layout_weight="5"/>
+    </LinearLayout>
+
+
+</LinearLayout>

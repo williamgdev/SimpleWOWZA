@@ -4,15 +4,16 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class BaseResponse {
-        @SerializedName("meta")
-        @Expose
-        private Meta meta;
 
-        public Meta getMeta() {
-            return meta;
-        }
+    @SerializedName("meta")
+    @Expose
+    private BaseDto meta;
 
-        public void setMeta(Meta meta) {
-            this.meta = meta;
-        }
+    public BaseDto getMeta() {
+        return meta;
+    }
+
+    public void setMeta(BaseDto meta) {
+        this.meta = meta;
+    }
 }

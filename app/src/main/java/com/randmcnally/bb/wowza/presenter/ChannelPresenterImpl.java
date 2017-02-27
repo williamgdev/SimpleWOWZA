@@ -4,43 +4,75 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.View;
 
+import com.randmcnally.bb.wowza.callback.AllStreamCallback;
+import com.randmcnally.bb.wowza.callback.StreamStatusCallback;
 import com.randmcnally.bb.wowza.database.Channel;
 import com.randmcnally.bb.wowza.database.ChannelDao;
 import com.randmcnally.bb.wowza.database.DaoMaster;
 import com.randmcnally.bb.wowza.database.DaoSession;
+import com.randmcnally.bb.wowza.dto.LiveStream;
+import com.randmcnally.bb.wowza.network.ServiceFactory;
+import com.randmcnally.bb.wowza.restservice.ApiService;
+import com.randmcnally.bb.wowza.util.ChannelUtil;
 import com.randmcnally.bb.wowza.util.GoCoderSDK;
 import com.randmcnally.bb.wowza.view.ChannelView;
 import com.randmcnally.bb.wowza.view.MainView;
 import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
-public class ChannelPresenterImpl {
+public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream{
+    AllStreamCallback allStreamsCallback;
     Context context;
     DaoSession daoSession;
     ChannelFragment mainView;
     List<Channel> channels;
     ChannelDao channelDao;
+    private ApiService apiService;
 
     public ChannelPresenterImpl(ChannelFragment view) {
         this.context = view.getContext();
         this.mainView = view;
+        apiService = ServiceFactory.createAPiService();
+        allStreamsCallback = new AllStreamCallback(this);
+
         loadData();
     }
 
     public void loadData() {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, "ptt-db", null);
-        SQLiteDatabase db = helper.getWritableDatabase();
-        DaoMaster daoMaster = new DaoMaster(db);
-        daoSession = daoMaster.newSession();
-        channelDao = daoSession.getChannelDao();
-        channels = channelDao.loadAll();
+        /**
+         * The code below allows you to save the channel you already create
+         */
+//        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, "ptt-db", null);
+//        SQLiteDatabase db = helper.getWritableDatabase();
+//        DaoMaster daoMaster = new DaoMaster(db);
+//        daoSession = daoMaster.newSession();
+//        channelDao = daoSession.getChannelDao();
+//        channels = channelDao.loadAll();
+
+        /**
+         * the code bellow retreive all channels using the /LiveStreams Rest Call
+         */
+//        apiService.getAllLiveStreams().enqueue(allStreamsCallback);
+
+        /**
+         * This is only for the Demo
+         */
+        channels = new ArrayList<>();
+        Channel demoChannel = new Channel();
+        demoChannel.setName("Rand McNally");
+        channels.add(demoChannel);
 
     }
 
     private void updateChannelItems() {
-        channels = channelDao.loadAll();
+        /**
+         * use this code when you are using thr Local Database
+         */
+//        channels = channelDao.loadAll();
+
         mainView.updateUI();
     }
 
@@ -48,15 +80,24 @@ public class ChannelPresenterImpl {
         return channels;
     }
 
-    public void addChannel(String text) {
-        Channel channel = new Channel();
-        channel.setName(text);
-        channelDao = daoSession.getChannelDao();
-        channelDao.insert(channel);
-        updateChannelItems();
-    }
+    /**
+     * Add Channel allows you to save the String in the ptt-db Sqlite Database
+     * @return
+     */
+//    public void addChannel(String text) {
+//        Channel channel = new Channel();
+//        channel.setName(text);
+//        channelDao = daoSession.getChannelDao();
+//        channelDao.insert(channel);
+//        updateChannelItems();
+//    }
 
     public String _getUrlStream() {
         return GoCoderSDK.getUrlStream();
+    }
+
+    @Override
+    public void getLivesStreams(List<LiveStream> liveStreams) {
+        channels = ChannelUtil.toChannel(liveStreams);
     }
 }

@@ -1,10 +1,14 @@
 package com.randmcnally.bb.wowza.database;
 
+import com.randmcnally.bb.wowza.dto.AllStreamsResponse;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Index;
 import org.greenrobot.greendao.annotation.NotNull;
 import org.greenrobot.greendao.annotation.Generated;
+
+import retrofit2.Call;
 
 @Entity(indexes = {
         @Index(value = "name DESC", unique = true)

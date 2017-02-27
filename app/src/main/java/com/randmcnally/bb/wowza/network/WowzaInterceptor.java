@@ -8,14 +8,20 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class WowzaInterceptor implements Interceptor {
+    private static final String API_KEY = "hBp76TIjgGJqUKaJkTfmdZ4EHAEKcA3GRQDfM2n2eFrDbjTBLnidstk2jS56321c";
+    private static final String ACCESS_KEY = "y0hsLVdvjFemqJnIRodyhsvRXurULfDxEzgivUg41ZAwIVwBeOzppA1C7cfP375e";
+
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Request request = chain.request()
+        return chain.proceed(createRequest(chain));
+    }
+
+    public Request createRequest(Chain chain) {
+        return chain.request()
                 .newBuilder()
-                .addHeader("wsc-api-key", "hBp76TIjgGJqUKaJkTfmdZ4EHAEKcA3GRQDfM2n2eFrDbjTBLnidstk2jS56321c")
-                .addHeader("wsc-access-key", "y0hsLVdvjFemqJnIRodyhsvRXurULfDxEzgivUg41ZAwIVwBeOzppA1C7cfP375e")
+                .addHeader("wsc-api-key", API_KEY)
+                .addHeader("wsc-access-key", ACCESS_KEY)
                 .build();
-        return chain.proceed(request);
     }
 
     public static OkHttpClient buildHttpClient(){

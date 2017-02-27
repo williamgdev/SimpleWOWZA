@@ -4,7 +4,8 @@ package com.randmcnally.bb.wowza.dto;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class LiveStreamResponse extends BaseResponse{
+public class StatusResponse extends BaseResponse{
+
     @SerializedName("live_stream")
     @Expose
     private LiveStream liveStream;

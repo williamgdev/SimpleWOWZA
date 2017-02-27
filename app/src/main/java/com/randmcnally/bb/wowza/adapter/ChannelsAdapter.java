@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.database.Channel;
@@ -41,17 +40,18 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ChannelFragment.openBroadcastActivity(context, channels.get(position).getName());
-                ChannelFragment.openBroadcastActivity(context, "a1abd153");
+//                ChannelFragment.openChannelActivity(context, channels.get(position).getName());
+                ChannelFragment.openChannelActivity(context, "a1abd153");
             }
         });
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                ChannelFragment.openReceiverActivity(context, GoCoderSDK.getUrlStream());
-                return true;
-            }
-        });
+
+//        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View v) {
+//                ChannelFragment.openReceiverActivity(context, GoCoderSDK.getUrlStream());
+//                return true;
+//            }
+//        });
     }
 
     public Channel getChannel(int position) {

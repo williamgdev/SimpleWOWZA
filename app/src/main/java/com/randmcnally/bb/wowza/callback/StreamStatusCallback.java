@@ -2,29 +2,38 @@ package com.randmcnally.bb.wowza.callback;
 
 import android.util.Log;
 
-import com.randmcnally.bb.wowza.dto.LiveStreamResponse;
+import com.randmcnally.bb.wowza.dto.StatusResponse;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class StreamStatusCallback implements Callback<LiveStreamResponse> {
+public class StreamStatusCallback implements Callback<StatusResponse>{
 
     private String TAG = "StreamStatusCallback ->";
-    ResultStreamStatusCallback resultCallback;
+    ListenerStreamStatusCallback resultCallback;
     public String message;
 
-    public StreamStatusCallback(ResultStreamStatusCallback resultCallback) {
+    public StreamStatusCallback(ListenerStreamStatusCallback resultCallback) {
         this.resultCallback = resultCallback;
     }
 
     @Override
-    public void onResponse(Call<LiveStreamResponse> call, Response<LiveStreamResponse> response) {
+    public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
         if (response.body() != null) {
             if (response.body().getLiveStream() != null) {
                 Log.d(TAG, "onResponse: State: " + response.body().getLiveStream().getState());
-                if (response.body().getLiveStream().getState().equals("starting")) {
-                    resultCallback.listenerStreamStatus(ResultStreamStatusCallback.DONE);
+                switch (response.body().getLiveStream().getState()) {
+                    case "starting":
+                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.WAITING);
+                        break;
+                    case "started":
+                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.DONE);
+                        break;
+                    case "stopping":
+                    case "stopped":
+                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.DONE);
+                        break;
                 }
                 message = response.body().getLiveStream().getState();
             }
@@ -36,16 +45,16 @@ public class StreamStatusCallback implements Callback<LiveStreamResponse> {
     }
 
     @Override
-    public void onFailure(Call<LiveStreamResponse> call, Throwable t) {
+    public void onFailure(Call<StatusResponse> call, Throwable t) {
         Log.e(TAG, "onFailure: error: ", t);
-        resultCallback.listenerStreamStatus(ResultStreamStatusCallback.ERROR);
+        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.ERROR);
         message = t.getMessage();
     }
 
     //Notify the result for the Callback
-    public interface ResultStreamStatusCallback{
+    public interface ListenerStreamStatusCallback {
         void listenerStreamStatus(int resultCallback);
-        int DONE = 1, ERROR = 0;
+        int DONE = 1, ERROR = -1, WAITING = 8, STOP = 0;
     }
 
 }

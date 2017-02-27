@@ -10,14 +10,18 @@ android:layout_height="match_parent">
     android:layout_height="match_parent"
     android:id="@+id/channel_recycler_view"/>
 
-<android.support.design.widget.FloatingActionButton
-    android:layout_width="wrap_content"
-    android:id="@+id/channel_fab"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom|right"
-    android:layout_margin="@dimen/fab_margin"
-    android:src="@android:drawable/stat_sys_phone_call"
-    app:layout_anchor="@id/channel_recycler_view"
-    app:layout_anchorGravity="bottom|right|end" />
+<!-- Add Channel Feature
+<android.support.design.widget.FloatingActionButton-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:id="@+id/channel_fab"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_gravity="bottom|right"-->
+    <!--android:layout_margin="@dimen/fab_margin"-->
+    <!--android:src="@android:drawable/stat_sys_phone_call"-->
+    <!--app:layout_anchor="@id/channel_recycler_view"-->
+    <!--app:layout_anchorGravity="bottom|right|end" />-->
+    <!--
+
+    -->
 
 </android.support.design.widget.CoordinatorLayout>
