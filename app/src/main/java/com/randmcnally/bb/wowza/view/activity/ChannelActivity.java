@@ -1,8 +1,12 @@
 package com.randmcnally.bb.wowza.view.activity;
 
+import android.app.ActionBar;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -21,6 +25,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     ImageView imgSpeak, imgBroadcast, iconBroadcast;
     LinearLayout layoutBroadcast, layoutSpeaker;
     PlayGifView gifLoading;
+//    private ActionBar actionbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +42,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
         layoutBroadcast.setOnTouchListener(broadcastTouchListener);
 
+//        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
+
         updateUI(UIState.LOADING);
 
         presenter = new BroadcastPresenterImpl(this, getIntent().getStringExtra("stream_name"));
@@ -45,6 +52,20 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         //Start the Stream as soon as possible
         presenter.loadData();
 
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // call this.finish or navigate to the activity
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public void updateUI(UIState state) {
@@ -114,7 +135,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 case MotionEvent.ACTION_POINTER_DOWN: {
                     // TODO use data
                     // start broadcasting
-                    if (!presenter.isBroadcasting()) {
+
+                    if (!presenter.isBroadcasting() && !presenter.isPlaying()) {
                         presenter.startBroadcast();
                     }
                     break;

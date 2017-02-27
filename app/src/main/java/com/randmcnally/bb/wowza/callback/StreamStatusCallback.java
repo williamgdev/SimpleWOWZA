@@ -1,5 +1,6 @@
 package com.randmcnally.bb.wowza.callback;
 
+import android.provider.Settings;
 import android.util.Log;
 
 import com.randmcnally.bb.wowza.dto.StatusResponse;
@@ -22,9 +23,9 @@ public class StreamStatusCallback implements Callback<StatusResponse>{
     public void onResponse(Call<StatusResponse> call, Response<StatusResponse> response) {
         if (response.body() != null) {
             if (response.body().getLiveStream() != null) {
-                Log.d(TAG, "onResponse: State: " + response.body().getLiveStream().getState());
                 switch (response.body().getLiveStream().getState()) {
                     case "starting":
+                        Log.d(TAG, "onResponse: Starting");
                         resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.WAITING);
                         break;
                     case "started":
@@ -32,7 +33,7 @@ public class StreamStatusCallback implements Callback<StatusResponse>{
                         break;
                     case "stopping":
                     case "stopped":
-                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.DONE);
+                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.STOP);
                         break;
                 }
                 message = response.body().getLiveStream().getState();
