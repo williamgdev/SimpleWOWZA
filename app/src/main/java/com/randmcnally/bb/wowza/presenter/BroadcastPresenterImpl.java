@@ -28,7 +28,7 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
     Context context;
     GoCoderSDK goCoderSDK;
     String streamName;
-    private boolean isBroadcasting, isStreaming, isAsyncTaskListening, isListeningStream;
+    private boolean isBroadcasting, isStreaming, isAsyncTaskListening, isListeningStream, listeninMusic;
 
     private File savedFile;
 
@@ -102,7 +102,7 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
 //        speakAsyncTask.cancel(true);
         mainView.updateUI(ChannelActivity.UIState.BROADCASTING);
         if (!goCoderSDK.isBroadcasting()){
-            // Start streaming
+            // Start Broadcast
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
             File outputFile = FileUtil.getOutputMediaFile(savedFile, "Wowza");
             if (outputFile != null)
@@ -123,19 +123,19 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
         goCoderSDK.stopBroadcast();
         isBroadcasting = false;
         mainView.updateUI(ChannelActivity.UIState.READY);
-        checkIfRTSPIsReady();
+        checkIfMusicIslaying();
     }
 
-    public void startStream(){
+    public void _startStream(){
         /**
          * Start the Stream in the Wowza Cloud
          */
         isStreaming = true;
         Log.d(TAG, "startStream: ");
-        apiService.startLiveStream(ServiceFactory.STREAM_ID).enqueue(streamStatusCallback);
+//        apiService.startLiveStream(ServiceFactory.STREAM_ID).enqueue(streamStatusCallback);
     }
 
-    public void stopStream(){
+    public void _stopStream(){
         /**
          * Stop the Stream in the Wowza Cloud
          */
@@ -184,8 +184,52 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
                 mp.start();
                 mainView.updateUI(ChannelActivity.UIState.RECEIVING);
                 isAsyncTaskListening = false;
+                listeninMusic = true;
+                checkIfMusicIslaying();
             }
         });
+    }
+
+    private void checkIfMusicIslaying() {
+
+
+//        Log.d(TAG, "run: Music Playing: " + mediaPlayer.isPlaying());
+//        AsyncTask.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                if (mediaPlayer != null){
+//                    if (mediaPlayer.isPlaying())
+//                        checkIfMusicIslaying();
+//                    else{
+//                        listeninMusic = false;
+//                        mediaPlayer.stop();
+//                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                mainView.updateUI(ChannelActivity.UIState.READY);
+//                            }
+//                        });
+//                    }
+//                }
+//            }
+////            try {
+////                MediaPlayer rtsp = new Me(GoCoderSDK.getUrlStream());
+////                checkIfRTSPIsAvailable();
+////            } catch (FileNotFoundException e) {
+////                e.printStackTrace();
+////
+////                Log.d(TAG, "run: Music Not Playing");
+////                listeninMusic = false;
+////                mediaPlayer.release();
+////                checkIfRTSPIsReady();
+////                new Handler(Looper.getMainLooper()).post(new Runnable() {
+////                    @Override
+////                    public void run() {
+////                        mainView.updateUI(ChannelActivity.UIState.READY);
+////                    }
+////                });
+////            }
+//        });
     }
 
     // Start and Stop Broadcast listening the Rest Call Start/Stop LiveStream
@@ -205,13 +249,13 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
                         isListeningStream = false;
                         mainView.updateUI(ChannelActivity.UIState.READY);
                     }
-                    checkIfRTSPIsReady();
+                    checkIfMusicIslaying();
                 }
 
                 break;
 
             case StreamStatusCallback.ListenerStreamStatusCallback.ERROR:
-                stopStream();
+//                stopStream();
                 mainView.showError(streamStatusCallback.message);
                 //It should show Error in the future
                 mainView.updateUI(ChannelActivity.UIState.CONFlICT);
@@ -230,7 +274,7 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
                 Log.d(TAG, "listenerStreamStatus: isStreaming-" + isStreaming);
                 if (!isStreaming) {
                     isStreaming = true;
-                    startStream();
+//                    startStream();
                 }
                 else
                     checkIfStreamIsReady();
@@ -238,7 +282,7 @@ public class BroadcastPresenterImpl implements MainPresenter, StreamStatusCallba
         }
     }
 
-    public void checkIfRTSPIsReady() {
+    public void _checkIfRTSPIsReady() {
         if (!isBroadcasting){
             speakAsyncTask.execute(new Runnable() {
                 @Override

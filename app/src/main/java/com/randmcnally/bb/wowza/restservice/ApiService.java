@@ -25,7 +25,7 @@ public interface ApiService {
     Call<StatusResponse> getState(@Path("id") String id);
 
     @PUT("live_streams/{id}/start")
-    Call<StatusResponse> startLiveStream(@Path("id") String id);
+    Call<StatusResponse> _startLiveStream(@Path("id") String id);
 
     @PUT("live_streams/{id}/stop")
     Call<StatusResponse> stopLiveStream(@Path("id") String id);
@@ -35,6 +35,5 @@ public interface ApiService {
 
 //    @POST("live_streams")
 //    Call<LiveStreamResponse> createLiveStream(@Body JSONObject jsonStream);
-
 
 }

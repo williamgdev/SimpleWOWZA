@@ -136,7 +136,7 @@ public class GoCoderSDK {
             goCoderBroadcaster.endBroadcast(statusCallback);
     }
 
-    public void startStreaming(){
+    public void _startStreaming(){
         WowzaConfig streamConfig = new WowzaConfig();
         streamConfig.setHostAddress(HOST_ADDRESS);
         streamConfig.setApplicationName(APP_NAME);

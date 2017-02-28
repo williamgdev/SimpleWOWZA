@@ -1,11 +1,9 @@
 package com.randmcnally.bb.wowza.view.activity;
 
-import android.app.ActionBar;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
+import com.randmcnally.bb.wowza.network.ServiceFactory;
 import com.randmcnally.bb.wowza.presenter.BroadcastPresenterImpl;
 import com.randmcnally.bb.wowza.view.MainView;
 import com.randmcnally.bb.wowza.view.custom.PlayGifView;
@@ -29,8 +28,13 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ServiceFactory.checkM3UFile();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_channel);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         txtState = (TextView) findViewById(R.id.channel_txt_state);
         imgBroadcast = (ImageView) findViewById(R.id.channel_img_broadcast);
@@ -52,16 +56,16 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         //Start the Stream as soon as possible
         presenter.loadData();
 
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                // call this.finish or navigate to the activity
+                this.finish();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -80,7 +84,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
             case READY:
                 gifLoading.setVisibility(View.GONE);
                 imgSpeak.setVisibility(View.VISIBLE);
-                imgSpeak.setImageResource(R.drawable.ic_icon_speaker_ready);
+                imgSpeak.setImageResource(R.drawable.icon_speaker_ready);
                 txtState.setText(R.string.ready);
                 txtState.setTextColor(Color.BLACK);
                 imgBroadcast.setImageResource(R.drawable.icon_microphone_ready);
@@ -193,8 +197,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onStop() {
         super.onStop();
-        if (presenter.isStreaming())
-            presenter.stopStream();
+//        if (presenter.isStreaming())
+//            presenter.stopStream();
     }
 
     @Override

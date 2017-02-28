@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Wowza Stream POC</string>
+    <string name="app_name">Breaker Breaker</string>
     <string name="start_broadcast">Start broadcast</string>
     <string name="play_recording">Play recording</string>
     <string name="stop_broadcast">Stop broadcast</string>

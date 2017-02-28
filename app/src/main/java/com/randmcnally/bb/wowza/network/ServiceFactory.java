@@ -1,14 +1,24 @@
 package com.randmcnally.bb.wowza.network;
 
+import android.util.Log;
+
 import com.google.gson.JsonObject;
 import com.randmcnally.bb.wowza.restservice.ApiService;
 
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ServiceFactory {
     private static final String BASE_URL = "https://api.cloud.wowza.com/api/v1/";
     public static final String STREAM_ID = "c9jf5cdq";
+    private static final String TAG = "Service Factory ->";
 
     public static ApiService createAPiService(){
         Retrofit retrofit = new Retrofit.Builder()
@@ -21,6 +31,32 @@ public class ServiceFactory {
 
         return apiService;
 
+    }
+
+    public static void checkM3UFile(){
+        final OkHttpClient client = new OkHttpClient();
+
+        final Request request = new Request.Builder()
+                .url("http://wowzaprodhd16-lh.akamaihd.net/i/8095ad94_1@440122/master.m3u8")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+                Log.d(TAG, "onFailure: M3u8");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: " + response.code());
+                    client.newCall(request).execute();
+                } else {
+                    // do something wih the result
+                    Log.d(TAG, "onResponse: " + response.toString());
+                }
+            }
+        });
     }
 
     public static JsonObject buildJsonStream(String name){
