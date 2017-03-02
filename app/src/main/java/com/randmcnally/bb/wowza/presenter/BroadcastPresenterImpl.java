@@ -65,7 +65,6 @@ public class BroadcastPresenterImpl implements MainPresenter,
         m3UAvailableCallback = new M3UAvailableCallback(this);
         wowzaStatusCallback = new WowzaStatusCallback(this);
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnErrorListener(this);
 
 
     }
@@ -73,8 +72,8 @@ public class BroadcastPresenterImpl implements MainPresenter,
     private void checkIfStreamIsReady() {
 //        if(isListeningStream)
         ischeckingStreaming = true;
-        if (isSimulated){
-            if(isBroadcasting)
+        if (isSimulated) {
+            if (isBroadcasting)
                 mainView.updateUI(ChannelActivity.UIState.BROADCASTING);
             else {
                 if (ischeckingStreaming) {
@@ -82,21 +81,14 @@ public class BroadcastPresenterImpl implements MainPresenter,
                     ischeckingStreaming = false;
                     islisteningTRSPUrl = true;
                     mainView.updateUI(ChannelActivity.UIState.READY);
-                }
-                else if(isListeningStream){
+                } else if (isListeningStream) {
                     isListeningStream = false;
                     mainView.updateUI(ChannelActivity.UIState.READY);
                 }
                 checkIfMusicIsPlaying();
             }
+            mainView.updateUI(ChannelActivity.UIState.READY);
 
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    if (mainView != null)
-                        mainView.updateUI(ChannelActivity.UIState.READY);
-                }
-            });
             return;
         }
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
@@ -146,7 +138,8 @@ public class BroadcastPresenterImpl implements MainPresenter,
             checkIfStreamIsReady();
             checkIfMusicIsPlaying();
             goCoderSDK = GoCoderSDK.getInstance();
-            if (goCoderSDK.initializeGoCoderSDK(context, streamName, hostAddress, appName, wowzaStatusCallback)) return;
+            if (goCoderSDK.initializeGoCoderSDK(context, streamName, hostAddress, appName, wowzaStatusCallback))
+                return;
         }
     }
 
@@ -177,7 +170,8 @@ public class BroadcastPresenterImpl implements MainPresenter,
         checkIfStreamIsReady();
 //        checkIfMusicIsPlaying();
         goCoderSDK = GoCoderSDK.getInstance();
-        if (goCoderSDK.initializeGoCoderSDK(context, "098d53ab", "7ba482.entrypoint.cloud.wowza.com", "app-4361", wowzaStatusCallback)) return;
+        if (goCoderSDK.initializeGoCoderSDK(context, "098d53ab", "7ba482.entrypoint.cloud.wowza.com", "app-4361", wowzaStatusCallback))
+            return;
 
     }
 
@@ -202,13 +196,13 @@ public class BroadcastPresenterImpl implements MainPresenter,
 ////            return true;
 //        }
 //        else {
-            if (!isStreaming) {
-                checkIfStreamIsReady();
-            }
+        if (!isStreaming) {
+            checkIfStreamIsReady();
+        }
 //        speakAsyncTask.cancel(true);
-            mainView.updateUI(ChannelActivity.UIState.BROADCASTING);
+        mainView.updateUI(ChannelActivity.UIState.BROADCASTING);
 
-        if (!goCoderSDK.isBroadcasting()){
+        if (!goCoderSDK.isBroadcasting()) {
             // Start Broadcast
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
             File outputFile = FileUtil.getOutputMediaFile(savedFile, "Wowza");
@@ -225,7 +219,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
         return false;
     }
 
-    public void stopBroadcast(){
+    public void stopBroadcast() {
         islisteningTRSPUrl = true;
         isBroadcasting = false;
 
@@ -270,7 +264,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
         checkIfMusicIsPlaying();
     }
 
-    public void _startStream(){
+    public void _startStream() {
         /**
          * Start the Stream in the Wowza Cloud
          */
@@ -279,7 +273,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
 //        apiService.startLiveStream(ServiceFactory.STREAM_ID).enqueue(streamStatusCallback);
     }
 
-    public void stopStream(){
+    public void stopStream() {
         /**
          * Stop the Stream in the Wowza Cloud
          */
@@ -303,65 +297,56 @@ public class BroadcastPresenterImpl implements MainPresenter,
                 }
             });
         }
-
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
                 if (mainView != null) {
                     mainView.updateUI(ChannelActivity.UIState.READY);
                 }
-            }
-        });
+
         checkIfStreamIsReady();
     }
 
-    public void startListen(){
+    public void startListen() {
         Log.d(TAG, "startListen: ");
         if (!islisteningTRSPUrl) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
                     if (mainView != null)
                         mainView.updateUI(ChannelActivity.UIState.READY);
-                }
-            });
+
             islisteningTRSPUrl = true;
             checkIfMusicIsPlaying();
         }
-        if (isBroadcasting){
+        if (isBroadcasting) {
             Log.d(TAG, "startListen: CAll RETURN");
             return;
         }
         mediaPlayer = new MediaPlayer();
+
+        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mp.start();
+
+                        if (mainView != null) {
+                            mainView.updateUI(ChannelActivity.UIState.RECEIVING);
+                        }
+
+                islisteningTRSPUrl = false;
+                rtspInteractor.startPlay();
+                checkIfMusicIsPlaying();
+            }
+        });
+
         try {
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setDataSource(rtspUrl);
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        try {
-            mediaPlayer.prepareAsync();
+
+        mediaPlayer.prepareAsync();
+
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(context, "Receiving the audio Stream", Toast.LENGTH_SHORT).show();
-            }
-        });
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mp.start();
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mainView != null) {
-                            mainView.updateUI(ChannelActivity.UIState.RECEIVING);
-                        }
-                    }
-                });
-                islisteningTRSPUrl = false;
-                rtspInteractor.startPlay();
-                checkIfMusicIsPlaying();
             }
         });
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -382,7 +367,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
         mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
-                switch (what){
+                switch (what) {
                     case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
                         showMessage("Server Die");
                         break;
@@ -404,11 +389,10 @@ public class BroadcastPresenterImpl implements MainPresenter,
 
     private void checkIfMusicIsPlaying() {
 
-        if (islisteningTRSPUrl){
+        if (islisteningTRSPUrl) {
             rtspInteractor.checkRTSPUrl(m3UAvailableCallback, m3u8Url);
 
-        }
-        else if(rtspInteractor.isPlaying()){
+        } else if (rtspInteractor.isPlaying()) {
             rtspInteractor.checkRTSPUrl(m3UAvailableCallback, m3u8Url);
         }
 //        if (rtspInteractor.isPlaying()){
@@ -465,7 +449,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
             case StreamStatusCallback.ListenerStreamStatusCallback.DONE:
 //                startBroadcast();
 //                mainView.showMessage(streamStatusCallback.message);
-                if(isBroadcasting)
+                if (isBroadcasting)
                     mainView.updateUI(ChannelActivity.UIState.BROADCASTING);
                 else {
                     if (ischeckingStreaming) {
@@ -475,8 +459,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
                         if (mainView != null) {
                             mainView.updateUI(ChannelActivity.UIState.READY);
                         }
-                    }
-                    else if(isListeningStream){
+                    } else if (isListeningStream) {
                         isListeningStream = false;
                         if (mainView != null) {
                             mainView.updateUI(ChannelActivity.UIState.READY);
@@ -506,7 +489,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
                     message = context.getString(R.string.stream_not_started);
                     mainView.updateUI(ChannelActivity.UIState.ERROR);
                 }
-                if (isBroadcasting() || islisteningTRSPUrl || islisteningTRSPUrl){
+                if (isBroadcasting() || islisteningTRSPUrl || islisteningTRSPUrl) {
                     stopBroadcast();
                     islisteningTRSPUrl = false;
                     islisteningTRSPUrl = false;
@@ -529,7 +512,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
     }
 
     public void _checkIfRTSPIsReady() {
-        if (!isBroadcasting){
+        if (!isBroadcasting) {
             speakAsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -547,7 +530,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.d(TAG, "onError: " );
+        Log.d(TAG, "onError: ");
         return false;
     }
 
@@ -570,19 +553,17 @@ public class BroadcastPresenterImpl implements MainPresenter,
     public void notifyM3UStatus(M3UStatus status) {
         switch (status) {
             case AVAILABLE:
-                if (mediaPlayer.isPlaying()){
+                if (mediaPlayer.isPlaying()) {
                     checkIfMusicIsPlaying();
-                }
-                else {
+                } else {
                     startListen();
                 }
                 break;
 
             case ERROR:
-                if (mediaPlayer.isPlaying()){
+                if (mediaPlayer.isPlaying()) {
                     stopListen();
-                }
-                else {
+                } else {
                     checkIfMusicIsPlaying();
                 }
                 break;
@@ -641,8 +622,6 @@ public class BroadcastPresenterImpl implements MainPresenter,
 //            return 1;
 //        }
 //    }
-
-
 
 
 }
