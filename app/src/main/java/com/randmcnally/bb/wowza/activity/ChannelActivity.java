@@ -196,6 +196,11 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
+    public void updateView(UIState state) {
+        updateUI(state);
+    }
+
+    @Override
     public void showProgress() {
         Toast.makeText(this, "Loading...", Toast.LENGTH_SHORT).show();
     }

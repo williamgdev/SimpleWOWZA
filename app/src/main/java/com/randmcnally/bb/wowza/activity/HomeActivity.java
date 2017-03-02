@@ -94,6 +94,11 @@ public class HomeActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
+    public void updateView(ChannelActivity.UIState state) {
+        // Update here the UI
+    }
+
+    @Override
     public void showProgress() {
         progressBar.setVisibility(View.VISIBLE);
 

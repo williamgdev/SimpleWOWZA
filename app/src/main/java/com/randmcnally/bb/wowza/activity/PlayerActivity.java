@@ -32,6 +32,11 @@ public class PlayerActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
+    public void updateView(ChannelActivity.UIState state) {
+        // Update the UI here
+    }
+
+    @Override
     public void showProgress() {
 
     }
