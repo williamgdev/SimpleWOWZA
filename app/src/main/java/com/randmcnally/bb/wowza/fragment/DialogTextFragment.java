@@ -1,6 +1,5 @@
-package com.randmcnally.bb.wowza.view.fragment;
+package com.randmcnally.bb.wowza.fragment;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -10,8 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.randmcnally.bb.wowza.R;
-import com.randmcnally.bb.wowza.presenter.MainPresenter;
-import com.randmcnally.bb.wowza.view.activity.HomeActivity;
+import com.randmcnally.bb.wowza.activity.HomeActivity;
 
 
 public class DialogTextFragment extends DialogFragment {

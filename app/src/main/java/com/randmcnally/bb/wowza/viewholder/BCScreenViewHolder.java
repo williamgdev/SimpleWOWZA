@@ -1,13 +1,4 @@
-package com.randmcnally.bb.wowza.view.activity;
-
-import android.support.annotation.ColorRes;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.StringRes;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.randmcnally.bb.wowza.R;
+package com.randmcnally.bb.wowza.viewholder;
 
 public class BCScreenViewHolder {
     /*

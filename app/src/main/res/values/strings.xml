@@ -15,4 +15,5 @@
     <string name="ready">Ready</string>
     <string name="broadcasting">Broadcasting</string>
     <string name="receiving">Receiving</string>
+    <string name="stream_not_started">The live stream is not started</string>
 </resources>

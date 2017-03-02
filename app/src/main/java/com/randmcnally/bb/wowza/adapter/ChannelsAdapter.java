@@ -9,8 +9,7 @@ import android.widget.TextView;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.database.Channel;
-import com.randmcnally.bb.wowza.util.GoCoderSDK;
-import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
+import com.randmcnally.bb.wowza.fragment.ChannelFragment;
 
 import java.util.List;
 
@@ -40,8 +39,8 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ChannelFragment.openChannelActivity(context, channels.get(position).getName());
-                ChannelFragment.openChannelActivity(context, "a1abd153");
+                ChannelFragment.openChannelActivity(context, channels.get(position));
+//                ChannelFragment.openChannelActivity(context, "a1abd153");
             }
         });
 

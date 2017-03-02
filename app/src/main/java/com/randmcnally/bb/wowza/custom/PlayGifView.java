@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza.view.custom;
+package com.randmcnally.bb.wowza.custom;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

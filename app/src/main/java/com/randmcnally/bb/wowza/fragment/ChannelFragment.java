@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza.view.fragment;
+package com.randmcnally.bb.wowza.fragment;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,10 +13,11 @@ import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.adapter.ChannelsAdapter;
+import com.randmcnally.bb.wowza.database.Channel;
 import com.randmcnally.bb.wowza.presenter.ChannelPresenterImpl;
 import com.randmcnally.bb.wowza.view.ChannelView;
-import com.randmcnally.bb.wowza.view.activity.ChannelActivity;
-import com.randmcnally.bb.wowza.view.activity.ReceiverActivity;
+import com.randmcnally.bb.wowza.activity.ChannelActivity;
+import com.randmcnally.bb.wowza.activity.ReceiverActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,7 +36,7 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
         recyclerView = (RecyclerView) view.findViewById(R.id.channel_recycler_view);
 
         presenter = new ChannelPresenterImpl(this);
-        updateUI();
+//        updateUI();
 //        fab = (FloatingActionButton) view.findViewById(R.id.channel_fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -69,9 +70,15 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
 //        context.startActivity(intent);
 //    }
 
-    public static void openChannelActivity(Context context, String streamName) {
+    public static void openChannelActivity(Context context, Channel channel) {
         Intent intent = new Intent(context, ChannelActivity.class);
-        intent.putExtra("stream_name", streamName);
+        intent.putExtra("stream_name", channel.getStreamName());
+        intent.putExtra("code_stream", channel.getCode());
+        intent.putExtra("host_name", channel.getPrimaryServer());
+        intent.putExtra("app_name", channel.getAppName());
+        intent.putExtra("rtsp_url", channel.getRtspUrl());
+        intent.putExtra("m3u8_url", channel.getPlayBackUrl());
+        intent.putExtra("channel_name", channel.getName());
         context.startActivity(intent);
     }
 

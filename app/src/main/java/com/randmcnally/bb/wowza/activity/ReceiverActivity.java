@@ -1,22 +1,14 @@
-package com.randmcnally.bb.wowza.view.activity;
+package com.randmcnally.bb.wowza.activity;
 
-import android.content.Intent;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.randmcnally.bb.wowza.R;
 import com.randmcnally.bb.wowza.presenter.ReceiverPresenterImpl;
-import com.randmcnally.bb.wowza.util.GoCoderSDK;
 import com.randmcnally.bb.wowza.view.MainView;
-
-import java.io.IOException;
 
 public class ReceiverActivity extends AppCompatActivity implements MainView{
     private static final String TAG = "Receiver ->";

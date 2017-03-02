@@ -1,40 +1,50 @@
-package com.randmcnally.bb.wowza.view.activity;
+package com.randmcnally.bb.wowza.activity;
 
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
-import com.randmcnally.bb.wowza.network.ServiceFactory;
 import com.randmcnally.bb.wowza.presenter.BroadcastPresenterImpl;
 import com.randmcnally.bb.wowza.view.MainView;
-import com.randmcnally.bb.wowza.view.custom.PlayGifView;
+import com.randmcnally.bb.wowza.custom.PlayGifView;
 
 public class ChannelActivity extends AppCompatActivity implements MainView {
     BroadcastPresenterImpl presenter;
-    TextView txtState;
-    ImageView imgSpeak, imgBroadcast, iconBroadcast;
+    TextView txtState, txtTitle;
+    ImageView imgSpeak, imgBroadcast, iconBroadcast, iconToolBar;
     LinearLayout layoutBroadcast, layoutSpeaker;
+    RelativeLayout layoutText;
     PlayGifView gifLoading;
+    UIState currentState;
 //    private ActionBar actionbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ServiceFactory.checkM3UFile();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_channel);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        txtTitle = (TextView) findViewById(R.id.toolbar_txt_title);
+        txtTitle.setText(getIntent().getStringExtra("channel_name"));
+        iconToolBar = (ImageView) findViewById(R.id.toolbar_icon);
+        iconToolBar.setVisibility(View.GONE);
 
         txtState = (TextView) findViewById(R.id.channel_txt_state);
         imgBroadcast = (ImageView) findViewById(R.id.channel_img_broadcast);
@@ -44,21 +54,26 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         iconBroadcast = (ImageView) findViewById(R.id.channel_icon_broadcast);
         layoutBroadcast = (LinearLayout) findViewById(R.id.channel_layout_broadcast);
         layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
+        layoutText = (RelativeLayout) findViewById(R.id.channel_layout_text);
         layoutBroadcast.setOnTouchListener(broadcastTouchListener);
 
 //        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
 
         updateUI(UIState.LOADING);
 
-        presenter = new BroadcastPresenterImpl(this, getIntent().getStringExtra("stream_name"));
+
+        presenter = new BroadcastPresenterImpl(this,
+                getIntent().getStringExtra("stream_name"),
+                getIntent().getStringExtra("code_stream"),
+                getIntent().getStringExtra("rtsp_url"),
+                getIntent().getStringExtra("m3u8_url"),
+                getIntent().getStringExtra("host_name"),
+                getIntent().getStringExtra("app_name"));
         presenter.attachView(this);
 
         //Start the Stream as soon as possible
         presenter.loadData();
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
     }
     @Override
@@ -73,6 +88,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     }
 
     public void updateUI(UIState state) {
+        currentState = state;
         switch (state) {
             case LOADING:
                 gifLoading.setVisibility(View.VISIBLE);
@@ -89,7 +105,9 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 txtState.setTextColor(Color.BLACK);
                 imgBroadcast.setImageResource(R.drawable.icon_microphone_ready);
                 layoutBroadcast.setBackgroundColor(getResources().getColor(R.color.colorGray));
-
+                layoutSpeaker.setBackgroundColor(getResources().getColor(R.color.colorGray));
+                layoutText.setBackgroundColor(getResources().getColor(R.color.colorGray));
+                iconBroadcast.setVisibility(View.INVISIBLE);
                 break;
 
             case BROADCASTING:
@@ -99,6 +117,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 iconBroadcast.setVisibility(View.VISIBLE);
                 imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_sending);
                 layoutBroadcast.setBackgroundColor(getResources().getColor(R.color.colorGreen));
+                layoutText.setBackgroundColor(getResources().getColor(R.color.colorGreen));
                 txtState.setText(R.string.broadcasting);
                 txtState.setTextColor(Color.WHITE);
 
@@ -113,8 +132,12 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_disabled);
                 layoutSpeaker.setBackgroundColor(getResources().getColor(R.color.colorBlue));
                 layoutBroadcast.setBackgroundColor(getResources().getColor(R.color.colorGray));
+                layoutText.setBackgroundColor(getResources().getColor(R.color.colorBlue));
+                txtState.setTextColor(Color.WHITE);
                 break;
-            case CONFlICT:
+
+            case ERROR:
+                showError(presenter.getMessage());
                 break;
         }
     }
@@ -140,7 +163,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                     // TODO use data
                     // start broadcasting
 
-                    if (!presenter.isBroadcasting() && !presenter.isPlaying()) {
+                    if (!presenter.isBroadcasting() && !presenter.isPlaying() && currentState != UIState.LOADING) {
+                        Log.d("simulate", "onTouch: " +  !presenter.isBroadcasting() + " " + !presenter.isPlaying() + " " + (currentState != UIState.LOADING));
                         presenter.startBroadcast();
                     }
                     break;
@@ -183,7 +207,13 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showError(String error) {
-        Toast.makeText(this, "Error: " + error, Toast.LENGTH_SHORT).show();
+        txtState.setText(error);
+        layoutSpeaker.setVisibility(View.GONE);
+        layoutBroadcast.setVisibility(View.GONE);
+        iconBroadcast.setVisibility(View.INVISIBLE);
+        imgSpeak.setVisibility(View.INVISIBLE);
+        imgBroadcast.setVisibility(View.INVISIBLE);
+        gifLoading.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -197,8 +227,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onStop() {
         super.onStop();
-//        if (presenter.isStreaming())
-//            presenter.stopStream();
+        if (presenter.isStreaming())
+            presenter.stopStream();
     }
 
     @Override
@@ -208,7 +238,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     }
 
     public enum UIState {
-        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT;
+        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, ERROR
     }
 
 }

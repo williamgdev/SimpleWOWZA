@@ -4,8 +4,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
-import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
-import com.randmcnally.bb.wowza.view.fragment.ContactsFragment;
+import com.randmcnally.bb.wowza.fragment.ChannelFragment;
+import com.randmcnally.bb.wowza.fragment.ContactsFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     int mNumOfTabs;

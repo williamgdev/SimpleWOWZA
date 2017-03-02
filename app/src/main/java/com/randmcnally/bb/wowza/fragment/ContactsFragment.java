@@ -1,4 +1,4 @@
-package com.randmcnally.bb.wowza.view.fragment;
+package com.randmcnally.bb.wowza.fragment;
 
 
 import android.os.Bundle;

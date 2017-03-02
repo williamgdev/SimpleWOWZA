@@ -25,10 +25,10 @@ public class AllStreamCallback implements Callback<AllStreamsResponse> {
                 message = response.body().getMeta().getMessage();
             }
             if (response.body().getLiveStreams() != null) {
-                listenerAllStream.getLivesStreams(response.body().getLiveStreams());
+                listenerAllStream.getResponseLivesStreams(response.body().getLiveStreams());
             }
             else {
-                listenerAllStream.getLivesStreams(new ArrayList<LiveStream>());
+                listenerAllStream.getResponseLivesStreams(new ArrayList<LiveStream>());
             }
         }
 
@@ -36,12 +36,12 @@ public class AllStreamCallback implements Callback<AllStreamsResponse> {
 
     @Override
     public void onFailure(Call<AllStreamsResponse> call, Throwable t) {
-        listenerAllStream.getLivesStreams(new ArrayList<LiveStream>());
+        listenerAllStream.getResponseLivesStreams(new ArrayList<LiveStream>());
         message = t.getMessage();
 
     }
 
     public interface ListenerAllStream{
-        void getLivesStreams(List<LiveStream> liveStreams);
+        void getResponseLivesStreams(List<LiveStream> liveStreams);
     }
 }

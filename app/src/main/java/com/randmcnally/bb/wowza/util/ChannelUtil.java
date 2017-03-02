@@ -15,9 +15,32 @@ public class ChannelUtil {
         for (LiveStream liveStream :
                 allLiveStreams) {
             Channel temp = new Channel();
+            temp.setAppName(liveStream.getSourceConnectionInformation().getApplication());
             temp.setName(liveStream.getName());
+            temp.setStreamName(liveStream.getSourceConnectionInformation().getStreamName());
+            temp.setPlayBackUrl(liveStream.getPlayerHlsPlaybackUrl());
+            temp.setHostPort(liveStream.getSourceConnectionInformation().getHostPort());
+            temp.setPrimaryServer(liveStream.getSourceConnectionInformation().getPrimaryServer());
+            temp.setRtspUrl(liveStream.getDirectPlaybackUrls().getRtsp().get(0).getUrl());
+            temp.setCode(liveStream.getId());
+
             channels.add(temp);
         }
         return channels;
     }
+
+//    public static List<Channel> toChannelOnlyStarted(List<LiveStream> allLiveStreams) {
+//        List<Channel> channels = new ArrayList<>();
+//        for (LiveStream liveStream :
+//                allLiveStreams) {
+//            if (liveStream.getState() != null) {
+//                if (liveStream.getState().equals("started")) {
+//                    Channel temp = new Channel();
+//                    temp.setName(liveStream.getName());
+//                    channels.add(temp);
+//                }
+//            }
+//        }
+//        return channels;
+//    }
 }

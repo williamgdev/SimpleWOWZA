@@ -23,10 +23,14 @@ import com.wowza.gocoder.sdk.api.status.WZStatus;
 import com.wowza.gocoder.sdk.api.status.WZStatusCallback;
 
 public class GoCoderSDK {
-    private static final String HOST_ADDRESS = "f3bcf3.entrypoint.cloud.wowza.com";
     private static final String SDK_API_KEY = "GOSK-5943-0103-A15E-86A3-BA36";
     private static final int PORT_NUMBER = 1935;
-    private static final String APP_NAME = "app-9bba";
+    private static String hostAddress;// = "f3bcf3.entrypoint.cloud.wowza.com";
+    private static String appName;// = "app-9bba";
+//    private static final String HOST_ADDRESS = "7ba482.entrypoint.cloud.wowza.com";
+//    private static final String APP_NAME = "app-4361";
+//
+
     private static final String TAG = "GoCoderSDK ->";
     private static GoCoderSDK ourInstance = new GoCoderSDK();
     private String streamName;
@@ -56,9 +60,12 @@ public class GoCoderSDK {
     private GoCoderSDK() {
     }
 
-    public boolean initializeGoCoderSDK(Context context, String streamName) {
+    public boolean initializeGoCoderSDK(Context context, String streamName, String hostAddress, String appName, WowzaStatusCallback statusCallback) {
         this.context = context;
         this.streamName = streamName;
+        this.hostAddress = hostAddress;
+        this.appName = appName;
+        this.statusCallback = statusCallback;
         // Initialize the GoCoder SDK
         goCoder = WowzaGoCoder.init(context, SDK_API_KEY);
 
@@ -83,9 +90,9 @@ public class GoCoderSDK {
         goCoderBroadcastConfig = new WZBroadcastConfig();
 
         // Set the connection properties for the target Wowza Streaming Engine server or Wowza Cloud account
-        goCoderBroadcastConfig.setHostAddress(HOST_ADDRESS);
+        goCoderBroadcastConfig.setHostAddress(hostAddress);
         goCoderBroadcastConfig.setPortNumber(PORT_NUMBER);
-        goCoderBroadcastConfig.setApplicationName(APP_NAME);
+        goCoderBroadcastConfig.setApplicationName(appName);
         goCoderBroadcastConfig.setStreamName(streamName);
 
         // Disable video
@@ -104,13 +111,12 @@ public class GoCoderSDK {
     }
 
 
-    public static String getUrlStream() {
+    public static String _getUrlStream() {
         return "rtsp://f3bcf3.entrypoint.cloud.wowza.com:1935/app-9bba/0eea2fb3";
     }
 
     public boolean isBroadcasting() {
         WZStreamingError configValidationError = goCoderBroadcastConfig.validateForBroadcast();
-        statusCallback = new WowzaStatusCallback(context);
         if (configValidationError != null) {
 //            Toast.makeText(context, configValidationError.getErrorDescription(), Toast.LENGTH_LONG).show();
             return false;
@@ -136,60 +142,60 @@ public class GoCoderSDK {
             goCoderBroadcaster.endBroadcast(statusCallback);
     }
 
-    public void _startStreaming(){
-        WowzaConfig streamConfig = new WowzaConfig();
-        streamConfig.setHostAddress(HOST_ADDRESS);
-        streamConfig.setApplicationName(APP_NAME);
-        streamConfig.setStreamName(streamName);
-        goCoder.setConfig(streamConfig);
-        //Make sure streaming isn't already active
-        if (!this.goCoder.isStreaming()) {
-            // Validate the current broadcast config
-            WZStreamingError configValidationError = this.goCoder.getConfig().validateForBroadcast();
-            if (configValidationError != null) {
-                WZLog.error(configValidationError);
-            } else {
-                // Start the live stream
-                goCoder.startStreaming(new WZStatusCallback() {
-                    @Override
-                    public void onWZStatus(WZStatus wzStatus) {
-                        switch (wzStatus.getState()) {
-                            case WZState.IDLE:
-                                WZLog.info(TAG, "Streaming is not active");
-                                break;
-
-                            case WZState.STARTING:
-                                WZLog.info(TAG, "Broadcast initialization");
-                                break;
-
-                            case WZState.READY:
-                                WZLog.info(TAG, "Ready to begin streaming");
-                                break;
-
-                            case WZState.RUNNING:
-                                WZLog.info(TAG, "Streaming is active");
-                                break;
-
-                            case WZState.STOPPING:
-                                WZLog.info(TAG, "Broadcast shutdown");
-                                break;
-                        }
-                    }
-
-                    @Override
-                    public void onWZError(final WZStatus wzStatus) {
-                        // Run this on the U/I thread
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(context, "Live Streaming Error: " + wzStatus.getLastError().getErrorDescription(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-
-                });
-            }
-        }
-    }
+//    public void _startStreaming(){
+//        WowzaConfig streamConfig = new WowzaConfig();
+//        streamConfig.setHostAddress(HOST_ADDRESS);
+//        streamConfig.setApplicationName(APP_NAME);
+//        streamConfig.setStreamName(streamName);
+//        goCoder.setConfig(streamConfig);
+//        //Make sure streaming isn't already active
+//        if (!this.goCoder.isStreaming()) {
+//            // Validate the current broadcast config
+//            WZStreamingError configValidationError = this.goCoder.getConfig().validateForBroadcast();
+//            if (configValidationError != null) {
+//                WZLog.error(configValidationError);
+//            } else {
+//                // Start the live stream
+//                goCoder.startStreaming(new WZStatusCallback() {
+//                    @Override
+//                    public void onWZStatus(WZStatus wzStatus) {
+//                        switch (wzStatus.getState()) {
+//                            case WZState.IDLE:
+//                                WZLog.info(TAG, "Streaming is not active");
+//                                break;
+//
+//                            case WZState.STARTING:
+//                                WZLog.info(TAG, "Broadcast initialization");
+//                                break;
+//
+//                            case WZState.READY:
+//                                WZLog.info(TAG, "Ready to begin streaming");
+//                                break;
+//
+//                            case WZState.RUNNING:
+//                                WZLog.info(TAG, "Streaming is active");
+//                                break;
+//
+//                            case WZState.STOPPING:
+//                                WZLog.info(TAG, "Broadcast shutdown");
+//                                break;
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onWZError(final WZStatus wzStatus) {
+//                        // Run this on the U/I thread
+//                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                Toast.makeText(context, "Live Streaming Error: " + wzStatus.getLastError().getErrorDescription(), Toast.LENGTH_LONG).show();
+//                            }
+//                        });
+//                    }
+//
+//                });
+//            }
+//        }
+//    }
 
 }

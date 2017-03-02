@@ -1,25 +1,17 @@
 package com.randmcnally.bb.wowza.presenter;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.view.View;
 
 import com.randmcnally.bb.wowza.callback.AllStreamCallback;
-import com.randmcnally.bb.wowza.callback.StreamStatusCallback;
 import com.randmcnally.bb.wowza.database.Channel;
 import com.randmcnally.bb.wowza.database.ChannelDao;
-import com.randmcnally.bb.wowza.database.DaoMaster;
 import com.randmcnally.bb.wowza.database.DaoSession;
 import com.randmcnally.bb.wowza.dto.LiveStream;
 import com.randmcnally.bb.wowza.network.ServiceFactory;
 import com.randmcnally.bb.wowza.restservice.ApiService;
 import com.randmcnally.bb.wowza.util.ChannelUtil;
-import com.randmcnally.bb.wowza.util.GoCoderSDK;
-import com.randmcnally.bb.wowza.view.ChannelView;
-import com.randmcnally.bb.wowza.view.MainView;
-import com.randmcnally.bb.wowza.view.fragment.ChannelFragment;
+import com.randmcnally.bb.wowza.fragment.ChannelFragment;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -55,15 +47,15 @@ public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream
         /**
          * the code bellow retreive all channels using the /LiveStreams Rest Call
          */
-//        apiService.getAllLiveStreams().enqueue(allStreamsCallback);
+        apiService.getAllLiveStreams().enqueue(allStreamsCallback);
 
         /**
          * This is only for the Demo
          */
-        channels = new ArrayList<>();
-        Channel demoChannel = new Channel();
-        demoChannel.setName("Rand McNally");
-        channels.add(demoChannel);
+//        channels = new ArrayList<>();
+//        Channel demoChannel = new Channel();
+//        demoChannel.setName("Rand McNally");
+//        channels.add(demoChannel);
 
     }
 
@@ -92,12 +84,9 @@ public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream
 //        updateChannelItems();
 //    }
 
-    public String _getUrlStream() {
-        return GoCoderSDK.getUrlStream();
-    }
-
     @Override
-    public void getLivesStreams(List<LiveStream> liveStreams) {
+    public void getResponseLivesStreams(List<LiveStream> liveStreams) {
         channels = ChannelUtil.toChannel(liveStreams);
+        updateChannelItems();
     }
 }

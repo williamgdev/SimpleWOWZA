@@ -1,6 +1,5 @@
 package com.randmcnally.bb.wowza.callback;
 
-import android.provider.Settings;
 import android.util.Log;
 
 import com.randmcnally.bb.wowza.dto.StatusResponse;
@@ -26,14 +25,14 @@ public class StreamStatusCallback implements Callback<StatusResponse>{
                 switch (response.body().getLiveStream().getState()) {
                     case "starting":
                         Log.d(TAG, "onResponse: Starting");
-                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.WAITING);
+                        resultCallback.notifyStreamStatus(ListenerStreamStatusCallback.WAITING);
                         break;
                     case "started":
-                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.DONE);
+                        resultCallback.notifyStreamStatus(ListenerStreamStatusCallback.DONE);
                         break;
                     case "stopping":
                     case "stopped":
-                        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.STOP);
+                        resultCallback.notifyStreamStatus(ListenerStreamStatusCallback.STOP);
                         break;
                 }
                 message = response.body().getLiveStream().getState();
@@ -48,13 +47,13 @@ public class StreamStatusCallback implements Callback<StatusResponse>{
     @Override
     public void onFailure(Call<StatusResponse> call, Throwable t) {
         Log.e(TAG, "onFailure: error: ", t);
-        resultCallback.listenerStreamStatus(ListenerStreamStatusCallback.ERROR);
+        resultCallback.notifyStreamStatus(ListenerStreamStatusCallback.ERROR);
         message = t.getMessage();
     }
 
     //Notify the result for the Callback
     public interface ListenerStreamStatusCallback {
-        void listenerStreamStatus(int resultCallback);
+        void notifyStreamStatus(int resultCallback);
         int DONE = 1, ERROR = -1, WAITING = 8, STOP = 0;
     }
 
