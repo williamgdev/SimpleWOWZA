@@ -10,6 +10,7 @@ import retrofit2.http.Path;
 
 import com.randmcnally.bb.wowza.dto.AllStreamsResponse;
 import com.randmcnally.bb.wowza.dto.StatusResponse;
+import com.randmcnally.bb.wowza.dto.TranscorderResponse;
 
 import org.json.JSONObject;
 
@@ -32,6 +33,9 @@ public interface ApiService {
 
     @PUT("live_streams/{id}/reset")
     Call<StatusResponse> resetLiveStream(@Path("id") String id);
+
+    @GET("transcoders/{id}/stats")
+    Call<TranscorderResponse> getTranscorderStatus(@Path("id") String id);
 
 //    @POST("live_streams")
 //    Call<LiveStreamResponse> createLiveStream(@Body JSONObject jsonStream);

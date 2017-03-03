@@ -1,6 +1,8 @@
 package com.randmcnally.bb.wowza.activity;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -44,7 +46,10 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         txtTitle = (TextView) findViewById(R.id.toolbar_txt_title);
         txtTitle.setText(getIntent().getStringExtra("channel_name"));
         iconToolBar = (ImageView) findViewById(R.id.toolbar_icon);
-        iconToolBar.setVisibility(View.GONE);
+        iconToolBar.setVisibility(View.GONE);final
+        Drawable upArrow = getResources().getDrawable(R.drawable.abc_ic_ab_back_material);
+        upArrow.setColorFilter(getResources().getColor(R.color.colorGray), PorterDuff.Mode.SRC_ATOP);
+        getSupportActionBar().setHomeAsUpIndicator(upArrow);
 
         txtState = (TextView) findViewById(R.id.channel_txt_state);
         imgBroadcast = (ImageView) findViewById(R.id.channel_img_broadcast);
@@ -226,7 +231,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         super.onPause();
         if (presenter.isBroadcasting())
             presenter.stopBroadcast();
-        presenter.stopListen();
+//        presenter.stopListen();
     }
 
     @Override

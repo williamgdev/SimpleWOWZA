@@ -47,8 +47,8 @@ public class StreamStatusCallback implements Callback<StatusResponse>{
     @Override
     public void onFailure(Call<StatusResponse> call, Throwable t) {
         Log.e(TAG, "onFailure: error: ", t);
-        resultCallback.notifyStreamStatus(ListenerStreamStatusCallback.ERROR);
         message = t.getMessage();
+        resultCallback.notifyStreamStatus(ListenerStreamStatusCallback.ERROR);
     }
 
     //Notify the result for the Callback
