@@ -167,8 +167,10 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 case MotionEvent.ACTION_POINTER_DOWN: {
                     // TODO use data
                     // start broadcasting
-
-                    if (!presenter.isBroadcasting() && !presenter.isPlaying() && currentState != UIState.LOADING) {
+                    if (presenter.isBroadcasting()){
+                        presenter.stopBroadcast();
+                    }
+                    else if (!presenter.isPlaying() && currentState != UIState.LOADING) {
                         Log.d("simulate", "onTouch: " +  !presenter.isBroadcasting() + " " + !presenter.isPlaying() + " " + (currentState != UIState.LOADING));
                         presenter.startBroadcast();
                     }
@@ -184,9 +186,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                     // TODO use data
 
                     // TODO use data
-                    // stop BC stream
-                    if (presenter.isBroadcasting())
-                        presenter.stopBroadcast();
+                    // Do something if you press and hold
+
                     break;
                 }
             }
@@ -197,7 +198,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showMessage(String text) {
-
+        txtState.setText(text);
     }
 
     @Override
@@ -229,9 +230,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onPause() {
         super.onPause();
-        if (presenter.isBroadcasting())
-            presenter.stopBroadcast();
-//        presenter.stopListen();
+        presenter.stopStream();
     }
 
     @Override
@@ -239,6 +238,12 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         super.onStop();
         if (presenter.isStreaming())
             presenter.stopStream();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        presenter.loadData();
     }
 
     @Override

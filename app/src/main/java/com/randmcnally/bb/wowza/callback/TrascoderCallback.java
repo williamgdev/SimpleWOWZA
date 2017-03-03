@@ -20,15 +20,16 @@ public class TrascoderCallback implements Callback<TranscorderResponse> {
 
     @Override
     public void onResponse(Call<TranscorderResponse> call, Response<TranscorderResponse> response) {
-        if (response.body().getMeta() != null) {
-            listener.notifyTranscoderStatus(false, response.body().getMeta().getMessage());
-        }
-        else if (response.body().getTranscoder() != null){
-            if (response.body().getTranscoder().getConnected().getValue().equals("Yes"))
-                listener.notifyTranscoderStatus(true, response.body().getTranscoder().getConnected().getText());
-            else
-                listener.notifyTranscoderStatus(false, response.body().getTranscoder().getConnected().getText());
+        if (response.body() != null) {
+            if (response.body().getMeta() != null) {
+                listener.notifyTranscoderStatus(false, response.body().getMeta().getMessage());
+            } else if (response.body().getTranscoder() != null) {
+                if (response.body().getTranscoder().getConnected().getValue().equals("Yes"))
+                    listener.notifyTranscoderStatus(true, response.body().getTranscoder().getConnected().getText());
+                else
+                    listener.notifyTranscoderStatus(false, response.body().getTranscoder().getConnected().getText());
 
+            }
         }
     }
 

@@ -20,31 +20,32 @@ public class WowzaStatusCallback implements WZStatusCallback {
     @Override
     public void onWZStatus(final WZStatus goCoderStatus) {
         // A successful status transition has been reported by the GoCoder SDK
-        final StringBuffer statusMessage = new StringBuffer("Broadcast status: ");
+        String statusMessage;
 
         switch (goCoderStatus.getState()) {
             case WZState.STARTING:
-                statusMessage.append("Broadcast initialization");
+                statusMessage = "Initialization";
                 break;
 
             case WZState.READY:
-                statusMessage.append("Ready to begin streaming");
+                statusMessage = "Ready";
                 break;
 
             case WZState.RUNNING:
-                statusMessage.append("Streaming is active");
+                statusMessage = "Streaming";
                 break;
 
             case WZState.STOPPING:
-                statusMessage.append("Broadcast shutting down");
+                statusMessage = "Stopping";
                 break;
 
             case WZState.IDLE:
-                statusMessage.append("The broadcast is stopped");
+                statusMessage = "Stopped";
                 break;
 
             default:
-                return;
+                statusMessage = "WOWZA Status need to catch";
+                break;
         }
 
         Log.d(TAG, "onWZStatus: " + statusMessage);
@@ -55,7 +56,7 @@ public class WowzaStatusCallback implements WZStatusCallback {
 //                Toast.makeText(context, statusMessage, Toast.LENGTH_LONG).show();
 //            }
 //        });
-        listener.notifyWowzaStatus(goCoderStatus.getState(), statusMessage.toString());
+        listener.notifyWowzaStatus(goCoderStatus.getState(), statusMessage);
 
     }
 
@@ -73,7 +74,7 @@ public class WowzaStatusCallback implements WZStatusCallback {
 //                        Toast.LENGTH_LONG).show();
 //            }
 //        });
-        listener.notifyWowzaStatus(WZState.STOPPING, goCoderStatus.getLastError().getErrorDescription());
+        listener.notifyWowzaStatus(WZState.IDLE, goCoderStatus.getLastError().getErrorDescription());
     }
 
     public interface ListenerWowzaStatus{

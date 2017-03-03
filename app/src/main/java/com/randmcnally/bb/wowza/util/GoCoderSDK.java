@@ -50,7 +50,6 @@ public class GoCoderSDK {
     private WZMP4Writer mp4Writer;
 
     WowzaStatusCallback statusCallback;
-    Context context;
 
 
     public static GoCoderSDK getInstance() {
@@ -61,7 +60,6 @@ public class GoCoderSDK {
     }
 
     public boolean initializeGoCoderSDK(Context context, String streamName, String hostAddress, String appName, WowzaStatusCallback statusCallback) {
-        this.context = context;
         this.streamName = streamName;
         this.hostAddress = hostAddress;
         this.appName = appName;
