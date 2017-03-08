@@ -1,6 +1,7 @@
 package com.randmcnally.bb.wowza.presenter;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.randmcnally.bb.wowza.callback.AllStreamCallback;
 import com.randmcnally.bb.wowza.database.Channel;
@@ -23,6 +24,7 @@ public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream
     List<Channel> channels;
     ChannelDao channelDao;
     private ApiService apiService;
+    private String TAG = "Channel ->";
 
     public ChannelPresenterImpl(ChannelFragment view) {
         this.context = view.getContext();
@@ -47,6 +49,7 @@ public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream
         /**
          * the code bellow retreive all channels using the /LiveStreams Rest Call
          */
+        mainView.showProgress();
         apiService.getAllLiveStreams().enqueue(allStreamsCallback);
 
         /**
@@ -66,6 +69,7 @@ public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream
 //        channels = channelDao.loadAll();
 
         mainView.updateUI();
+        mainView.hideProgress();
     }
 
     public List<Channel> getChannels() {
@@ -88,5 +92,6 @@ public class ChannelPresenterImpl implements AllStreamCallback.ListenerAllStream
     public void getResponseLivesStreams(List<LiveStream> liveStreams) {
         channels = ChannelUtil.toChannel(liveStreams);
         updateChannelItems();
+        Log.d(TAG, "getResponseLivesStreams: " + channels.size());
     }
 }

@@ -1,22 +1,49 @@
 package com.randmcnally.bb.wowza.custom;
 
+import android.app.Activity;
+import android.content.Context;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.util.Log;
 
 import java.io.IOException;
+
+import io.vov.vitamio.LibsChecker;
+import io.vov.vitamio.MediaPlayer;
 
 public class BBPlayer {
     private static final String TAG = "BBPlayer ->";
     ListenerBBPlayer listener;
     String rtspUrl;
-    private boolean playing;
+    private boolean playing, mute;
     private MediaPlayer mediaPlayer;
+    Context context;
 
 
-    public BBPlayer(String rtspUrl, ListenerBBPlayer listener) {
+    public BBPlayer(Context context, String rtspUrl, ListenerBBPlayer listener) throws IOException {
         this.listener = listener;
         this.rtspUrl = rtspUrl;
-        mediaPlayer = new MediaPlayer();
+        this.context = context;
+
+        if (!LibsChecker.checkVitamioLibs((Activity)context))
+            return;
+
+        mediaPlayer = buildPlayer();
+
+    }
+
+    private MediaPlayer buildPlayer() throws IOException {
+        MediaPlayer mp = new MediaPlayer(context);
+        mp.setOnInfoListener(onInfoListener);
+        mp.setOnErrorListener(onErrorListener);
+        mp.setOnPreparedListener(onPreparedListener);
+        mp.setOnCompletionListener(onCompletionListener);
+
+//        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mp.setDataSource(rtspUrl);
+//        mediaPlayer.setLooping(true);
+        playing = false;
+        mute = false;
+        return mp;
     }
 
     public boolean isPlaying() {
@@ -30,26 +57,28 @@ public class BBPlayer {
         listener.onListener(BBPLAYER.STOPPED);
     }
 
-    public void start() throws IOException {
+    public void start() {
+        if (mute){
+            /**
+             * Check the audio volume in the device.
+             */
+            mediaPlayer.setVolume(1.0f, 1.0f);
+            mute = false;
+        }
+        else {
+            mediaPlayer.prepareAsync();
+        }
         playing = true;
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnInfoListener(onInfoListener);
-        mediaPlayer.setOnErrorListener(onErrorListener);
-        mediaPlayer.setOnPreparedListener(onPreparedListener);
-        mediaPlayer.setOnCompletionListener(onCompletionListener);
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setDataSource(rtspUrl);
-        mediaPlayer.prepareAsync();
-
-        listener.onListener(BBPLAYER.PREPARING);
+        listener.onListener(BBPLAYER.PLAYING);
 
     }
 
     MediaPlayer.OnPreparedListener onPreparedListener = new MediaPlayer.OnPreparedListener() {
         @Override
         public void onPrepared(MediaPlayer mp) {
-            mp.start();
-            listener.onListener(BBPLAYER.PLAYING);
+        mp.start();
+        mp.setPlaybackSpeed(1.0f);
+        listener.onListener(BBPLAYER.PLAYING);
         }
     };
 
@@ -57,6 +86,13 @@ public class BBPlayer {
         @Override
         public void onCompletion(MediaPlayer mp) {
             listener.onListener(BBPLAYER.AUDIO_STREAM_COMPLETED);
+            mediaPlayer.release();
+            try {
+                mediaPlayer = buildPlayer();
+                Log.d(TAG, "onCompletion: new Player Created");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     };
 
@@ -94,7 +130,17 @@ public class BBPlayer {
     };
 
     public void forceStop() {
-        mediaPlayer.stop();
+        if (isPlaying())
+            mediaPlayer.stop();
+    }
+
+    public void mute() {
+        if (isPlaying()) {
+            mediaPlayer.setVolume(0, 0);
+            mute = true;
+            playing = false;
+            listener.onListener(BBPLAYER.STOPPED);
+        }
     }
 
     public enum BBPLAYER{

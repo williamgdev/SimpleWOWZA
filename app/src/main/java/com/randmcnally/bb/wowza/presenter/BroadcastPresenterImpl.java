@@ -2,6 +2,8 @@ package com.randmcnally.bb.wowza.presenter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +27,7 @@ import com.wowza.gocoder.sdk.api.status.WZState;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 public class BroadcastPresenterImpl implements MainPresenter,
         StreamStatusCallback.ListenerStreamStatusCallback,
@@ -42,18 +45,21 @@ public class BroadcastPresenterImpl implements MainPresenter,
     GoCoderSDK goCoderSDK;
     SimulateInteractor _rtspInteractor;
     String streamName, codeStream, rtspUrl, m3u8Url, hostAddress, appName, message;
+    Date bcStartTime, transcoderStartTime;
     private boolean isBroadcasting, isStreaming,
             _isAsyncTaskListening, isListeningStream, islisteningTRSPUrl, ischeckingStreaming, isReceivingM3u8Url,
             isSimulated;
 
 
     private File savedFile;
+    private AudioManager audioManager;
 
     ApiService apiService;
     long responseTime;
     long callTime;
     private BBPlayer bbPlayer;
     private boolean isCheckingtranscoder;
+    private boolean isStoppingBroadcast;
 
 
     public BroadcastPresenterImpl(Context context, String streamName, String codeStream, String rtspUrl, String m3u8_url, String hostAddress, String appName) {
@@ -69,7 +75,14 @@ public class BroadcastPresenterImpl implements MainPresenter,
 //        m3UAvailableCallback = new M3UAvailableCallback(this);
         wowzaStatusCallback = new WowzaStatusCallback(this);
         transcordeCallback = new TrascoderCallback(this);
-        bbPlayer = new BBPlayer(rtspUrl, this);
+
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+        try {
+            bbPlayer = new BBPlayer(context, rtspUrl, this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -122,18 +135,18 @@ public class BroadcastPresenterImpl implements MainPresenter,
             checkIfStreamIsReady();
         }
 
-        updateView(ChannelActivity.UIState.BROADCASTING);
+        updateView(ChannelActivity.UIState.BROADCASTING_PREPARING);
 
         if (!goCoderSDK.isBroadcasting()) {
             // Start Broadcast
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-            File outputFile = FileUtil.getOutputMediaFile(savedFile, "Wowza");
-            if (outputFile != null)
-                goCoderSDK.setMp4WriterPath(outputFile.toString());
-            else {
-                Log.w(TAG, "changeStatusBroadcast: " + "Could not create or access the directory in which to store the MP");
-                mainView.showError("Could not create or access the directory in which to store the MP");
-            }
+//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+//            File outputFile = FileUtil.getOutputMediaFile(savedFile, "Wowza");
+//            if (outputFile != null)
+//                goCoderSDK.setMp4WriterPath(outputFile.toString());
+//            else {
+//                Log.w(TAG, "changeStatusBroadcast: " + "Could not create or access the directory in which to store the MP");
+//                mainView.showError("Could not create or access the directory in which to store the MP");
+//            }
             goCoderSDK.startBroadcast();
             return true;
         }
@@ -142,11 +155,31 @@ public class BroadcastPresenterImpl implements MainPresenter,
     }
 
     public void stopBroadcast() {
+        if (isBroadcasting){
+            if (audioManager.isMicrophoneMute() == false) {
+                audioManager.setMicrophoneMute(true);
+            }
+        }
         isBroadcasting = false;
+        isStoppingBroadcast = true;
+
         // Stop the broadcast that is currently running
-        goCoderSDK.stopBroadcast();
-        updateView(ChannelActivity.UIState.READY);
+        updateView(ChannelActivity.UIState.BROADCASTING_STOPPING);
+        goCoderSDK.stopBroadcast(getTimeDelay());
         checkifTranscoderIsConnected();
+    }
+
+    private long getTimeDelay() {
+        if (bcStartTime == null)
+            return 0;
+        long timeDelay;
+        if (transcoderStartTime == null)
+            transcoderStartTime = new Date();
+        timeDelay = transcoderStartTime.getTime() - bcStartTime.getTime();
+
+        transcoderStartTime = null;
+        bcStartTime = null;
+        return timeDelay;
     }
 
     public void _startStream() {
@@ -162,7 +195,8 @@ public class BroadcastPresenterImpl implements MainPresenter,
         /**
          * Stop the Stream in the Wowza Cloud
          */
-        goCoderSDK.stopBroadcast();
+        if (isBroadcasting)
+            goCoderSDK.stopBroadcast(0); //Here check if you need to use the timeDelay
         isStreaming = false;
         ischeckingStreaming = false;
         isCheckingtranscoder = false;
@@ -255,9 +289,29 @@ public class BroadcastPresenterImpl implements MainPresenter,
         if (state == WZState.IDLE) {
             updateView(ChannelActivity.UIState.READY);
             isBroadcasting = false;
+            if (isStoppingBroadcast){
+                isStoppingBroadcast = false;
+                audioManager.setMicrophoneMute(false);
+            }
             showToast(message);
         }
-        else if (mainView != null) {
+        else if (state == WZState.READY){
+            if (!isBroadcasting)
+                stopBroadcast();
+        }
+        else if(state == WZState.RUNNING){
+            if (isBroadcasting) {
+                bcStartTime = new Date();
+                MediaPlayer mp = MediaPlayer.create(context, R.raw.sound);
+                mp.start();
+                updateView(ChannelActivity.UIState.BROADCASTING);
+                checkifTranscoderIsConnected();
+            }
+            else{
+                stopBroadcast();
+            }
+        }
+        else if (mainView != null && !((Activity) context).isFinishing()) {
             ((Activity) context).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -290,7 +344,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
 
     @Override
     public void notifyTranscoderStatus(boolean isConnected, String message) {
-        if (isStreaming && !isBroadcasting) {
+        if (isStreaming && !isBroadcasting && !isStoppingBroadcast) {
             if (isCheckingtranscoder) {
                 if (isConnected) {
                     if (bbPlayer.isPlaying())
@@ -302,8 +356,18 @@ public class BroadcastPresenterImpl implements MainPresenter,
                     }
                 } else {
                     if (bbPlayer.isPlaying()){
-                        isCheckingtranscoder = false;
-                        bbPlayer.stop();
+                        if (ischeckingStreaming) {
+                            checkifTranscoderIsConnected();
+                        }
+                        else{
+//                            bbPlayer.stop();
+                            Log.d(TAG, "notifyTranscoderStatus: Broadcast Stop and the BBPlayer is muted");
+
+                            bbPlayer.mute();
+
+//                            if (isCheckingtranscoder)
+//                                isCheckingtranscoder = false;
+                        }
                     }
                     else
                         checkifTranscoderIsConnected();
@@ -311,6 +375,15 @@ public class BroadcastPresenterImpl implements MainPresenter,
             }
             else {
                 showToast("notifyTranscoderStatus: Case need to catch");
+            }
+        }
+        else if(isStreaming && isBroadcasting){
+            if(isConnected) {
+                transcoderStartTime = new Date();
+                isCheckingtranscoder = false;
+            }
+            else{
+                checkifTranscoderIsConnected();
             }
         }
 
@@ -324,11 +397,7 @@ public class BroadcastPresenterImpl implements MainPresenter,
 //    }
 
     private void startPlayRTSP() {
-        try {
-            bbPlayer.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        bbPlayer.start();
 
     }
 
@@ -342,25 +411,32 @@ public class BroadcastPresenterImpl implements MainPresenter,
                 break;
 
             case STOPPED:
-            case ERROR_UNKNOWN:
-            case AUDIO_STREAM_COMPLETED:
                 updateView(ChannelActivity.UIState.READY);
-                if (!isCheckingtranscoder)
-                    checkifTranscoderIsConnected();
+                checkifTranscoderIsConnected();
+                break;
+            case ERROR_UNKNOWN:
+                updateView(ChannelActivity.UIState.ERROR);
+                message = "Error!";
                 break;
 
-            case AUDIO_STREAM_END:
-                Toast.makeText(context, "CREATE A STATE AUDIO_STREAM_END", Toast.LENGTH_SHORT).show();
+            case AUDIO_STREAM_COMPLETED:
+                showToast(state.toString());
+                updateView(ChannelActivity.UIState.READY);
+                checkifTranscoderIsConnected();
                 break;
-            case AUDIO_STREAM_START:
-                Toast.makeText(context, "CREATE A STATE AUDIO_STREAM_START", Toast.LENGTH_SHORT).show();
-                break;
-            case INFO_UNKNOWN:
-                Toast.makeText(context, "CREATE A STATE INFO_UNKNOWN", Toast.LENGTH_SHORT).show();
-                break;
-            case PREPARING:
-                Toast.makeText(context, "CREATE A STATE PREPARING", Toast.LENGTH_SHORT).show();
-                break;
+
+//            case AUDIO_STREAM_END:
+//                Toast.makeText(context, "CREATE A STATE AUDIO_STREAM_END", Toast.LENGTH_SHORT).show();
+//                break;
+//            case AUDIO_STREAM_START:
+//                Toast.makeText(context, "CREATE A STATE AUDIO_STREAM_START", Toast.LENGTH_SHORT).show();
+//                break;
+//            case INFO_UNKNOWN:
+//                Toast.makeText(context, "CREATE A STATE INFO_UNKNOWN", Toast.LENGTH_SHORT).show();
+//                break;
+//            case PREPARING:
+//                Toast.makeText(context, "CREATE A STATE PREPARING", Toast.LENGTH_SHORT).show();
+//                break;
         }
     }
 }

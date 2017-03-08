@@ -1,10 +1,12 @@
 package com.randmcnally.bb.wowza.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,7 +22,6 @@ import com.randmcnally.bb.wowza.view.MainView;
 public class HomeActivity extends AppCompatActivity implements MainView {
     private static final String TAG = "HomeActivity ->";
 
-    private ProgressBar progressBar;
 
     public HomePresenterImpl presenter;
 
@@ -37,10 +38,11 @@ public class HomeActivity extends AppCompatActivity implements MainView {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+
         viewPager = (ViewPager) findViewById(R.id.pager);
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Channel"));
-        tabLayout.addTab(tabLayout.newTab().setText("Contacts"));
+//        tabLayout.addTab(tabLayout.newTab().setText("Contacts"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         pagerAdapter = new PagerAdapter
@@ -65,9 +67,13 @@ public class HomeActivity extends AppCompatActivity implements MainView {
         });
 
         presenter = new HomePresenterImpl(getApplicationContext());
+        if (!presenter.isNetworkAvailable()){
+            startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+        }
         presenter.attachView(this);
 
-        progressBar = (ProgressBar) findViewById(R.id.main_progress);
+
+
 
     }
 
@@ -100,13 +106,13 @@ public class HomeActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showProgress() {
-        progressBar.setVisibility(View.VISIBLE);
+//        progressBar.setVisibility(View.VISIBLE);
 
     }
 
     @Override
     public void hideProgress() {
-        progressBar.setVisibility(View.GONE);
+//        progressBar.setVisibility(View.GONE);
 
     }
 

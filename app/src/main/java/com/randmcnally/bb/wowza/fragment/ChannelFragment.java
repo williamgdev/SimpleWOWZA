@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
@@ -27,6 +28,7 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
     ChannelPresenterImpl presenter;
     RecyclerView recyclerView;
     DialogTextFragment dialogFragment;
+    private ProgressBar progressBar;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -34,6 +36,7 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
         // Inflate the layout for this fragment
         final View view = inflater.inflate(R.layout.fragment_channel, container, false);
         recyclerView = (RecyclerView) view.findViewById(R.id.channel_recycler_view);
+        progressBar = (ProgressBar) view.findViewById(R.id.channel_progress);
 
         presenter = new ChannelPresenterImpl(this);
 //        updateUI();
@@ -44,6 +47,7 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
 //                showDialog();
 //            }
 //        });
+
         return view;
     }
 
@@ -59,6 +63,8 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setAdapter(mAdapter);
+//        mAdapter.notifyDataSetChanged();
+
 
     }
 /**
@@ -92,11 +98,12 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
 
     @Override
     public void showProgress() {
-
+        progressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hideProgress() {
+        progressBar.setVisibility(View.GONE);
 
     }
 

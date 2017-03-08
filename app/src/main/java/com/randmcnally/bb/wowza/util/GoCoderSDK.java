@@ -1,8 +1,10 @@
 package com.randmcnally.bb.wowza.util;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.callback.StreamStatusCallback;
@@ -21,6 +23,8 @@ import com.wowza.gocoder.sdk.api.mp4.WZMP4Writer;
 import com.wowza.gocoder.sdk.api.status.WZState;
 import com.wowza.gocoder.sdk.api.status.WZStatus;
 import com.wowza.gocoder.sdk.api.status.WZStatusCallback;
+
+import java.sql.Time;
 
 public class GoCoderSDK {
     private static final String SDK_API_KEY = "GOSK-5943-0103-A15E-86A3-BA36";
@@ -50,6 +54,7 @@ public class GoCoderSDK {
     private WZMP4Writer mp4Writer;
 
     WowzaStatusCallback statusCallback;
+    private Context context;
 
 
     public static GoCoderSDK getInstance() {
@@ -64,6 +69,7 @@ public class GoCoderSDK {
         this.hostAddress = hostAddress;
         this.appName = appName;
         this.statusCallback = statusCallback;
+        this.context = context;
         // Initialize the GoCoder SDK
         goCoder = WowzaGoCoder.init(context, SDK_API_KEY);
 
@@ -99,10 +105,6 @@ public class GoCoderSDK {
         // Designate the audio device as the audio broadcaster
         goCoderBroadcastConfig.setAudioBroadcaster(goCoderAudioDevice);
 
-        // Use the WZMP4Writer to save the audio file while broadcasting
-        mp4Writer = new WZMP4Writer();
-        goCoderBroadcastConfig.registerAudioSink(mp4Writer);
-        goCoderBroadcastConfig.registerVideoSink(mp4Writer);
         goCoderBroadcastConfig.setVideoEnabled(false);
 
         return true;
@@ -127,6 +129,11 @@ public class GoCoderSDK {
     }
 
     public void setMp4WriterPath(String mp4WriterPath) {
+        // Use the WZMP4Writer to save the audio file while broadcasting
+        mp4Writer = new WZMP4Writer();
+        goCoderBroadcastConfig.registerAudioSink(mp4Writer);
+        goCoderBroadcastConfig.registerVideoSink(mp4Writer);
+
         this.mp4Writer.setFilePath(mp4WriterPath);
     }
 
@@ -135,9 +142,28 @@ public class GoCoderSDK {
             goCoderBroadcaster.startBroadcast(goCoderBroadcastConfig, statusCallback);
     }
 
-    public void stopBroadcast() {
-        if (isBroadcasting())
-            goCoderBroadcaster.endBroadcast(statusCallback);
+    /**
+     * Use the timeDelay to stop the broadcast and mute the microphone
+     * @param timesDelay
+     */
+    public void stopBroadcast(long timesDelay) {
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (isBroadcasting())
+                    goCoderBroadcaster.endBroadcast(statusCallback);
+
+            }
+        }, timesDelay);
+
+//        try {
+//            Thread.sleep(timesDelay);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        goCoderBroadcaster.endBroadcast(statusCallback);
+
     }
 
 //    public void _startStreaming(){

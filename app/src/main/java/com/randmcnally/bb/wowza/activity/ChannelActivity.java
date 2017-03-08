@@ -3,6 +3,7 @@ package com.randmcnally.bb.wowza.activity;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.randmcnally.bb.wowza.R;
+import com.randmcnally.bb.wowza.custom.BBTouchListener;
 import com.randmcnally.bb.wowza.presenter.BroadcastPresenterImpl;
 import com.randmcnally.bb.wowza.view.MainView;
 import com.randmcnally.bb.wowza.custom.PlayGifView;
@@ -37,6 +39,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_channel);
 
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -46,9 +49,9 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         txtTitle = (TextView) findViewById(R.id.toolbar_txt_title);
         txtTitle.setText(getIntent().getStringExtra("channel_name"));
         iconToolBar = (ImageView) findViewById(R.id.toolbar_icon);
-        iconToolBar.setVisibility(View.GONE);final
-        Drawable upArrow = getResources().getDrawable(R.drawable.abc_ic_ab_back_material);
-        upArrow.setColorFilter(getResources().getColor(R.color.colorGray), PorterDuff.Mode.SRC_ATOP);
+        iconToolBar.setVisibility(View.GONE);
+        Drawable upArrow = ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_white);
+        upArrow.setColorFilter(ContextCompat.getColor(this, R.color.colorGray), PorterDuff.Mode.SRC_ATOP);
         getSupportActionBar().setHomeAsUpIndicator(upArrow);
 
         txtState = (TextView) findViewById(R.id.channel_txt_state);
@@ -60,7 +63,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         layoutBroadcast = (LinearLayout) findViewById(R.id.channel_layout_broadcast);
         layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
         layoutText = (RelativeLayout) findViewById(R.id.channel_layout_text);
-        layoutBroadcast.setOnTouchListener(broadcastTouchListener);
+        layoutBroadcast.setOnTouchListener(bbTouchListener);
 
 //        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
 
@@ -100,6 +103,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 imgSpeak.setVisibility(View.GONE);
                 txtState.setText(R.string.loading);
                 imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_disabled);
+                layoutBroadcast.setEnabled(false);
                 break;
 
             case READY:
@@ -109,22 +113,59 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 txtState.setText(R.string.ready);
                 txtState.setTextColor(Color.BLACK);
                 imgBroadcast.setImageResource(R.drawable.icon_microphone_ready);
-                layoutBroadcast.setBackgroundColor(getResources().getColor(R.color.colorGray));
-                layoutSpeaker.setBackgroundColor(getResources().getColor(R.color.colorGray));
-                layoutText.setBackgroundColor(getResources().getColor(R.color.colorGray));
+                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutSpeaker.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
                 iconBroadcast.setVisibility(View.INVISIBLE);
+                layoutBroadcast.setEnabled(true);
                 break;
 
             case BROADCASTING:
                 gifLoading.setVisibility(View.GONE);
                 imgSpeak.setVisibility(View.VISIBLE);
                 imgSpeak.setImageResource(R.drawable.ic_icon_speaker_disabled);
+//                iconBroadcast.setVisibility(View.VISIBLE);
+//                imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_sending);
+//                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+//                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+                txtState.setText(R.string.broadcasting);
+//                txtState.setTextColor(Color.WHITE);
+//                layoutBroadcast.setEnabled(true);
+
+                break;
+
+            case BROADCASTING_PREPARING:
+                gifLoading.setVisibility(View.VISIBLE);
+                imgSpeak.setVisibility(View.GONE);
+//                imgSpeak.setImageResource(R.drawable.ic_icon_speaker_disabled);
                 iconBroadcast.setVisibility(View.VISIBLE);
                 imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_sending);
-                layoutBroadcast.setBackgroundColor(getResources().getColor(R.color.colorGreen));
-                layoutText.setBackgroundColor(getResources().getColor(R.color.colorGreen));
-                txtState.setText(R.string.broadcasting);
+                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+                txtState.setText(R.string.loading);
                 txtState.setTextColor(Color.WHITE);
+                layoutBroadcast.setEnabled(true);
+
+
+
+                break;
+
+            case BROADCASTING_STOPPING:
+                gifLoading.setVisibility(View.VISIBLE);
+                imgSpeak.setVisibility(View.GONE);
+
+
+//                gifLoading.setVisibility(View.GONE);
+//                imgSpeak.setVisibility(View.VISIBLE);
+                imgSpeak.setImageResource(R.drawable.icon_speaker_ready);
+                txtState.setText(R.string.loading);
+                txtState.setTextColor(Color.BLACK);
+                imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_disabled);
+                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutSpeaker.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                iconBroadcast.setVisibility(View.INVISIBLE);
+                layoutBroadcast.setEnabled(true);
 
                 break;
 
@@ -135,10 +176,11 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
                 iconBroadcast.setVisibility(View.VISIBLE);
                 imgSpeak.setImageResource(R.drawable.ic_icon_speaker_enabled);
                 imgBroadcast.setImageResource(R.drawable.ic_icon_microphone_disabled);
-                layoutSpeaker.setBackgroundColor(getResources().getColor(R.color.colorBlue));
-                layoutBroadcast.setBackgroundColor(getResources().getColor(R.color.colorGray));
-                layoutText.setBackgroundColor(getResources().getColor(R.color.colorBlue));
+                layoutSpeaker.setBackgroundColor(ContextCompat.getColor(this, R.color.colorBlue));
+                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorBlue));
                 txtState.setTextColor(Color.WHITE);
+                layoutBroadcast.setEnabled(false);
                 break;
 
             case ERROR:
@@ -147,58 +189,28 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
         }
     }
 
-
-    private View.OnTouchListener broadcastTouchListener = new View.OnTouchListener() {
+    private String TAG = "Channel ->";
+    private BBTouchListener bbTouchListener = new BBTouchListener() {
         @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            // get pointer index from the event object
-            int pointerIndex = event.getActionIndex();
-
-            // get pointer ID
-            int pointerId = event.getPointerId(pointerIndex);
-
-            // get masked (not specific to a pointer) action
-            int maskedAction = event.getActionMasked();
-            int action = event.getAction();
-
-            switch (maskedAction) {
-
-                case MotionEvent.ACTION_DOWN:
-                case MotionEvent.ACTION_POINTER_DOWN: {
-                    // TODO use data
-                    // start broadcasting
-                    if (presenter.isBroadcasting()){
-                        presenter.stopBroadcast();
-                    }
-                    else if (!presenter.isPlaying() && currentState != UIState.LOADING) {
-                        Log.d("simulate", "onTouch: " +  !presenter.isBroadcasting() + " " + !presenter.isPlaying() + " " + (currentState != UIState.LOADING));
-                        presenter.startBroadcast();
-                    }
-                    break;
-                }
-                case MotionEvent.ACTION_MOVE: { // a pointer was moved
-                    // TODO use data
-                    break;
-                }
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                case MotionEvent.ACTION_CANCEL: {
-                    // TODO use data
-
-                    // TODO use data
-                    // Do something if you press and hold
-
-                    break;
-                }
+        public void oNTouchStart() {
+            if (!presenter.isBroadcasting() && !presenter.isPlaying() && currentState != UIState.LOADING) {
+                presenter.startBroadcast();
+                Log.d(TAG, "oNTouchStart: ");
             }
+        }
 
-            return true;
+        @Override
+        public void oNTouchEnd() {
+            if (presenter.isBroadcasting()){
+                presenter.stopBroadcast();
+                Log.d(TAG, "oNTouchStop: ");
+            }
         }
     };
 
     @Override
     public void showMessage(String text) {
-        txtState.setText(text);
+        //txtState.setText(text);
     }
 
     @Override
@@ -230,6 +242,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onPause() {
         super.onPause();
+        presenter.detachView();
         presenter.stopStream();
     }
 
@@ -253,7 +266,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView {
     }
 
     public enum UIState {
-        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, ERROR
+        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, BROADCASTING_PREPARING, BROADCASTING_STOPPING, ERROR
     }
 
 }
