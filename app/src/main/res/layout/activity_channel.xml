@@ -18,7 +18,7 @@
         android:layout_weight="3"
         android:gravity="center_horizontal|center_vertical">
 
-        <com.randmcnally.bb.wowza.custom.PlayGifView
+        <com.randmcnally.bb.poc.custom.PlayGifView
             android:id="@+id/channel_view_gif"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -28,7 +28,7 @@
             android:id="@+id/channel_img_microphone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_icon_speaker_disabled"
+            android:src="@drawable/icon_speaker_disabled"
             android:visibility="visible" />
 
     </LinearLayout>
@@ -37,7 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/channel_layout_text"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingBottom="10dp"
@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="18dp"
             android:layout_marginTop="10dp"
-            android:src="@drawable/ic_icon_broadcast"
+            android:src="@drawable/icon_broadcast"
             android:visibility="invisible" />
 
         <TextView
@@ -82,6 +82,12 @@
             android:paddingTop="@dimen/activity_vertical_margin"
             android:src="@drawable/icon_microphone_ready" />
     </LinearLayout>
+
+    <!--<SurfaceView-->
+        <!--android:id="@+id/surfaceView"-->
+        <!--android:layout_width="320px"-->
+        <!--android:layout_height="240px"-->
+        <!--/>-->
 
 
 </LinearLayout>

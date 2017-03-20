@@ -15,3 +15,9 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontwarn com.fasterxml.**
+-dontwarn org.eclipse.paho.client.mqttv3.**
+
+-keep class me.pushy.** { *; }
+-keep class com.fasterxml.** { *; }
+-keep class org.eclipse.paho.client.mqttv3.** { *; }
