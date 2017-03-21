@@ -1,1 +1,1 @@
-include ':app', ':greendao-gradle-plugin-3.2.1', ':apache-mina'
+include ':app', ':greendao-gradle-plugin-3.2.1', ':apache-mina', ':pushy-jackson', ':pushy-sdk-1.0.24'
