@@ -108,7 +108,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         presenter.loadData();
 
         new RegisterForPushNotificationsAsync().execute();
-        PushyReceiver receiver = new PushyReceiver();
+
         receiver.setPusyhReceiverListener(new PushyReceiver.PushyReceiverListener() {
             @Override
             public void notifyPushyStatus(boolean online, String streamName) {
@@ -120,10 +120,11 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
                 }
             }
         });
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter());
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter("pushy.me"));
 
     }
 
+    PushyReceiver receiver = new PushyReceiver();
     String deviceToken;
     private class RegisterForPushNotificationsAsync extends AsyncTask<Void, Void, Exception> {
         protected Exception doInBackground(Void... params) {
