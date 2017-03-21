@@ -8,11 +8,16 @@ import com.randmcnally.bb.poc.activity.ChannelActivity;
 import com.randmcnally.bb.poc.callback.StatusLiveStreamCallback;
 import com.randmcnally.bb.poc.custom.BBPlayer;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
+import com.randmcnally.bb.poc.restservice.PushyAPI;
 import com.randmcnally.bb.poc.view.MainView;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerBBPlayer,
         R5ConnectionListener, StatusLiveStreamCallback.LiveStreamListener{
@@ -213,4 +218,7 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
         }
     }
 
+    public void stopListen() {
+        interactor.stopListen();
+    }
 }

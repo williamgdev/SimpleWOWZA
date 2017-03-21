@@ -2,6 +2,7 @@ package com.randmcnally.bb.poc.network;
 
 import com.google.gson.JsonObject;
 import com.randmcnally.bb.poc.restservice.ApiService;
+import com.randmcnally.bb.poc.restservice.NotificationServiceAPI;
 
 import okhttp3.Request;
 import retrofit2.Retrofit;
@@ -11,13 +12,25 @@ public class ServiceFactory {
     private static final String TAG = "Service Factory ->";
 
 
-    public static ApiService createAPiService(String baseUrl){
+    public static ApiService createStreamAPIService(String baseUrl){
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         ApiService apiService = retrofit.create(ApiService.class);
+
+        return apiService;
+
+    }
+
+    public static NotificationServiceAPI createNotificationAPIService(String baseUrl){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        NotificationServiceAPI apiService = retrofit.create(NotificationServiceAPI.class);
 
         return apiService;
 

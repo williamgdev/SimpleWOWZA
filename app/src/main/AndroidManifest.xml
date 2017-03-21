@@ -31,7 +31,7 @@
         <activity android:name="com.randmcnally.bb.poc.activity.ChannelActivity"
             android:screenOrientation="portrait" />
         <activity android:name="com.randmcnally.bb.poc.activity.ReceiverActivity"></activity>
-        <receiver android:name=".receiver.PushReceiver" android:exported="false">
+        <receiver android:name=".receiver.PushyReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="pushy.me" />
             </intent-filter>

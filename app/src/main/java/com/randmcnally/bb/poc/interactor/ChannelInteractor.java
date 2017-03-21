@@ -1,12 +1,8 @@
 package com.randmcnally.bb.poc.interactor;
 
-import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.SurfaceView;
-import android.widget.Toast;
 
-import com.randmcnally.bb.poc.activity.ChannelActivity;
 import com.randmcnally.bb.poc.callback.StatusLiveStreamCallback;
 import com.randmcnally.bb.poc.network.ServiceFactory;
 import com.randmcnally.bb.poc.restservice.ApiService;
@@ -14,7 +10,6 @@ import com.red5pro.streaming.R5Connection;
 import com.red5pro.streaming.R5Stream;
 import com.red5pro.streaming.R5StreamProtocol;
 import com.red5pro.streaming.config.R5Configuration;
-import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 import com.red5pro.streaming.source.R5Microphone;
 
@@ -51,7 +46,7 @@ public class ChannelInteractor{
         stream = new R5Stream(connection);
 
 
-        apiService = ServiceFactory.createAPiService(getBaseUrlAPI());
+        apiService = ServiceFactory.createStreamAPIService(getBaseUrlAPI());
 
     }
 

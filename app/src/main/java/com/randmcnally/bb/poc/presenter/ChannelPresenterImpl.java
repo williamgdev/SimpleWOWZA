@@ -24,7 +24,7 @@ public class ChannelPresenterImpl {
     public ChannelPresenterImpl(ChannelFragment view) {
         this.context = view.getContext();
         this.mainView = view;
-//        apiService = ServiceFactory.createAPiService();
+//        apiService = ServiceFactory.createStreamAPIService();
 
         loadData();
     }

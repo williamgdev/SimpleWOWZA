@@ -1,22 +1,19 @@
 package com.randmcnally.bb.poc.activity;
 
 import android.Manifest;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -24,17 +21,27 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.randmcnally.bb.poc.R;
+import com.randmcnally.bb.poc.callback.PushyCallback;
 import com.randmcnally.bb.poc.custom.BBTouchListener;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
+import com.randmcnally.bb.poc.network.ServiceFactory;
 import com.randmcnally.bb.poc.presenter.BroadcastPresenterImpl;
+import com.randmcnally.bb.poc.receiver.PushyReceiver;
+import com.randmcnally.bb.poc.restservice.NotificationServiceAPI;
+import com.randmcnally.bb.poc.restservice.PushyAPI;
 import com.randmcnally.bb.poc.view.MainView;
 import com.randmcnally.bb.poc.custom.PlayGifView;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import me.pushy.sdk.Pushy;
-import me.pushy.sdk.util.exceptions.PushyException;
 
 public class ChannelActivity extends AppCompatActivity implements MainView{
     BroadcastPresenterImpl presenter;
@@ -101,14 +108,28 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         presenter.loadData();
 
         new RegisterForPushNotificationsAsync().execute();
+        PushyReceiver receiver = new PushyReceiver();
+        receiver.setPusyhReceiverListener(new PushyReceiver.PushyReceiverListener() {
+            @Override
+            public void notifyPushyStatus(boolean online, String streamName) {
+                if (online){
+                    presenter.startListen();
+                }
+                else{
+                    presenter.stopListen();
+                }
+            }
+        });
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter());
 
     }
 
+    String deviceToken;
     private class RegisterForPushNotificationsAsync extends AsyncTask<Void, Void, Exception> {
         protected Exception doInBackground(Void... params) {
             try {
                 // Assign a unique token to this device
-                String deviceToken = Pushy.register(getApplicationContext());
+                deviceToken = Pushy.register(getApplicationContext());
 
                 // Log it for debugging purposes
                 Log.d("MyApp", "Pushy device token: " + deviceToken);
@@ -136,6 +157,53 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
 
             // Succeeded, do something to alert the user
         }
+    }
+
+    public static final String SECRET_API_KEY = "8cc782d407f0f3830391081a8e3633b5adfb924c1b1dc8d1d1c9977c656b75d6";
+    public static final String BASE_URL = "https://api.pushy.me/";
+
+    public void sendNotification() {
+        if (deviceToken == null){
+            Log.d("MyApp", "sendNotification: Error registration");
+            return;
+        }
+        // Prepare list of target device tokens
+        List<String> deviceTokens = new ArrayList<String>();
+
+        // Add your device tokens here
+        if (deviceToken.equals("b2e2a47764542343d732e9"))
+            deviceTokens.add("3f58671baede6ab28bcd8c");
+        else
+            deviceTokens.add("b2e2a47764542343d732e9");
+
+        // Set payload (any object, it will be serialized to JSON)
+        Map<String, String> payload = new HashMap<String, String>();
+
+        // Add "message" parameter to payload
+        payload.put("online", String.valueOf(presenter.isBroadcasting()));
+        payload.put("stream_name", txtTitle.getText().toString());
+
+        // Prepare the push request
+        PushyAPI.PushyPushRequest push = new PushyAPI.PushyPushRequest(
+                payload,
+                deviceTokens.toArray(new String[deviceTokens.size()])
+        );
+
+        NotificationServiceAPI serviceAPI = ServiceFactory.createNotificationAPIService(BASE_URL);
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+        try {
+            json = mapper.writeValueAsString(push);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        serviceAPI.sendNotification(push, SECRET_API_KEY).enqueue(new PushyCallback(new PushyCallback.PushyListener() {
+            @Override
+            public void errorPushy(String message) {
+                Log.d("MyApp", "errorPushy: " + message);
+            }
+        }));
+
     }
 
     @Override
@@ -209,6 +277,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         public void oNTouchStart() {
             if (!presenter.isBroadcasting() && !presenter.isPlaying() && currentState != UIState.LOADING) {
                 presenter.startBroadcast();
+                sendNotification();
             }
         }
 
@@ -216,7 +285,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         public void oNTouchEnd() {
             if (presenter.isBroadcasting()) {
                 presenter.stopBroadcast();
-//                presenter.starListen();
+                sendNotification();
             }
 
         }

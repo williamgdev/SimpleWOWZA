@@ -60,7 +60,7 @@ public class ReceiverPresenterImpl implements MainPresenter {
 
 //
 //    public void stopListenRecording() {
-//        mediaPlayer.stop();
+//        mediaPlayer.stopListen();
 //        mediaPlayer.release();
 //    }
 //

@@ -15,7 +15,7 @@ public interface ApiService {
     @GET("applications/{appname}/streams/{streamname}")
     Call<LiveStreamResponse> getLiveStreamStatistics(@Path("appname") String appName,
                                                      @Path("streamname") String streamName,
-                                                     @Query("accessToken") String securityToken);
+                                                         @Query("accessToken") String securityToken);
 
 
 //    @POST("live_streams")
