@@ -1,12 +1,19 @@
 package com.randmcnally.bb.poc.activity;
 
 import android.Manifest;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.media.RingtoneManager;
 import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -51,6 +58,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
     RelativeLayout layoutText;
     PlayGifView gifLoading;
     UIState currentState;
+
 //    private ActionBar actionbar;
 
 
@@ -109,22 +117,28 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
 
         new RegisterForPushNotificationsAsync().execute();
 
-        receiver.setPusyhReceiverListener(new PushyReceiver.PushyReceiverListener() {
-            @Override
-            public void notifyPushyStatus(boolean online, String streamName) {
-                if (online){
-                    presenter.startListen();
-                }
-                else{
-                    presenter.stopListen();
-                }
-            }
-        });
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter("pushy.me"));
-
+        LocalBroadcastManager.getInstance(this).registerReceiver(mSelectionReceiver, new IntentFilter("pushy.me"));
     }
 
-    PushyReceiver receiver = new PushyReceiver();
+    private BroadcastReceiver mSelectionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            String online = "";
+
+            if (intent.getStringExtra("online") != null) {
+                online = intent.getStringExtra("online");
+            }
+            if (online.equals("true")) {
+                presenter.startListen();
+            }
+            else {
+                presenter.stopListen();
+
+            }
+        }
+    };
+
     String deviceToken;
     private class RegisterForPushNotificationsAsync extends AsyncTask<Void, Void, Exception> {
         protected Exception doInBackground(Void... params) {
@@ -163,7 +177,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
     public static final String SECRET_API_KEY = "8cc782d407f0f3830391081a8e3633b5adfb924c1b1dc8d1d1c9977c656b75d6";
     public static final String BASE_URL = "https://api.pushy.me/";
 
-    public void sendNotification() {
+    public void sendNotification(boolean b) {
         if (deviceToken == null){
             Log.d("MyApp", "sendNotification: Error registration");
             return;
@@ -181,7 +195,8 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         Map<String, String> payload = new HashMap<String, String>();
 
         // Add "message" parameter to payload
-        payload.put("online", String.valueOf(presenter.isBroadcasting()));
+//        payload.put("online", String.valueOf(presenter.isBroadcasting()));
+        payload.put("online", String.valueOf(b));
         payload.put("stream_name", txtTitle.getText().toString());
 
         // Prepare the push request
@@ -191,13 +206,6 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         );
 
         NotificationServiceAPI serviceAPI = ServiceFactory.createNotificationAPIService(BASE_URL);
-        ObjectMapper mapper = new ObjectMapper();
-        String json = "";
-        try {
-            json = mapper.writeValueAsString(push);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         serviceAPI.sendNotification(push, SECRET_API_KEY).enqueue(new PushyCallback(new PushyCallback.PushyListener() {
             @Override
             public void errorPushy(String message) {
@@ -278,7 +286,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         public void oNTouchStart() {
             if (!presenter.isBroadcasting() && !presenter.isPlaying() && currentState != UIState.LOADING) {
                 presenter.startBroadcast();
-                sendNotification();
+                sendNotification(true);
             }
         }
 
@@ -286,7 +294,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         public void oNTouchEnd() {
             if (presenter.isBroadcasting()) {
                 presenter.stopBroadcast();
-                sendNotification();
+                sendNotification(false);
             }
 
         }

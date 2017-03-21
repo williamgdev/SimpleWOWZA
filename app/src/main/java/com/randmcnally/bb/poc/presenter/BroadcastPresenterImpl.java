@@ -154,6 +154,7 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
 
     @Override
     public void onConnectionEvent(R5ConnectionEvent r5ConnectionEvent) {
+        showToast(r5ConnectionEvent.message);
         switch (r5ConnectionEvent) {
             case CONNECTED:
                 break;
@@ -195,8 +196,9 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
             case ERROR:
             case FAILURE:
                 isStreaming = false;
-                if (interactor.isCheckingStream() && !interactor.isListening())
+                if (interactor.isCheckingStream() && !interactor.isListening()) {
                     startListen();
+                }
                 else if (interactor.isListening()){
                     interactor.stop();
                     updateView(ChannelActivity.UIState.READY);
@@ -206,7 +208,7 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
                 if (interactor.isCheckingStream()){
                     isStreaming = true;
                     if (interactor.isListening()) {
-                        interactor.checkStream(liveStreamCallback);
+//                        interactor.checkStream(liveStreamCallback);
                     }
                     else {
                         interactor.stopCheckStream();
