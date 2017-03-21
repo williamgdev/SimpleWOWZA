@@ -51,7 +51,7 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
     @Override
     public void loadData() {
         updateView(ChannelActivity.UIState.READY);
-        startListen();
+//        startListen();
     }
 
     @Override

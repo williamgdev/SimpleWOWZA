@@ -16,10 +16,11 @@ import com.red5pro.streaming.source.R5Microphone;
 public class ChannelInteractor{
 
     private static final String IP_ADDRESS = "192.168.43.212";
+//    private static final String IP_ADDRESS = "192.168.1.233";
     private static final int STREAM_PORT = 8554;
     private static final int API_PORT = 5080;
     private static final String APP_NAME = "live";
-    private static final String LICENSE_KEY = "2WDZ-GOA3-XZJJ-YFZE";
+    private static final String LICENSE_KEY = "I4JO-QKWW-WM42-52TR";
     private static final String APP_ID = "com.randmcnally.bb.poc";
     private static final String ACCESS_TOKEN = "123";
     private final ApiService apiService;
