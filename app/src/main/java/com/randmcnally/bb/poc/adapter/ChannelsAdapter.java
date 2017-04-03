@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.randmcnally.bb.poc.R;
-import com.randmcnally.bb.poc.database.Channel;
+import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.fragment.ChannelFragment;
 
 import java.util.List;

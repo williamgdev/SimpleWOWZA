@@ -1,11 +1,16 @@
 package com.randmcnally.bb.poc.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class FileUtil {
 
@@ -35,4 +40,21 @@ public class FileUtil {
         return savedFile;
     }
 
+    public static String getDeviceUID(Context context) {
+        SharedPreferences settings = context.getSharedPreferences("Config", MODE_PRIVATE);
+        String uniqueID = settings.getString("UUID", "");
+        if (uniqueID.isEmpty()) {
+            uniqueID = createUID(context);
+        }
+        return uniqueID;
+    }
+
+    public static String createUID(Context context) {
+        String uniqueID = UUID.randomUUID().toString();
+        SharedPreferences setting = context.getSharedPreferences("Config", MODE_PRIVATE);
+        SharedPreferences.Editor editor = setting.edit();
+        editor.putString("UUID", uniqueID);
+        editor.apply();
+        return uniqueID;
+    }
 }

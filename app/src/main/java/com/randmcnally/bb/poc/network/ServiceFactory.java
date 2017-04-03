@@ -2,14 +2,22 @@ package com.randmcnally.bb.poc.network;
 
 import com.google.gson.JsonObject;
 import com.randmcnally.bb.poc.restservice.ApiService;
-import com.randmcnally.bb.poc.restservice.NotificationServiceAPI;
+import com.randmcnally.bb.poc.restservice.OpenFireApiService;
 
 import okhttp3.Request;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 public class ServiceFactory {
     private static final String TAG = "Service Factory ->";
+
+
+    public static final String HOST_NAME = "192.168.43.212";
+    public static final String USER_EMAIL_ADDRESS = "@" + HOST_NAME;
+    public static final String XMPP_DOMAIN = "openfire.test";
+    public static final String BASE_URL_OPENFIRE_API = "http://" + HOST_NAME + ":9090/plugins/restapi/v1/";
+    public static final String GROUPCHAT_SERVICE = "randmcnally";
 
 
     public static ApiService createStreamAPIService(String baseUrl){
@@ -23,14 +31,14 @@ public class ServiceFactory {
         return apiService;
 
     }
-
-    public static NotificationServiceAPI createNotificationAPIService(String baseUrl){
+    public static OpenFireApiService createOpenFireAPIService(){
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
+                .baseUrl(BASE_URL_OPENFIRE_API)
+                .client(OpenFireInterceptor.buildHttpClient())
+                .addConverterFactory(SimpleXmlConverterFactory.create())
                 .build();
 
-        NotificationServiceAPI apiService = retrofit.create(NotificationServiceAPI.class);
+        OpenFireApiService apiService = retrofit.create(OpenFireApiService.class);
 
         return apiService;
 

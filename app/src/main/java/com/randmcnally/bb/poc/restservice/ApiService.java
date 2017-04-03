@@ -1,11 +1,10 @@
 package com.randmcnally.bb.poc.restservice;
 
 
-import com.randmcnally.bb.poc.dto.LiveStreamResponse;
+import com.randmcnally.bb.poc.dto.red5pro.LiveStreamResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 

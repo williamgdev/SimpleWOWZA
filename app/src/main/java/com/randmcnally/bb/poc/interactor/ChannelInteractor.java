@@ -6,53 +6,51 @@ import android.os.Looper;
 import com.randmcnally.bb.poc.callback.StatusLiveStreamCallback;
 import com.randmcnally.bb.poc.network.ServiceFactory;
 import com.randmcnally.bb.poc.restservice.ApiService;
-import com.red5pro.streaming.R5Connection;
-import com.red5pro.streaming.R5Stream;
-import com.red5pro.streaming.R5StreamProtocol;
-import com.red5pro.streaming.config.R5Configuration;
+import com.randmcnally.bb.poc.util.BroadcasterStream;
+import com.randmcnally.bb.poc.util.ReceiverStream;
 import com.red5pro.streaming.event.R5ConnectionListener;
-import com.red5pro.streaming.source.R5Microphone;
+
+import java.util.ArrayList;
 
 public class ChannelInteractor{
 
-    private static final String IP_ADDRESS = "192.168.43.212";
-//    private static final String IP_ADDRESS = "192.168.1.233";
-    private static final int STREAM_PORT = 8554;
-    private static final int API_PORT = 5080;
-    private static final String APP_NAME = "live";
-    private static final String LICENSE_KEY = "I4JO-QKWW-WM42-52TR";
-    private static final String APP_ID = "com.randmcnally.bb.poc";
-    private static final String ACCESS_TOKEN = "123";
-    private final ApiService apiService;
-    private R5Configuration configuration;
-    private R5Stream stream;
-    private R5Connection connection;
+    private final ApiService _apiService;
 
-    private String streamName, channelName;
+    private BroadcasterStream broadcasterStream;
+    private ReceiverStream receiverStream;
+
+    private String _streamName, publishStreamName, channelName;
     private boolean isBroadcasting, isListening;
     private boolean isCheckingStream;
 
     private InteractorListener interatorListener;
+    private boolean isMute;
+    private R5ConnectionListener listener;
+    private String receiverStreamName;
+    private int counter;
 
-    public ChannelInteractor(String streamName, String channelName) {
-        this.streamName = streamName;
+    public ChannelInteractor(String streamName, String channelName, R5ConnectionListener listener) {
+        this._streamName = streamName;
+        publishStreamName = getPublishStreamName(streamName);
         this.channelName = channelName;
+        this.listener = listener;
+
+        broadcasterStream = new BroadcasterStream(listener);
+        receiverStream = new ReceiverStream(listener);
+
 
         //    http://localhost:5080/api/v1/applications/live/streams/rand_mcnally?accessToken=123
-
-        configuration = new R5Configuration(R5StreamProtocol.RTSP, IP_ADDRESS,  STREAM_PORT, APP_NAME, 1.0f);
-        configuration.setLicenseKey(LICENSE_KEY);
-        configuration.setBundleID(APP_ID);
-        connection = new R5Connection(configuration);
-        stream = new R5Stream(connection);
-
-
-        apiService = ServiceFactory.createStreamAPIService(getBaseUrlAPI());
+        _apiService = ServiceFactory.createStreamAPIService(receiverStream.getBaseUrlAPI());
 
     }
 
-    public void setR5ConnectionListener(R5ConnectionListener listener){
-        stream.setListener(listener);
+    private String getPublishStreamName(String streamName) {
+        return streamName + "_" + nextCounter();
+    }
+
+    private int nextCounter() {
+        counter ++;
+        return getCounter();
     }
 
     public void setInteratorListener(InteractorListener interatorListener){
@@ -64,30 +62,50 @@ public class ChannelInteractor{
      * @return name of the file created on the server
      */
     public String startBroadcast() {
+        if (broadcasterStream == null)
+            broadcasterStream = new BroadcasterStream(listener);
+
         if (isListening)
             stop();
         isBroadcasting = true;
         isCheckingStream = false;
 
-        R5Microphone r5Microphone = new R5Microphone();
-        stream.attachMic(r5Microphone);
+        broadcasterStream.startBroadcast(getPublishStreamName(_streamName));
 
-        stream.publish(streamName, R5Stream.RecordType.Record);
-
-        return streamName;
+        return publishStreamName;
     }
 
     public void stop() {
-        if (stream != null) {
-            stream.stop();
+        if (isBroadcasting) {
+            broadcasterStream.stopBroadcast();
+            isBroadcasting = false;
+            broadcasterStream = null; //Testing if it is work
         }
-        isBroadcasting = false;
-        isListening = false;
+        else if(isListening) {
+            receiverStream.stop();
+            isListening = false;
+            receiverStream = null;
+        }
+
     }
 
-    public void play() {
-        isListening = true;
-        stream.play(streamName);
+    public void play(String receiverStreamName, String stream_id) {
+        this.receiverStreamName = receiverStreamName;
+
+        if (receiverStream == null)
+            receiverStream = new ReceiverStream(listener);
+        if (!isListening || isMute) {
+            isListening = true;
+            counter = Integer.parseInt(stream_id);
+            receiverStream.play(receiverStreamName + "_" + counter);
+            isMute = false;
+        }
+    }
+
+    public void stopListen() {
+        if (isListening)
+            stop();
+        stopCheckStream();
     }
 
     public boolean isBroadcasting() {
@@ -98,29 +116,19 @@ public class ChannelInteractor{
         return isListening;
     }
 
-    public void checkStream(final StatusLiveStreamCallback liveStreamCallback) {
+    /**
+     * This method is deprecated
+     * @param liveStreamCallback
+     */
+    public void _checkStream(final StatusLiveStreamCallback liveStreamCallback) {
         isCheckingStream = true;
         final Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                apiService.getLiveStreamStatistics(APP_NAME, streamName, ACCESS_TOKEN).enqueue(liveStreamCallback);
+                _apiService.getLiveStreamStatistics(receiverStream.APP_NAME, receiverStreamName, receiverStream.ACCESS_TOKEN).enqueue(liveStreamCallback);
             }
         }, 500);
-    }
-
-    public static String getURLStream(String streamName){
-        return "http://" + IP_ADDRESS + ":" + STREAM_PORT + "/api/v1/applications/live/streams/" + streamName + "?accessToken=" + ACCESS_TOKEN;
-    }
-
-    public static String getBaseUrlAPI(){
-        return "http://" + IP_ADDRESS + ":" + API_PORT + "/api/v1/";
-    }
-
-
-    public void stopListen() {
-        if (isListening)
-            stop();
     }
 
     public boolean isCheckingStream() {
@@ -131,8 +139,26 @@ public class ChannelInteractor{
         isCheckingStream = false;
     }
 
+    public void muteAudio() {
+        isMute = true;
+    }
+
+    public boolean isMute() {
+        return isMute;
+    }
+
+    public int getCounter() {
+        if (counter > 5)
+            counter = 0;
+        return counter;
+    }
+
     public interface InteractorListener{
         enum STATE {STREAM_CONNECTED, STREAM_DISCONNECTED}
         void notifyInteractorState(STATE state);
+    }
+
+    public String getStreamName() {
+        return _streamName;
     }
 }

@@ -1,32 +1,57 @@
 package com.randmcnally.bb.poc.presenter;
 
+import android.app.Activity;
 import android.content.Context;
+import android.widget.Toast;
 
-import com.randmcnally.bb.poc.database.Channel;
+import com.randmcnally.bb.poc.callback.ChatRoomCallback;
+import com.randmcnally.bb.poc.callback.EmptyCallback;
+import com.randmcnally.bb.poc.dto.openfire.UserRequest;
+import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.database.ChannelDao;
 import com.randmcnally.bb.poc.database.DaoSession;
 import com.randmcnally.bb.poc.network.ServiceFactory;
-import com.randmcnally.bb.poc.restservice.ApiService;
 import com.randmcnally.bb.poc.fragment.ChannelFragment;
+import com.randmcnally.bb.poc.restservice.OpenFireApiService;
+import com.randmcnally.bb.poc.util.FileUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class ChannelPresenterImpl {
+public class ChannelPresenterImpl implements ChatRoomCallback.ChatRoomCallbackListener{
     Context context;
-    DaoSession daoSession;
+//    DaoSession daoSession;
     ChannelFragment mainView;
     List<Channel> channels;
-    ChannelDao channelDao;
-    private ApiService apiService;
+//    ChannelDao channelDao;
+    private OpenFireApiService apiService;
 
     public ChannelPresenterImpl(ChannelFragment view) {
         this.context = view.getContext();
         this.mainView = view;
-//        apiService = ServiceFactory.createStreamAPIService();
+        apiService = ServiceFactory.createOpenFireAPIService();
+        String uniqueID = FileUtil.getDeviceUID(context);
 
+
+        apiService = ServiceFactory.createOpenFireAPIService();
+        apiService.createUser(new UserRequest(uniqueID, uniqueID)).enqueue(new EmptyCallback(new EmptyCallback.EmptyCallbackListener() {
+            @Override
+            public void onCreateError(String message) {
+                showToast(message);
+            }
+        }));
         loadData();
+    }
+
+    private void showToast(final String message){
+        ((Activity)context).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, message , Toast.LENGTH_LONG).show();
+            }
+        });
+
     }
 
     public void loadData() {
@@ -40,33 +65,28 @@ public class ChannelPresenterImpl {
 //        channelDao = daoSession.getChannelDao();
 //        channels = channelDao.loadAll();
 
-        /**
-         * the code bellow retreive all channels using the /LiveStreams Rest Call
-         */
-//        apiService.getAllLiveStreams().enqueue(allStreamsCallback);
+        apiService.getChatRooms(ServiceFactory.GROUPCHAT_SERVICE).enqueue(new ChatRoomCallback(this));
 
         /**
          * This is only for the Demo
          */
-        channels = new ArrayList<>();
-        Channel demoChannel = new Channel();
-        demoChannel.setName("Rand McNally");
-        demoChannel.setStreamName("rand_mcnally");
-        channels.add(demoChannel);
+//        channels = new ArrayList<>();
+//        Channel demoChannel = new Channel();
+//        demoChannel.setName("Rand McNally");
+//        demoChannel.setStreamName("rand_mcnally");
+//        channels.add(demoChannel);
 
-    }
-
-    private void updateChannelItems() {
-        /**
-         * use this code when you are using thr Local Database
-         */
-//        channels = channelDao.loadAll();
-
-        mainView.updateUI();
     }
 
     public List<Channel> getChannels() {
         return channels;
+    }
+
+    @Override
+    public void notifyChatRoomResponse(List<Channel> channels) {
+        this.channels = channels;
+        mainView.updateUI();
+
     }
 
     /**

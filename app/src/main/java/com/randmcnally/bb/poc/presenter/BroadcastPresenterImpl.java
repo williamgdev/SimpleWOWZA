@@ -2,56 +2,67 @@ package com.randmcnally.bb.poc.presenter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
+import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.activity.ChannelActivity;
-import com.randmcnally.bb.poc.callback.StatusLiveStreamCallback;
-import com.randmcnally.bb.poc.custom.BBPlayer;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
-import com.randmcnally.bb.poc.restservice.PushyAPI;
+import com.randmcnally.bb.poc.restservice.OpenFireApiService;
+import com.randmcnally.bb.poc.util.FileUtil;
+import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.MainView;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Date;
 
-public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerBBPlayer,
-        R5ConnectionListener, StatusLiveStreamCallback.LiveStreamListener{
+
+public class BroadcastPresenterImpl implements MainPresenter,
+        R5ConnectionListener, OpenFireServer.OpenFireServerListener{
     private static final String TAG = "Broadcast ->";
-    private final StatusLiveStreamCallback liveStreamCallback;
+
+    private final AudioManager audioManager;
 
     MainView mainView;
     Context context;
     ChannelInteractor interactor;
     String message;
 
-    private BBPlayer bbPlayer;
     private boolean isStreaming;
+    Date streamStartTime;
+    Date bcStartTime;
+    private String receiverStreamName;
 
 
-    public BroadcastPresenterImpl(Context context, ChannelInteractor interactor) {
+    OpenFireApiService apiService;
+    OpenFireServer openFireServer;
+
+
+    public BroadcastPresenterImpl(Context context, String streamName, String channelName) {
         this.context = context;
-        this.interactor = interactor;
-        interactor.setR5ConnectionListener(this);
+        this.interactor = new ChannelInteractor(streamName, channelName, this);
 
-        liveStreamCallback = new StatusLiveStreamCallback(this);
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
-        try {
-            bbPlayer = new BBPlayer("", this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String uniqueUID = FileUtil.getDeviceUID(context);
+        openFireServer = OpenFireServer.getInstance(uniqueUID);
+        openFireServer.setListener(this);
 
+    }
+
+
+        public boolean isPreparing() {
+        return preparing;
     }
 
     @Override
     public void loadData() {
         updateView(ChannelActivity.UIState.READY);
-//        startListen();
     }
 
     @Override
@@ -66,15 +77,58 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
 
     }
 
+    static boolean preparing;
     public void startBroadcast() {
-        String fileName = interactor.startBroadcast(); //Send the filename to the Receiver
-        updateView(ChannelActivity.UIState.BROADCASTING);
+        bcStartTime = new Date();
+
+        preparing = true;
+        if (audioManager.isMicrophoneMute() == false) {
+            audioManager.setMicrophoneMute(true);
+        }
+        updateView(ChannelActivity.UIState.BROADCASTING_PREPARING);
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (preparing) {
+                    preparing = false;
+                    final MediaPlayer mp = MediaPlayer.create(context, R.raw.sound);
+                    mp.start();
+                    audioManager.setMicrophoneMute(false);
+
+                    interactor.startBroadcast(); //Send the filename to the Receiver
+
+                    updateView(ChannelActivity.UIState.BROADCASTING);
+                }
+            }
+        }, 500);
     }
 
     public void stopBroadcast() {
-        updateView(ChannelActivity.UIState.READY);
-        interactor.stop();
+        if (preparing){
+            preparing = false;
+            updateView(ChannelActivity.UIState.READY);
+            return;
+        }
+        updateView(ChannelActivity.UIState.BROADCASTING_STOPPING);
+        long time = getTimeDelay();
+
+        audioManager.setMicrophoneMute(true);
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                interactor.stop();
+                audioManager.setMicrophoneMute(false);
+                updateView(ChannelActivity.UIState.READY);
+//                sendNotification(false);
+            }
+        }, time);
+
     }
+
 
     public boolean isBroadcasting() {
         return interactor.isBroadcasting();
@@ -85,9 +139,7 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
     }
 
     public boolean isPlaying() {
-        if (bbPlayer != null)
-            return bbPlayer.isPlaying();
-        return false;
+        return interactor.isListening();
     }
 
     void updateView(final ChannelActivity.UIState state) {
@@ -111,116 +163,139 @@ public class BroadcastPresenterImpl implements MainPresenter, BBPlayer.ListenerB
 
     }
 
-    @Override
-    public void onListener(BBPlayer.BBPLAYER state) {
-        switch (state) {
-            case PLAYING:
-                updateView(ChannelActivity.UIState.RECEIVING);
-                break;
-
-            case STOPPED:
-            case ERROR_UNKNOWN:
-            case AUDIO_STREAM_COMPLETED:
-                showToast(state.toString());
-                updateView(ChannelActivity.UIState.READY);
-                break;
-
-            case AUDIO_STREAM_END:
-                Toast.makeText(context, "CREATE A STATE AUDIO_STREAM_END", Toast.LENGTH_SHORT).show();
-                break;
-            case AUDIO_STREAM_START:
-                Toast.makeText(context, "CREATE A STATE AUDIO_STREAM_START", Toast.LENGTH_SHORT).show();
-                break;
-            case INFO_UNKNOWN:
-                Toast.makeText(context, "CREATE A STATE INFO_UNKNOWN", Toast.LENGTH_SHORT).show();
-                break;
-            case PREPARING:
-                Toast.makeText(context, "CREATE A STATE PREPARING", Toast.LENGTH_SHORT).show();
-                break;
-        }
-    }
-
-
-
-    public void startListen() {
+    public void startListen(String streamName, String stream_id) {
+        bcStartTime = new Date();
+        this.receiverStreamName = streamName;
         if (interactor.isBroadcasting()){
             interactor.stop();
         }
-        if (!isStreaming){
-            interactor.checkStream(liveStreamCallback);
+        if(interactor.isMute() || !isPlaying()){
+            isStreaming = true;
+            interactor.play(receiverStreamName, stream_id);
+            updateView(ChannelActivity.UIState.RECEIVING);
         }
     }
 
 
     @Override
     public void onConnectionEvent(R5ConnectionEvent r5ConnectionEvent) {
-        showToast(r5ConnectionEvent.message);
+//        showToast(r5ConnectionEvent.name());
         switch (r5ConnectionEvent) {
-            case CONNECTED:
-                break;
             case DISCONNECTED:
-                showToast(r5ConnectionEvent.message);
-                updateView(ChannelActivity.UIState.READY);
-                break;
-            case ERROR:
-                break;
-            case TIMEOUT:
-                break;
-            case CLOSE:
+                if (isStreaming) {
+                    updateView(ChannelActivity.UIState.READY);
+                    isStreaming = false;
+                }
                 break;
             case START_STREAMING:
-                break;
-            case STOP_STREAMING:
+                if (isBroadcasting()) {
+                    openFireServer.sendNotification(interactor.getStreamName(), interactor.getCounter());
+                    showToast("STREAMING");
+                }
+                streamStartTime = new Date();
+
                 break;
             case NET_STATUS:
+                switch (r5ConnectionEvent.message){
+                    case "NetStream.Play.UnpublishNotify":
+                        interactor.muteAudio();
+                        interactor.stopListen();
+                        updateView(ChannelActivity.UIState.READY);
+                        break;
+                    case "NetStream.Play.PublishNotify":
+                        updateView(ChannelActivity.UIState.RECEIVING);
+                        if (isStreaming)
+                            startListen(receiverStreamName, String.valueOf(interactor.getCounter()));
+                            streamStartTime = new Date();
+
+                        break;
+                    default:
+                        showToast(r5ConnectionEvent.name());
+                        break;
+                }
                 break;
-            case AUDIO_MUTE:
-                break;
-            case AUDIO_UNMUTE:
-                break;
-            case VIDEO_MUTE:
+            case ERROR:
+            case CLOSE:
+                if (isPlaying() || isBroadcasting())
+                    stopListen();
                 break;
             case VIDEO_UNMUTE:
-                break;
-            case LICENSE_ERROR:
+            case CONNECTED:
+//                if (!isBroadcasting())
+//                    bcStartTime = new Date();
+            case AUDIO_UNMUTE:
+                streamStartTime = new Date();
                 break;
             case LICENSE_VALID:
                 break;
-        }
-    }
-
-
-    @Override
-    public void notifyLiveStreamStatus(StatusLiveStreamCallback.LiveStreamListener.STATUS status, String message) {
-        switch (status) {
-            case ERROR:
-            case FAILURE:
-                isStreaming = false;
-                if (interactor.isCheckingStream() && !interactor.isListening()) {
-                    startListen();
-                }
-                else if (interactor.isListening()){
-                    interactor.stop();
-                    updateView(ChannelActivity.UIState.READY);
-                }
-                break;
-            case CONNECTED:
-                if (interactor.isCheckingStream()){
-                    isStreaming = true;
-                    if (interactor.isListening()) {
-//                        interactor.checkStream(liveStreamCallback);
-                    }
-                    else {
-                        interactor.stopCheckStream();
-                        interactor.play();
-                        updateView(ChannelActivity.UIState.RECEIVING);
-                    }
-                }
+            case TIMEOUT:
+            case STOP_STREAMING:
+            case AUDIO_MUTE:
+            case VIDEO_MUTE:
+            case LICENSE_ERROR:
+            default:
+                showToast(r5ConnectionEvent.name());
                 break;
         }
     }
 
     public void stopListen() {
-        interactor.stopListen();
+        long time = getTimeDelay();
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                interactor.stopListen();
+                updateView(ChannelActivity.UIState.READY);
+            }
+        }, time);
     }
+
+
+    private long getTimeDelay() {
+        if (bcStartTime == null)
+            return 0;
+        long timeDelay;
+        if (streamStartTime == null)
+            streamStartTime = new Date();
+        timeDelay = streamStartTime.getTime() - bcStartTime.getTime();
+
+        streamStartTime = null;
+        bcStartTime = null;
+        return timeDelay;
+    }
+
+    @Override
+    public void notifyStatusOpenFireServer(STATE state, String message) {
+        showToast(state.toString());
+        switch (state) {
+            case ERROR:
+                mainView.showError(message);
+                break;
+            case CONNECTION_CLOSED:
+                break;
+            case RECONNECTION_SUCCESS:
+                break;
+            case RECONNECTION_FAILED:
+                break;
+            case CONNECTED:
+                break;
+        }
+    }
+
+    @Override
+    public void notifyMessage(final String streamName, final String streamId) {
+        if (!isBroadcasting()) {
+            final Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    startListen(streamName, streamId);
+                }
+            });
+        }
+        Log.d(TAG, "processMessage: " + streamName + ": " + streamId);
+
+    }
+
 }

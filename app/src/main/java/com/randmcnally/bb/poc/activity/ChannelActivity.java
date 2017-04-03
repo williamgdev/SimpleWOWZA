@@ -1,8 +1,6 @@
 package com.randmcnally.bb.poc.activity;
 
 import android.Manifest;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,16 +8,12 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.media.RingtoneManager;
-import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -28,27 +22,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.randmcnally.bb.poc.R;
-import com.randmcnally.bb.poc.callback.PushyCallback;
 import com.randmcnally.bb.poc.custom.BBTouchListener;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
-import com.randmcnally.bb.poc.network.ServiceFactory;
 import com.randmcnally.bb.poc.presenter.BroadcastPresenterImpl;
-import com.randmcnally.bb.poc.receiver.PushyReceiver;
-import com.randmcnally.bb.poc.restservice.NotificationServiceAPI;
-import com.randmcnally.bb.poc.restservice.PushyAPI;
 import com.randmcnally.bb.poc.view.MainView;
 import com.randmcnally.bb.poc.custom.PlayGifView;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import me.pushy.sdk.Pushy;
 
 public class ChannelActivity extends AppCompatActivity implements MainView{
     BroadcastPresenterImpl presenter;
@@ -67,7 +47,6 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
 
         super.onCreate(savedInstanceState);
 
-        Pushy.listen(this);
         // Check whether the user has granted us the READ/WRITE_EXTERNAL_STORAGE permissions
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             // Request both READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE so that the
@@ -106,21 +85,19 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         updateUI(UIState.LOADING);
 
 
-        presenter = new BroadcastPresenterImpl(this, new ChannelInteractor(
+        presenter = new BroadcastPresenterImpl(this,
                 getIntent().getStringExtra("stream_name"),
-                getIntent().getStringExtra("channel_name"))
-        );
+                getIntent().getStringExtra("channel_name"));
         presenter.attachView(this);
 
         //Start the Stream as soon as possible
         presenter.loadData();
 
-        new RegisterForPushNotificationsAsync().execute();
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mSelectionReceiver, new IntentFilter("pushy.me"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(localNotificationReceiver, new IntentFilter("pushy.me"));
     }
 
-    private BroadcastReceiver mSelectionReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver localNotificationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -130,90 +107,16 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
                 online = intent.getStringExtra("online");
             }
             if (online.equals("true")) {
-                presenter.startListen();
+                if (intent.getStringExtra("stream_name") != null && intent.getStringExtra("stream_id") != null)
+                    presenter.startListen(intent.getStringExtra("stream_name"), intent.getStringExtra("stream_id"));
+                else {
+                    Toast.makeText(context, "Error: No stream name received", Toast.LENGTH_SHORT).show();
+                }
             }
             else {
-                presenter.stopListen();
-
             }
         }
     };
-
-    String deviceToken;
-    private class RegisterForPushNotificationsAsync extends AsyncTask<Void, Void, Exception> {
-        protected Exception doInBackground(Void... params) {
-            try {
-                // Assign a unique token to this device
-                deviceToken = Pushy.register(getApplicationContext());
-
-                // Log it for debugging purposes
-                Log.d("MyApp", "Pushy device token: " + deviceToken);
-
-                // Send the token to your backend server via an HTTP GET request
-                new URL("https://{YOUR_API_HOSTNAME}/register/device?token=" + deviceToken).openConnection();
-            }
-            catch (Exception exc) {
-                // Return exc to onPostExecute
-                return exc;
-            }
-
-            // Success
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Exception exc) {
-            // Failed?
-            if (exc != null) {
-                // Show error as toast message
-                Toast.makeText(getApplicationContext(), exc.toString(), Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            // Succeeded, do something to alert the user
-        }
-    }
-
-    public static final String SECRET_API_KEY = "8cc782d407f0f3830391081a8e3633b5adfb924c1b1dc8d1d1c9977c656b75d6";
-    public static final String BASE_URL = "https://api.pushy.me/";
-
-    public void sendNotification(boolean b) {
-        if (deviceToken == null){
-            Log.d("MyApp", "sendNotification: Error registration");
-            return;
-        }
-        // Prepare list of target device tokens
-        List<String> deviceTokens = new ArrayList<String>();
-
-        // Add your device tokens here
-        if (deviceToken.equals("b2e2a47764542343d732e9"))
-            deviceTokens.add("3f58671baede6ab28bcd8c");
-        else
-            deviceTokens.add("b2e2a47764542343d732e9");
-
-        // Set payload (any object, it will be serialized to JSON)
-        Map<String, String> payload = new HashMap<String, String>();
-
-        // Add "message" parameter to payload
-//        payload.put("online", String.valueOf(presenter.isBroadcasting()));
-        payload.put("online", String.valueOf(b));
-        payload.put("stream_name", txtTitle.getText().toString());
-
-        // Prepare the push request
-        PushyAPI.PushyPushRequest push = new PushyAPI.PushyPushRequest(
-                payload,
-                deviceTokens.toArray(new String[deviceTokens.size()])
-        );
-
-        NotificationServiceAPI serviceAPI = ServiceFactory.createNotificationAPIService(BASE_URL);
-        serviceAPI.sendNotification(push, SECRET_API_KEY).enqueue(new PushyCallback(new PushyCallback.PushyListener() {
-            @Override
-            public void errorPushy(String message) {
-                Log.d("MyApp", "errorPushy: " + message);
-            }
-        }));
-
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -261,6 +164,34 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
                 txtState.setTextColor(Color.WHITE);
 
                 break;
+            case BROADCASTING_PREPARING:
+                gifLoading.setVisibility(View.VISIBLE);
+                imgSpeak.setVisibility(View.GONE);
+                iconBroadcast.setVisibility(View.VISIBLE);
+                imgBroadcast.setImageResource(R.drawable.icon_microphone_sending);
+                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+                txtState.setText(R.string.loading);
+                txtState.setTextColor(Color.WHITE);
+                layoutBroadcast.setEnabled(true);
+                break;
+
+            case BROADCASTING_STOPPING:
+                gifLoading.setVisibility(View.VISIBLE);
+                imgSpeak.setVisibility(View.GONE);
+                imgSpeak.setImageResource(R.drawable.icon_speaker_ready);
+                txtState.setText(R.string.loading);
+                txtState.setTextColor(Color.BLACK);
+                imgBroadcast.setImageResource(R.drawable.icon_microphone_disabled);
+                layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutSpeaker.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
+                iconBroadcast.setVisibility(View.INVISIBLE);
+                layoutBroadcast.setEnabled(true);
+
+                break;
+
+
 
             case RECEIVING:
                 txtState.setText(R.string.receiving);
@@ -286,15 +217,13 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         public void oNTouchStart() {
             if (!presenter.isBroadcasting() && !presenter.isPlaying() && currentState != UIState.LOADING) {
                 presenter.startBroadcast();
-                sendNotification(true);
             }
         }
 
         @Override
         public void oNTouchEnd() {
-            if (presenter.isBroadcasting()) {
+            if (presenter.isBroadcasting() || presenter.isPreparing()) {
                 presenter.stopBroadcast();
-                sendNotification(false);
             }
 
         }
@@ -337,12 +266,15 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         presenter.detachView();
         if (presenter.isBroadcasting())
             presenter.stopBroadcast();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(localNotificationReceiver);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         presenter.loadData();
+        presenter.attachView(this);
+        LocalBroadcastManager.getInstance(this).registerReceiver(localNotificationReceiver, new IntentFilter("pushy.me"));
     }
 
     @Override
@@ -352,7 +284,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
     }
 
     public enum UIState {
-        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, ERROR
+        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, BROADCASTING_PREPARING, BROADCASTING_STOPPING, ERROR
     }
 
 }

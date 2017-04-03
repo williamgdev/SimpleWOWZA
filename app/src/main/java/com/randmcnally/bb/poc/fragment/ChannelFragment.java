@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.ChannelsAdapter;
-import com.randmcnally.bb.poc.database.Channel;
+import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.activity.ChannelActivity;
@@ -35,7 +35,7 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
         recyclerView = (RecyclerView) view.findViewById(R.id.channel_recycler_view);
 
         presenter = new ChannelPresenterImpl(this);
-        updateUI();
+//        updateUI();
 //        fab = (FloatingActionButton) view.findViewById(R.id.channel_fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override

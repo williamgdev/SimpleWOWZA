@@ -31,24 +31,7 @@
         <activity android:name="com.randmcnally.bb.poc.activity.ChannelActivity"
             android:screenOrientation="portrait" />
         <activity android:name="com.randmcnally.bb.poc.activity.ReceiverActivity"></activity>
-        <receiver android:name=".receiver.PushyReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="pushy.me" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="me.pushy.sdk.receivers.PushyUpdateReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="me.pushy.sdk.receivers.PushyBootReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
 
-        <service android:name="me.pushy.sdk.services.PushySocketService"/>
 
     </application>
 
