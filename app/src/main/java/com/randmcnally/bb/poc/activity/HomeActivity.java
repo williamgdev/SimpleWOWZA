@@ -14,12 +14,11 @@ import com.randmcnally.bb.poc.presenter.HomePresenterImpl;
 import com.randmcnally.bb.poc.view.MainView;
 
 
-public class HomeActivity extends AppCompatActivity implements MainView {
+public class HomeActivity extends BaseActivity implements MainView {
     private static final String TAG = "HomeActivity ->";
 
-    private ProgressBar progressBar;
 
-    public HomePresenterImpl presenter;
+    public HomePresenterImpl    presenter;
 
     TabLayout tabLayout;
     ViewPager viewPager;
@@ -28,12 +27,49 @@ public class HomeActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        presenter = new HomePresenterImpl(this);
+        presenter.attachView(this);
 
+    }
+
+    @Override
+    protected int getToolbarLogoID() {
+        return R.id.toolbar_icon ;
+    }
+
+    @Override
+    protected boolean isToolBarLogoAdded() {
+        return true;
+    }
+
+    @Override
+    protected int getLayoutID() {
+        return R.layout.activity_home;
+    }
+
+    @Override
+    protected int getToolbarID() {
+        return R.id.toolbar;
+    }
+
+    @Override
+    protected boolean isToolbarAdded() {
+        return true;
+    }
+
+    @Override
+    protected int getProgressbarID() {
+        return R.id.main_progress;
+    }
+
+    @Override
+    protected boolean isProgressBarAdded() {
+        return true;
+    }
+
+    @Override
+    protected void initializeUIComponents() {
         viewPager = (ViewPager) findViewById(R.id.pager);
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Channel"));
@@ -60,11 +96,6 @@ public class HomeActivity extends AppCompatActivity implements MainView {
 
             }
         });
-
-        presenter = new HomePresenterImpl(this);
-        presenter.attachView(this);
-
-        progressBar = (ProgressBar) findViewById(R.id.main_progress);
 
     }
 
@@ -93,18 +124,6 @@ public class HomeActivity extends AppCompatActivity implements MainView {
     @Override
     public void updateView(ChannelActivity.UIState state) {
         // Update here the UI
-    }
-
-    @Override
-    public void showProgress() {
-        progressBar.setVisibility(View.VISIBLE);
-
-    }
-
-    @Override
-    public void hideProgress() {
-        progressBar.setVisibility(View.GONE);
-
     }
 
     @Override

@@ -1,19 +1,11 @@
 package com.randmcnally.bb.poc.activity;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,23 +16,22 @@ import android.widget.Toast;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.custom.BBTouchListener;
-import com.randmcnally.bb.poc.interactor.ChannelInteractor;
-import com.randmcnally.bb.poc.presenter.BroadcastPresenterImpl;
-import com.randmcnally.bb.poc.view.MainView;
+import com.randmcnally.bb.poc.presenter.ChannelPresenter;
+import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
+import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.custom.PlayGifView;
 
 
-public class ChannelActivity extends AppCompatActivity implements MainView{
-    BroadcastPresenterImpl presenter;
-    TextView txtState, txtTitle;
-    ImageView imgSpeak, imgBroadcast, iconBroadcast, iconToolBar;
+public class ChannelActivity extends BaseActivity implements ChannelView{
+    ChannelPresenter presenter;
+    TextView txtState;
+    ImageView imgSpeak, imgBroadcast, iconBroadcast;
     LinearLayout layoutBroadcast, layoutSpeaker;
     RelativeLayout layoutText;
     PlayGifView gifLoading;
     UIState currentState;
 
 //    private ActionBar actionbar;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,20 +45,7 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         }
 
-        setContentView(R.layout.activity_channel);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        txtTitle = (TextView) findViewById(R.id.toolbar_txt_title);
-        txtTitle.setText(getIntent().getStringExtra("channel_name"));
-        iconToolBar = (ImageView) findViewById(R.id.toolbar_icon);
-        iconToolBar.setVisibility(View.GONE);
-        final Drawable upArrow = ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_white);
-        getSupportActionBar().setHomeAsUpIndicator(upArrow);
+        setToolbarTitle(getIntent().getStringExtra("channel_name"));
 
         txtState = (TextView) findViewById(R.id.channel_txt_state);
         imgBroadcast = (ImageView) findViewById(R.id.channel_img_broadcast);
@@ -79,13 +57,13 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
         layoutText = (RelativeLayout) findViewById(R.id.channel_layout_text);
         layoutBroadcast.setOnTouchListener(bbTouchListener);
-
+        setToolbarBackIcon(R.drawable.ic_arrow_back_white);
 //        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
 
         updateUI(UIState.LOADING);
 
 
-        presenter = new BroadcastPresenterImpl(this,
+        presenter = new ChannelPresenterImpl(this,
                 getIntent().getStringExtra("stream_name"),
                 getIntent().getStringExtra("channel_name"));
         presenter.attachView(this);
@@ -93,30 +71,52 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
         //Start the Stream as soon as possible
         presenter.loadData();
 
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(localNotificationReceiver, new IntentFilter("pushy.me"));
     }
 
-    private BroadcastReceiver localNotificationReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
+    @Override
+    protected int getLayoutID() {
+        return R.layout.activity_channel;
+    }
 
-            String online = "";
+    @Override
+    protected int getToolbarID() {
+        return R.id.toolbar;
+    }
 
-            if (intent.getStringExtra("online") != null) {
-                online = intent.getStringExtra("online");
-            }
-            if (online.equals("true")) {
-                if (intent.getStringExtra("stream_name") != null && intent.getStringExtra("stream_id") != null)
-                    presenter.startListen(intent.getStringExtra("stream_name"), intent.getStringExtra("stream_id"));
-                else {
-                    Toast.makeText(context, "Error: No stream name received", Toast.LENGTH_SHORT).show();
-                }
-            }
-            else {
-            }
-        }
-    };
+    @Override
+    protected boolean isToolbarAdded() {
+        return true;
+    }
+
+    @Override
+    protected int getProgressbarID() {
+        return R.id.main_progress;
+    }
+
+    @Override
+    protected boolean isProgressBarAdded() {
+        return true;
+    }
+
+    @Override
+    protected void initializeUIComponents() {
+
+    }
+
+    @Override
+    protected boolean isToolBarLogoAdded() {
+        return false;
+    }
+
+    @Override
+    protected int getToolbarLogoID() {
+        return 0;
+    }
+
+    @Override
+    protected void setToolbarTitle(String title) {
+        titleToolBar.setText(title);
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -264,27 +264,18 @@ public class ChannelActivity extends AppCompatActivity implements MainView{
     protected void onPause() {
         super.onPause();
         presenter.detachView();
-        if (presenter.isBroadcasting())
-            presenter.stopBroadcast();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(localNotificationReceiver);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        presenter.loadData();
         presenter.attachView(this);
-        LocalBroadcastManager.getInstance(this).registerReceiver(localNotificationReceiver, new IntentFilter("pushy.me"));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         presenter.detachView();
-    }
-
-    public enum UIState {
-        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, BROADCASTING_PREPARING, BROADCASTING_STOPPING, ERROR
     }
 
 }

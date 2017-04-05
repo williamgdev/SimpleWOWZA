@@ -9,7 +9,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 
-public interface ApiService {
+public interface Red5ProApiService {
 
     @GET("applications/{appname}/streams/{streamname}")
     Call<LiveStreamResponse> getLiveStreamStatistics(@Path("appname") String appName,

@@ -3,18 +3,14 @@ package com.randmcnally.bb.poc.interactor;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.randmcnally.bb.poc.callback.StatusLiveStreamCallback;
-import com.randmcnally.bb.poc.network.ServiceFactory;
-import com.randmcnally.bb.poc.restservice.ApiService;
+import com.randmcnally.bb.poc.network.Red5ProApiManager;
 import com.randmcnally.bb.poc.util.BroadcasterStream;
 import com.randmcnally.bb.poc.util.ReceiverStream;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
-import java.util.ArrayList;
-
 public class ChannelInteractor{
 
-    private final ApiService _apiService;
+    private Red5ProApiManager apiService;
 
     private BroadcasterStream broadcasterStream;
     private ReceiverStream receiverStream;
@@ -38,9 +34,7 @@ public class ChannelInteractor{
         broadcasterStream = new BroadcasterStream(listener);
         receiverStream = new ReceiverStream(listener);
 
-
-        //    http://localhost:5080/api/v1/applications/live/streams/rand_mcnally?accessToken=123
-        _apiService = ServiceFactory.createStreamAPIService(receiverStream.getBaseUrlAPI());
+        apiService = Red5ProApiManager.getInstance();
 
     }
 
@@ -117,20 +111,35 @@ public class ChannelInteractor{
     }
 
     /**
-     * This method is deprecated
-     * @param liveStreamCallback
+     *
+     * @param streamName
+     *
+     * @deprecated  {will be removed in the next version} </br>
+     *              It is used to know if the stream are you working on is live.
      */
-    public void _checkStream(final StatusLiveStreamCallback liveStreamCallback) {
+    @Deprecated
+    public void _checkStream(final String streamName) {
         isCheckingStream = true;
         final Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                _apiService.getLiveStreamStatistics(receiverStream.APP_NAME, receiverStreamName, receiverStream.ACCESS_TOKEN).enqueue(liveStreamCallback);
+                apiService.getLiveStreamStatistics(streamName, new Red5ProApiManager.LiveStreamApiListener() {
+                    @Override
+                    public void onSuccess(String s) {
+
+                    }
+
+                    @Override
+                    public void onError(String s) {
+
+                    }
+                });
             }
         }, 500);
     }
 
+    @Deprecated
     public boolean isCheckingStream() {
         return isCheckingStream;
     }

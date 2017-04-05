@@ -14,16 +14,17 @@ import android.widget.Toast;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.ChannelsAdapter;
 import com.randmcnally.bb.poc.model.Channel;
-import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
+import com.randmcnally.bb.poc.presenter.ChannelFragmentPresenterImpl;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.activity.ChannelActivity;
+import com.randmcnally.bb.poc.view.MainView;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ChannelFragment extends Fragment implements ChannelView, DialogTextFragment.ListenerDialogFragment{
+public class ChannelFragment extends Fragment implements MainView, DialogTextFragment.ListenerDialogFragment{
 //    private FloatingActionButton fab;
-    ChannelPresenterImpl presenter;
+    ChannelFragmentPresenterImpl presenter;
     RecyclerView recyclerView;
     DialogTextFragment dialogFragment;
 
@@ -34,7 +35,7 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
         final View view = inflater.inflate(R.layout.fragment_channel, container, false);
         recyclerView = (RecyclerView) view.findViewById(R.id.channel_recycler_view);
 
-        presenter = new ChannelPresenterImpl(this);
+        presenter = new ChannelFragmentPresenterImpl(this);
 //        updateUI();
 //        fab = (FloatingActionButton) view.findViewById(R.id.channel_fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -97,5 +98,15 @@ public class ChannelFragment extends Fragment implements ChannelView, DialogText
     @Override
     public void showError(String error) {
         Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showMessage(String text) {
+
+    }
+
+    @Override
+    public void updateView(ChannelActivity.UIState state) {
+
     }
 }

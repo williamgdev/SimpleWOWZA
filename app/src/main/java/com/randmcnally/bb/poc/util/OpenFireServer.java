@@ -1,6 +1,6 @@
 package com.randmcnally.bb.poc.util;
 
-import com.randmcnally.bb.poc.network.ServiceFactory;
+import com.randmcnally.bb.poc.network.OpenFireApiManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
@@ -55,8 +55,8 @@ public class OpenFireServer implements ConnectionListener {
         try {
             configBuilder = XMPPTCPConnectionConfiguration.builder();
             configBuilder.setUsernameAndPassword(uniqueUID, uniqueUID);
-            configBuilder.setXmppDomain(ServiceFactory.XMPP_DOMAIN);
-            configBuilder.setHost(ServiceFactory.HOST_NAME);
+            configBuilder.setXmppDomain(OpenFireApiManager.XMPP_DOMAIN);
+            configBuilder.setHost(OpenFireApiManager.HOST_NAME);
             connection = new XMPPTCPConnection(configBuilder.build());
             connection.addConnectionListener(this);
 
