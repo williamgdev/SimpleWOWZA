@@ -20,7 +20,6 @@ import com.randmcnally.bb.poc.restservice.OpenFireApiService;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
-import com.randmcnally.bb.poc.view.MainView;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
@@ -31,10 +30,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         R5ConnectionListener, OpenFireServer.OpenFireServerListener{
     private static final String TAG = "Broadcast ->";
 
-    private final AudioManager audioManager;
-
-    MainView mainView;
-    Context context;
+    ChannelView channelView;
     ChannelInteractor interactor;
     String message;
 
@@ -50,15 +46,8 @@ public class ChannelPresenterImpl implements ChannelPresenter,
     OpenFireServer openFireServer;
 
 
-    public ChannelPresenterImpl(Context context, String streamName, String channelName) {
-        this.context = context;
+    public ChannelPresenterImpl(String streamName, String channelName) {
         this.interactor = new ChannelInteractor(streamName, channelName, this);
-
-        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-
-        String uniqueUID = FileUtil.getDeviceUID(context);
-        openFireServer = OpenFireServer.getInstance(uniqueUID);
-        openFireServer.setListener(this);
 
     }
 
@@ -90,25 +79,26 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
     @Override
     public void loadData() {
+        String uniqueUID = FileUtil.getDeviceUID(channelView.getContext());
+        openFireServer = OpenFireServer.getInstance(uniqueUID);
+        openFireServer.setListener(this);
         updateView(ChannelActivity.UIState.READY);
-        LocalBroadcastManager.getInstance(context).registerReceiver(localNotificationReceiver, new IntentFilter("pushy.me"));
     }
 
     @Override
     public void attachView(ChannelView mainView) {
-        this.mainView = mainView;
+        this.channelView = mainView;
         loadData();
-        LocalBroadcastManager.getInstance(context).registerReceiver(localNotificationReceiver, new IntentFilter("pushy.me"));
     }
 
     @Override
     public void detachView() {
-        mainView = null;
+        LocalBroadcastManager.getInstance(channelView.getContext()).unregisterReceiver(localNotificationReceiver);
         if (interactor.isListening())
             interactor.stopListen();
         if (isBroadcasting())
             stopBroadcast();
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(localNotificationReceiver);
+        channelView = null;
     }
 
     @Override
@@ -116,8 +106,8 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         bcStartTime = new Date();
 
         preparing = true;
-        if (audioManager.isMicrophoneMute() == false) {
-            audioManager.setMicrophoneMute(true);
+        if (channelView.getAudioManager().isMicrophoneMute() == false) {
+            channelView.setMicrophoneMute(true);
         }
         updateView(ChannelActivity.UIState.BROADCASTING_PREPARING);
 
@@ -127,9 +117,8 @@ public class ChannelPresenterImpl implements ChannelPresenter,
             public void run() {
                 if (preparing) {
                     preparing = false;
-                    final MediaPlayer mp = MediaPlayer.create(context, R.raw.sound);
-                    mp.start();
-                    audioManager.setMicrophoneMute(false);
+                    channelView.playBipSound();
+                    channelView.setMicrophoneMute(false);
 
                     interactor.startBroadcast(); //Send the filename to the Receiver
 
@@ -149,14 +138,14 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         updateView(ChannelActivity.UIState.BROADCASTING_STOPPING);
         long time = getTimeDelay();
 
-        audioManager.setMicrophoneMute(true);
+        channelView.setMicrophoneMute(true);
 
         final Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 interactor.stop();
-                audioManager.setMicrophoneMute(false);
+                channelView.setMicrophoneMute(false);
                 updateView(ChannelActivity.UIState.READY);
 //                sendNotification(false);
             }
@@ -181,23 +170,25 @@ public class ChannelPresenterImpl implements ChannelPresenter,
     }
 
     void updateView(final ChannelActivity.UIState state) {
-        if (mainView != null) {
-            ((Activity) context).runOnUiThread(new Runnable() {
+        if (channelView != null) {
+            ((Activity) channelView.getContext()).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mainView.updateView(state);
+                    channelView.updateView(state);
                 }
             });
         }
     }
 
     private void showToast(final String message){
-        ((Activity)context).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, message , Toast.LENGTH_LONG).show();
-            }
-        });
+        if (channelView != null) {
+            ((Activity) channelView.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(channelView.getContext(), message, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
 
     }
 
@@ -308,7 +299,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         showToast(state.toString());
         switch (state) {
             case ERROR:
-                mainView.showError(message);
+                channelView.showError(message);
                 break;
             case CONNECTION_CLOSED:
                 break;

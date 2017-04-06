@@ -7,39 +7,32 @@ import android.widget.Toast;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.network.OpenFireApiManager;
-import com.randmcnally.bb.poc.fragment.ChannelFragment;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.view.BaseView;
+import com.randmcnally.bb.poc.view.ChannelFragmentView;
+import com.randmcnally.bb.poc.view.ChannelView;
 
 import java.util.List;
 
 public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
-    Context context;
 //    DaoSession daoSession;
-    ChannelFragment mainView;
+    ChannelFragmentView channelFragmentView;
     List<Channel> channels;
 //    ChannelDao channelDao;
     private OpenFireApiManager apiManager;
 
-    public ChannelFragmentPresenterImpl(ChannelFragment view) {
-        this.context = view.getContext();
-        this.mainView = view;
-
-        loadData();
-    }
-
     private void showToast(final String message){
-        ((Activity)context).runOnUiThread(new Runnable() {
+        ((Activity)channelFragmentView.getContext()).runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context, message , Toast.LENGTH_LONG).show();
+                Toast.makeText(channelFragmentView.getContext(), message , Toast.LENGTH_LONG).show();
             }
         });
 
     }
 
     @Override
-    public void loadData() {
+    public void registerDevice() {
         /**
          * The code below allows you to save the channel you already create
          */
@@ -51,7 +44,7 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
 //        channels = channelDao.loadAll();
 
 
-        String uniqueID = FileUtil.getDeviceUID(context);
+        String uniqueID = FileUtil.getDeviceUID(channelFragmentView.getContext());
 
         apiManager = OpenFireApiManager.getInstance();
         apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiManager.CreateUserApiListener() {
@@ -66,17 +59,6 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
             }
         });
 
-        apiManager.getChatRooms(new OpenFireApiManager.ChatRoomApiListener() {
-            @Override
-            public void onSuccess(List<Channel> channels) {
-                setChannels(channels);
-            }
-
-            @Override
-            public void onError(String s) {
-
-            }
-        });
 
         /**
          * This is only for the Demo
@@ -90,25 +72,34 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
     }
 
     @Override
-    public List<Channel> getChannels() {
-        return channels;
+    public void getChannels() {
+        apiManager.getChatRooms(new OpenFireApiManager.ChatRoomApiListener() {
+            @Override
+            public void onSuccess(List<Channel> channels) {
+                channelFragmentView.setChannels(channels);
+            }
+
+            @Override
+            public void onError(String s) {
+
+            }
+        });
     }
 
     @Override
     public void setChannels(List<Channel> channels) {
         this.channels = channels;
-        mainView.updateUI();
 
     }
 
     @Override
-    public void attachView(BaseView baseView) {
-
+    public void attachView(ChannelFragmentView view) {
+        this.channelFragmentView = view;
     }
 
     @Override
     public void detachView() {
-
+        channelFragmentView = null;
     }
 
     /**

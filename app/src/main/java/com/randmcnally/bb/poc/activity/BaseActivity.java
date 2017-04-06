@@ -1,5 +1,6 @@
 package com.randmcnally.bb.poc.activity;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
@@ -32,6 +33,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
         setProgressBar();
 
         initializeUIComponents();
+        initializePresenter();
 
     }
 
@@ -79,7 +81,6 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
         progressBar = (ProgressBar) findViewById(getProgressbarID());
     }
 
-
     @Override
     public void showProgress() {
         if (progressBar != null) {
@@ -113,5 +114,10 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
     protected abstract void initializeUIComponents();
 
     protected abstract boolean isToolBarLogoAdded();
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
 
 }

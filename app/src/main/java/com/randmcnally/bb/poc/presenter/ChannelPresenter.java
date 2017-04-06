@@ -4,6 +4,7 @@ import com.randmcnally.bb.poc.view.ChannelView;
 
 public interface ChannelPresenter extends BasePresenter<ChannelView> {
     void loadData();
+
     String getMessage();
 
     void startBroadcast();

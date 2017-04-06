@@ -2,41 +2,44 @@ package com.randmcnally.bb.poc.fragment;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.ChannelsAdapter;
 import com.randmcnally.bb.poc.model.Channel;
+import com.randmcnally.bb.poc.presenter.ChannelFragmentPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelFragmentPresenterImpl;
-import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.activity.ChannelActivity;
-import com.randmcnally.bb.poc.view.MainView;
+import com.randmcnally.bb.poc.view.ChannelFragmentView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ChannelFragment extends Fragment implements MainView, DialogTextFragment.ListenerDialogFragment{
+public class ChannelFragment extends BaseFragment implements DialogTextFragment.ListenerDialogFragment, ChannelFragmentView {
 //    private FloatingActionButton fab;
-    ChannelFragmentPresenterImpl presenter;
+    ChannelFragmentPresenter presenter;
     RecyclerView recyclerView;
     DialogTextFragment dialogFragment;
+    ChannelsAdapter channelsAdapter;
+
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        final View view = inflater.inflate(R.layout.fragment_channel, container, false);
-        recyclerView = (RecyclerView) view.findViewById(R.id.channel_recycler_view);
+    protected int getLayoutID() {
+        return R.layout.fragment_channel;
+    }
 
-        presenter = new ChannelFragmentPresenterImpl(this);
-//        updateUI();
+    @Override
+    protected void initializeUIComponents(View view) {
+        recyclerView = (RecyclerView) view.findViewById(R.id.channel_recycler_view);
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
+        recyclerView.setLayoutManager(mLayoutManager);
 //        fab = (FloatingActionButton) view.findViewById(R.id.channel_fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -44,23 +47,15 @@ public class ChannelFragment extends Fragment implements MainView, DialogTextFra
 //                showDialog();
 //            }
 //        });
-        return view;
     }
 
-    private void showDialog() {
-        dialogFragment = new DialogTextFragment();
-        dialogFragment.show(getActivity().getSupportFragmentManager(), "channel_dialog_text");
-        dialogFragment.setListenerDialogFragment(this);
+//    private void showDialog() {
+//        dialogFragment = new DialogTextFragment();
+//        dialogFragment.show(getActivity().getSupportFragmentManager(), "channel_dialog_text");
+//        dialogFragment.setListenerDialogFragment(this);
+//
+//    }
 
-    }
-
-    public void updateUI() {
-        ChannelsAdapter mAdapter = new ChannelsAdapter(getContext(), presenter.getChannels());
-        LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setAdapter(mAdapter);
-
-    }
 /**
  * openReceiverActivity method is deprecated
   */
@@ -97,16 +92,31 @@ public class ChannelFragment extends Fragment implements MainView, DialogTextFra
 
     @Override
     public void showError(String error) {
-        Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Error: " + error, Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void showMessage(String text) {
+    public void initializePresenter() {
+        presenter = new ChannelFragmentPresenterImpl();
+        presenter.attachView(this);
+        presenter.registerDevice();
+        presenter.getChannels();
 
     }
 
     @Override
-    public void updateView(ChannelActivity.UIState state) {
+    public void setChannels(List<Channel> channels) {
+        channelsAdapter = getChannelAdapter(channels);
+        recyclerView.setAdapter(channelsAdapter);
+    }
 
+    private ChannelsAdapter getChannelAdapter(List<Channel> channels) {
+        return new ChannelsAdapter(getActivity(), channels);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        presenter.detachView();
     }
 }

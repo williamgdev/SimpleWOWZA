@@ -1,7 +1,7 @@
 package com.randmcnally.bb.poc.presenter;
 
-import com.randmcnally.bb.poc.view.BaseView;
+import com.randmcnally.bb.poc.view.HomeView;
 
-public interface HomePresenter extends BasePresenter<BaseView> {
+public interface HomePresenter extends BasePresenter<HomeView> {
 
 }

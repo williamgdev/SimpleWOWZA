@@ -3,35 +3,23 @@ package com.randmcnally.bb.poc.activity;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.widget.ProgressBar;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.PagerAdapter;
+import com.randmcnally.bb.poc.presenter.HomePresenter;
 import com.randmcnally.bb.poc.presenter.HomePresenterImpl;
-import com.randmcnally.bb.poc.view.MainView;
+import com.randmcnally.bb.poc.view.HomeView;
 
 
-public class HomeActivity extends BaseActivity implements MainView {
+public class HomeActivity extends BaseActivity implements HomeView {
     private static final String TAG = "HomeActivity ->";
 
 
-    public HomePresenterImpl    presenter;
+    public HomePresenter presenter;
 
     TabLayout tabLayout;
     ViewPager viewPager;
     PagerAdapter pagerAdapter;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        presenter = new HomePresenterImpl(this);
-        presenter.attachView(this);
-
-    }
 
     @Override
     protected int getToolbarLogoID() {
@@ -129,6 +117,12 @@ public class HomeActivity extends BaseActivity implements MainView {
     @Override
     public void showError(String error) {
 
+    }
+
+    @Override
+    public void initializePresenter() {
+        presenter = new HomePresenterImpl();
+        presenter.attachView(this);
     }
 
 

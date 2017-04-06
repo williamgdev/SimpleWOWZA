@@ -1,8 +1,11 @@
 package com.randmcnally.bb.poc.activity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
@@ -30,6 +33,7 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
     RelativeLayout layoutText;
     PlayGifView gifLoading;
     UIState currentState;
+    private AudioManager audioManager;
 
 //    private ActionBar actionbar;
 
@@ -46,30 +50,18 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
         }
 
         setToolbarTitle(getIntent().getStringExtra("channel_name"));
-
-        txtState = (TextView) findViewById(R.id.channel_txt_state);
-        imgBroadcast = (ImageView) findViewById(R.id.channel_img_broadcast);
-        imgSpeak = (ImageView) findViewById(R.id.channel_img_microphone);
-        gifLoading = (PlayGifView) findViewById(R.id.channel_view_gif);
-        gifLoading.setImageResource(R.drawable.gif_loading);
-        iconBroadcast = (ImageView) findViewById(R.id.channel_icon_broadcast);
-        layoutBroadcast = (LinearLayout) findViewById(R.id.channel_layout_broadcast);
-        layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
-        layoutText = (RelativeLayout) findViewById(R.id.channel_layout_text);
-        layoutBroadcast.setOnTouchListener(bbTouchListener);
         setToolbarBackIcon(R.drawable.ic_arrow_back_white);
-//        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
+
+        audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+
+        layoutBroadcast.setOnTouchListener(bbTouchListener);
+
+//
+//        setToolbarBackIcon(R.drawable.ic_arrow_back_white);
+////        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
 
         updateUI(UIState.LOADING);
 
-
-        presenter = new ChannelPresenterImpl(this,
-                getIntent().getStringExtra("stream_name"),
-                getIntent().getStringExtra("channel_name"));
-        presenter.attachView(this);
-
-        //Start the Stream as soon as possible
-        presenter.loadData();
 
     }
 
@@ -100,6 +92,23 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
 
     @Override
     protected void initializeUIComponents() {
+        txtState = (TextView) findViewById(R.id.channel_txt_state);
+        imgBroadcast = (ImageView) findViewById(R.id.channel_img_broadcast);
+        imgSpeak = (ImageView) findViewById(R.id.channel_img_microphone);
+        gifLoading = (PlayGifView) findViewById(R.id.channel_view_gif);
+        gifLoading.setImageResource(R.drawable.gif_loading);
+        iconBroadcast = (ImageView) findViewById(R.id.channel_icon_broadcast);
+        layoutBroadcast = (LinearLayout) findViewById(R.id.channel_layout_broadcast);
+        layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
+        layoutText = (RelativeLayout) findViewById(R.id.channel_layout_text);
+
+    }
+
+    @Override
+    public void initializePresenter() {
+        presenter = new ChannelPresenterImpl(getIntent().getStringExtra("stream_name"),
+                getIntent().getStringExtra("channel_name"));
+        presenter.attachView(this);
 
     }
 
@@ -240,6 +249,22 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
     }
 
     @Override
+    public AudioManager getAudioManager() {
+        return audioManager;
+    }
+
+    @Override
+    public void setMicrophoneMute(boolean on) {
+        audioManager.setMicrophoneMute(on);
+    }
+
+    @Override
+    public void playBipSound() {
+        final MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.sound);
+        mp.start();
+    }
+
+    @Override
     public void showProgress() {
         Toast.makeText(this, "Loading...", Toast.LENGTH_SHORT).show();
     }
@@ -262,20 +287,14 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
 
     @Override
     protected void onPause() {
-        super.onPause();
         presenter.detachView();
+        super.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         presenter.attachView(this);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        presenter.detachView();
     }
 
 }

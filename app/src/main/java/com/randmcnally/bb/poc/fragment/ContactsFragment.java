@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import com.randmcnally.bb.poc.R;
 
 /**
+ * TODO implement MVP
  * A simple {@link Fragment} subclass.
  */
 public class ContactsFragment extends Fragment {
