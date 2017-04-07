@@ -8,13 +8,13 @@ public class LiveStreamResponse extends BaseResponse {
 
     @SerializedName("data")
     @Expose
-    private Data data;
+    private LiveStreamData data;
 
-    public Data getData() {
+    public LiveStreamData getData() {
         return data;
     }
 
-    public void setData(Data data) {
+    public void setData(LiveStreamData data) {
         this.data = data;
     }
 

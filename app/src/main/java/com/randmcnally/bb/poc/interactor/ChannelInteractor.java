@@ -2,11 +2,16 @@ package com.randmcnally.bb.poc.interactor;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
+import com.randmcnally.bb.poc.custom.BBPlayer;
+import com.randmcnally.bb.poc.model.Playlist;
 import com.randmcnally.bb.poc.network.Red5ProApiManager;
 import com.randmcnally.bb.poc.util.BroadcasterStream;
 import com.randmcnally.bb.poc.util.ReceiverStream;
 import com.red5pro.streaming.event.R5ConnectionListener;
+
+import java.io.IOException;
 
 public class ChannelInteractor{
 
@@ -27,7 +32,7 @@ public class ChannelInteractor{
 
     public ChannelInteractor(String streamName, String channelName, R5ConnectionListener listener) {
         this._streamName = streamName;
-        publishStreamName = getPublishStreamName(streamName);
+        publishStreamName = createPublishStreamName(streamName);
         this.channelName = channelName;
         this.listener = listener;
 
@@ -38,7 +43,7 @@ public class ChannelInteractor{
 
     }
 
-    private String getPublishStreamName(String streamName) {
+    private String createPublishStreamName(String streamName) {
         return streamName + "_" + nextCounter();
     }
 
@@ -64,7 +69,7 @@ public class ChannelInteractor{
         isBroadcasting = true;
         isCheckingStream = false;
 
-        broadcasterStream.startBroadcast(getPublishStreamName(_streamName));
+        broadcasterStream.startBroadcast(createPublishStreamName(_streamName));
 
         return publishStreamName;
     }
@@ -94,6 +99,7 @@ public class ChannelInteractor{
             receiverStream.play(receiverStreamName + "_" + counter);
             isMute = false;
         }
+
     }
 
     public void stopListen() {
@@ -162,6 +168,21 @@ public class ChannelInteractor{
         return counter;
     }
 
+    public void play(Playlist playList) {
+        try {
+            BBPlayer player = new BBPlayer(playList, new BBPlayer.ListenerBBPlayer() {
+                @Override
+                public void onListener(BBPlayer.BBPLAYER state) {
+
+                }
+            });
+            player.play();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public interface InteractorListener{
         enum STATE {STREAM_CONNECTED, STREAM_DISCONNECTED}
         void notifyInteractorState(STATE state);
@@ -170,4 +191,9 @@ public class ChannelInteractor{
     public String getStreamName() {
         return _streamName;
     }
+
+    public String getFullReceivedStreamName(){
+        return receiverStreamName + "_" + counter;
+    }
+
 }

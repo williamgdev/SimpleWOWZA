@@ -1,12 +1,17 @@
 package com.randmcnally.bb.poc.network;
 
+import android.util.Log;
+
 import com.randmcnally.bb.poc.dto.red5pro.LiveStreamResponse;
+import com.randmcnally.bb.poc.dto.red5pro.RecordedFileResponse;
+import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.restservice.Red5ProApiService;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 public class Red5ProApiManager {
@@ -23,11 +28,10 @@ public class Red5ProApiManager {
     private static Red5ProApiManager instance;
     private Red5ProApiService apiService;
 
-    private Red5ProApiManager() {
+    public Red5ProApiManager() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getBaseUrlAPI())
-                .client(OpenFireInterceptor.buildHttpClient())
-                .addConverterFactory(SimpleXmlConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         apiService = retrofit.create(Red5ProApiService.class);
@@ -42,7 +46,8 @@ public class Red5ProApiManager {
     }
 
     public static String getURLStream(String streamName){
-        return "http://" + IP_ADDRESS + ":" + STREAM_PORT + "/api/v1/applications/live/streams/" + streamName + "?accessToken=" + ACCESS_TOKEN;
+        //http://192.168.43.212:5080/live/streams/randmcnally_3.flv
+        return "http://" + IP_ADDRESS + ":" + API_PORT + "/live/streams/" + streamName + ".flv";
     }
 
     public static String getBaseUrlAPI(){
@@ -53,29 +58,38 @@ public class Red5ProApiManager {
         apiService.getLiveStreamStatistics(APP_NAME, streamName, ACCESS_TOKEN).enqueue(getLiveStreamCallback(listener));
     }
 
+    public void getRecordedFiles(RecordedFileApiListener listener){
+        apiService.getRecordedFiles(APP_NAME, ACCESS_TOKEN).enqueue(getRecordedFilesCallback(listener));
+    }
+
+    private Callback<RecordedFileResponse> getRecordedFilesCallback(final RecordedFileApiListener listener) {
+        return new Callback<RecordedFileResponse>() {
+            @Override
+            public void onResponse(Call<RecordedFileResponse> call, Response<RecordedFileResponse> response) {
+                switch (response.code()){
+                    case RecordedFileApiListener.OK:
+                        if (response.body().getData() != null){
+                            listener.onSuccess(History.create(response.body().getData(), ".flv"));
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RecordedFileResponse> call, Throwable t) {
+                listener.onError(t.getMessage());
+            }
+        };
+    }
+
     private Callback<LiveStreamResponse> getLiveStreamCallback(final LiveStreamApiListener listener) {
         return new Callback<LiveStreamResponse>() {
             @Override
             public void onResponse(Call<LiveStreamResponse> call, Response<LiveStreamResponse> response) {
                 switch (response.code()){
-                    case LiveStreamApiListener.OK:
-                        listener.onSuccess("The Stream is started.");
-                        break;
-                    case LiveStreamApiListener.NOT_FOIND:
-                        listener.onError("Resource not found.");
-                        break;
-                    case LiveStreamApiListener.BAD_REQUEST:
-                        listener.onError("Bad Request because of incorrect number of arguments, or argument format or the order or arguments.");
-                        break;
-                    case LiveStreamApiListener.CONFLICT:
-                        listener.onError("Invalid operation requested. An operation is requested which cannot be performed given the current state of target resource.");
-                        break;
-                    case LiveStreamApiListener.SERVER_ERROR:
-                        listener.onError("An I/O operation failure occurred.Stream not found in application live.");
-                        break;
-                    case LiveStreamApiListener.UNAUTHORIZED:
-                        listener.onError("Unauthorized. The http client is denied access. Authentication information is missing or invalid.");
-                        break;
+
                 }
             }
 
@@ -89,5 +103,11 @@ public class Red5ProApiManager {
     public interface LiveStreamApiListener extends BaseApiListener{
         void onSuccess(String s);
         void onError(String s);
+    }
+
+    public interface RecordedFileApiListener extends BaseApiListener{
+        void onSuccess(History history);
+        void onError(String s);
+
     }
 }

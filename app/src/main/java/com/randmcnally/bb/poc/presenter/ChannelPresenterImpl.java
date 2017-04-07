@@ -4,26 +4,28 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.activity.ChannelActivity;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
-import com.randmcnally.bb.poc.restservice.OpenFireApiService;
+import com.randmcnally.bb.poc.model.History;
+import com.randmcnally.bb.poc.model.Playlist;
+import com.randmcnally.bb.poc.model.VoiceMail;
+import com.randmcnally.bb.poc.network.Red5ProApiManager;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
+import org.jivesoftware.smack.packet.Message;
+
 import java.util.Date;
+import java.util.List;
 
 
 public class ChannelPresenterImpl implements ChannelPresenter,
@@ -40,29 +42,47 @@ public class ChannelPresenterImpl implements ChannelPresenter,
     Date streamStartTime;
     Date bcStartTime;
     private String receiverStreamName;
-
-
-    OpenFireApiService apiService;
+    Red5ProApiManager red5ProApiManager;
     OpenFireServer openFireServer;
+
+    History history;
+    private Playlist playList;
 
 
     public ChannelPresenterImpl(String streamName, String channelName) {
         this.interactor = new ChannelInteractor(streamName, channelName, this);
+        red5ProApiManager = new Red5ProApiManager();
+        red5ProApiManager.getRecordedFiles(new Red5ProApiManager.RecordedFileApiListener() {
+            @Override
+            public void onSuccess(History history) {
+                setHistory(history);
+            }
 
+            @Override
+            public void onError(String s) {
+
+            }
+        });
+
+    }
+
+    @Override
+    public void setHistory(History history) {
+        this.history = history;
     }
 
     private BroadcastReceiver localNotificationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
             String online = "";
 
             if (intent.getStringExtra("online") != null) {
                 online = intent.getStringExtra("online");
             }
             if (online.equals("true")) {
-                if (intent.getStringExtra("stream_name") != null && intent.getStringExtra("stream_id") != null)
+                if (intent.getStringExtra("stream_name") != null && intent.getStringExtra("stream_id") != null) {
                     startListen(intent.getStringExtra("stream_name"), intent.getStringExtra("stream_id"));
+                }
                 else {
                     Toast.makeText(context, "Error: No stream name received", Toast.LENGTH_SHORT).show();
                 }
@@ -133,6 +153,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         if (preparing){
             preparing = false;
             updateView(ChannelActivity.UIState.READY);
+            interactor.play(playList);
             return;
         }
         updateView(ChannelActivity.UIState.BROADCASTING_STOPPING);
@@ -208,7 +229,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
     @Override
     public void onConnectionEvent(R5ConnectionEvent r5ConnectionEvent) {
-//        showToast(r5ConnectionEvent.name());
+        showToast(r5ConnectionEvent.name());
         switch (r5ConnectionEvent) {
             case DISCONNECTED:
                 if (isStreaming) {
@@ -244,6 +265,37 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                 }
                 break;
             case ERROR:
+                interactor.stop();
+                switch (r5ConnectionEvent.message){
+                    case "No Valid Media Found":
+                        /**
+                         * TODO notify the stream is not active
+                         */
+                        VoiceMail voiceMail = history.hasMessage(interactor.getFullReceivedStreamName());
+                        if (voiceMail != null){
+                            Log.d(TAG, "notifyMessage: " + interactor.getFullReceivedStreamName());
+                            if (!voiceMail.isEmpty()) {
+                                if (playList == null)
+                                    playList = new Playlist();
+                                playList.addMessage(voiceMail);
+
+                            } else { // Check if it is a live message
+
+                            }
+                        } else {
+                            /**
+                             * Message is not related with the files on the Server.
+                             * Cases:
+                             * - Old Message
+                             * - Channel does not exist anymore
+                             *
+                             * TODO Remove this old message from the server
+                             */
+                        }
+
+                        break;
+
+                }
             case CLOSE:
                 if (isPlaying() || isBroadcasting())
                     stopListen();
@@ -307,7 +359,12 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                 break;
             case RECONNECTION_FAILED:
                 break;
+            case AUTHENTICATED:
+                openFireServer.joinToChannel("randmcnally");
+                List<Message> oldMessages = openFireServer.getOldMessages();
+                break;
             case CONNECTED:
+
                 break;
         }
     }
@@ -319,11 +376,21 @@ public class ChannelPresenterImpl implements ChannelPresenter,
             handler.post(new Runnable() {
                 @Override
                 public void run() {
+                    /**
+                     * TODO
+
+                     * 2- remove the messages depends of the limit declared in the stream. actual is 5
+                     * 3- check all channels and notify the user the message for each one
+                     * 4- create a state to know when the message is already listened. No start listen the user message
+                     * 5- check the file already exists
+                     */
+
                     startListen(streamName, streamId);
+                    Log.d(TAG, "notifyMessage: " + interactor.getFullReceivedStreamName());
                 }
             });
         }
-        Log.d(TAG, "processMessage: " + streamName + ": " + streamId);
+
 
     }
 

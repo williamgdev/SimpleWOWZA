@@ -3,19 +3,23 @@ package com.randmcnally.bb.poc.custom;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 
+import com.randmcnally.bb.poc.model.Playlist;
+
 import java.io.IOException;
 
 public class BBPlayer {
     private static final String TAG = "BBPlayer ->";
     ListenerBBPlayer listener;
-    String rtspUrl;
+    String mediaUrl;
+    Playlist playlist;
     private boolean playing;
     private MediaPlayer mediaPlayer;
+    private boolean playListAdded;
 
 
-    public BBPlayer(String rtspUrl, ListenerBBPlayer listener) throws IOException {
+    public BBPlayer(String url, ListenerBBPlayer listener) throws IOException {
         this.listener = listener;
-        this.rtspUrl = rtspUrl;
+        this.mediaUrl = url;
         playing = false;
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnInfoListener(onInfoListener);
@@ -23,8 +27,27 @@ public class BBPlayer {
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setDataSource(rtspUrl);
+        mediaPlayer.setDataSource(url);
 
+    }
+
+    public BBPlayer(Playlist playlist, ListenerBBPlayer listener) throws IOException {
+        this.listener = listener;
+        this.playlist = playlist;
+        playing = false;
+        playListAdded = true;
+        createMediaPlayer();
+
+    }
+
+    private void createMediaPlayer() throws IOException {
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnInfoListener(onInfoListener);
+        mediaPlayer.setOnErrorListener(onErrorListener);
+        mediaPlayer.setOnPreparedListener(onPreparedListener);
+        mediaPlayer.setOnCompletionListener(onCompletionListener);
+        mediaPlayer.setDataSource(playlist.getOlderMessages().getUrl());
+        mediaPlayer.prepare();
     }
 
     public boolean isPlaying() {
@@ -38,25 +61,48 @@ public class BBPlayer {
         listener.onListener(BBPLAYER.STOPPED);
     }
 
-    public void start() throws IOException {
+    public void play() throws IOException {
         playing = true;
-        listener.onListener(BBPLAYER.PREPARING);
-        mediaPlayer.prepareAsync();
+        if (playListAdded){
+            mediaPlayer.start();
+        } else {
+            listener.onListener(BBPLAYER.PREPARING);
+            mediaPlayer.prepareAsync();
+        }
+    }
+
+    private void playNextVoiceMessage() {
+        mediaPlayer.release();
+        try {
+            createMediaPlayer();
+            play();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
     MediaPlayer.OnPreparedListener onPreparedListener = new MediaPlayer.OnPreparedListener() {
         @Override
         public void onPrepared(MediaPlayer mp) {
-            mp.start();
-            listener.onListener(BBPLAYER.PLAYING);
+            if (!playListAdded){
+                mp.start();
+                listener.onListener(BBPLAYER.PLAYING);
+            }
         }
     };
 
     MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer mp) {
-            listener.onListener(BBPLAYER.AUDIO_STREAM_COMPLETED);
+            if (playListAdded) {
+                if (!playlist.isEmpty())
+                    playNextVoiceMessage();
+                listener.onListener(BBPLAYER.MESSAGE_COMPLETE);
+            }
+            else {
+                listener.onListener(BBPLAYER.AUDIO_STREAM_COMPLETED);
+            }
         }
     };
 
@@ -99,10 +145,11 @@ public class BBPlayer {
     }
 
     public enum BBPLAYER{
-        PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, PREPARING
+        PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, MESSAGE_COMPLETE, PREPARING
     }
 
     public interface ListenerBBPlayer{
         void onListener(BBPLAYER state);
     }
+
 }

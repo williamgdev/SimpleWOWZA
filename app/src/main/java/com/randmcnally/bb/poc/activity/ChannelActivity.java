@@ -62,7 +62,6 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
 
         updateUI(UIState.LOADING);
 
-
     }
 
     @Override

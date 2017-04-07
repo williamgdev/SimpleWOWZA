@@ -1,5 +1,6 @@
 package com.randmcnally.bb.poc.presenter;
 
+import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.view.ChannelView;
 
 public interface ChannelPresenter extends BasePresenter<ChannelView> {
@@ -12,6 +13,8 @@ public interface ChannelPresenter extends BasePresenter<ChannelView> {
     void stopBroadcast();
 
     boolean isBroadcasting();
+
+    void setHistory(History history);
 
     boolean isPreparing();
 
