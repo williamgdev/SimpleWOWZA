@@ -11,7 +11,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.randmcnally.bb.poc.activity.ChannelActivity;
+import com.randmcnally.bb.poc.custom.BBPlayer;
+import com.randmcnally.bb.poc.database.VoiceMailDB;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
+import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.Playlist;
 import com.randmcnally.bb.poc.model.VoiceMail;
@@ -22,8 +25,7 @@ import com.randmcnally.bb.poc.view.ChannelView;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
-import org.jivesoftware.smack.packet.Message;
-
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +35,8 @@ public class ChannelPresenterImpl implements ChannelPresenter,
     private static final String TAG = "Broadcast ->";
 
     ChannelView channelView;
-    ChannelInteractor interactor;
+    ChannelInteractor channelInteractor;
+    DatabaseInteractor databaseInteractor;
     String message;
 
     private boolean isStreaming;
@@ -50,7 +53,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
 
     public ChannelPresenterImpl(String streamName, String channelName) {
-        this.interactor = new ChannelInteractor(streamName, channelName, this);
+        this.channelInteractor = new ChannelInteractor(streamName, channelName, this);
         red5ProApiManager = new Red5ProApiManager();
         red5ProApiManager.getRecordedFiles(new Red5ProApiManager.RecordedFileApiListener() {
             @Override
@@ -103,6 +106,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         openFireServer = OpenFireServer.getInstance(uniqueUID);
         openFireServer.setListener(this);
         updateView(ChannelActivity.UIState.READY);
+
     }
 
     @Override
@@ -114,11 +118,16 @@ public class ChannelPresenterImpl implements ChannelPresenter,
     @Override
     public void detachView() {
         LocalBroadcastManager.getInstance(channelView.getContext()).unregisterReceiver(localNotificationReceiver);
-        if (interactor.isListening())
-            interactor.stopListen();
+        if (channelInteractor.isListening())
+            channelInteractor.stopListen();
         if (isBroadcasting())
             stopBroadcast();
         channelView = null;
+    }
+
+    @Override
+    public void setDatabaseInteractor(DatabaseInteractor databaseInteractor) {
+        this.databaseInteractor = databaseInteractor;
     }
 
     @Override
@@ -140,7 +149,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                     channelView.playBipSound();
                     channelView.setMicrophoneMute(false);
 
-                    interactor.startBroadcast(); //Send the filename to the Receiver
+                    channelInteractor.startBroadcast(); //Send the filename to the Receiver
 
                     updateView(ChannelActivity.UIState.BROADCASTING);
                 }
@@ -150,11 +159,43 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
     @Override
     public void stopBroadcast() {
-        if (preparing){
+        if (preparing) {
             preparing = false;
             updateView(ChannelActivity.UIState.READY);
-            interactor.play(playList);
-            return;
+            if (playList != null) {
+                try {
+                    BBPlayer bbPlayer = new BBPlayer(playList, new BBPlayer.ListenerBBPlayer() {
+                        @Override
+                        public void onListener(BBPlayer.BBPLAYER state) {
+                            switch (state) {
+                                case PLAYING:
+                                    break;
+                                case AUDIO_STREAM_COMPLETED:
+                                    break;
+                                case AUDIO_STREAM_END:
+                                    break;
+                                case AUDIO_STREAM_START:
+                                    break;
+                                case INFO_UNKNOWN:
+                                    break;
+                                case ERROR_UNKNOWN:
+                                    break;
+                                case STOPPED:
+                                    break;
+                                case MESSAGE_COMPLETE:
+                                    Log.d(TAG, "onListener: MESSAGE_COMPLETE");
+                                    break;
+                                case PREPARING:
+                                    break;
+                            }
+                        }
+                    });
+                    bbPlayer.play();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
         }
         updateView(ChannelActivity.UIState.BROADCASTING_STOPPING);
         long time = getTimeDelay();
@@ -165,7 +206,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                interactor.stop();
+                channelInteractor.stop();
                 channelView.setMicrophoneMute(false);
                 updateView(ChannelActivity.UIState.READY);
 //                sendNotification(false);
@@ -177,7 +218,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
     @Override
     public boolean isBroadcasting() {
-        return interactor.isBroadcasting();
+        return channelInteractor.isBroadcasting();
     }
 
     @Override
@@ -187,7 +228,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
     @Override
     public boolean isPlaying() {
-        return interactor.isListening();
+        return channelInteractor.isListening();
     }
 
     void updateView(final ChannelActivity.UIState state) {
@@ -216,12 +257,12 @@ public class ChannelPresenterImpl implements ChannelPresenter,
     public void startListen(String streamName, String stream_id) {
         bcStartTime = new Date();
         this.receiverStreamName = streamName;
-        if (interactor.isBroadcasting()){
-            interactor.stop();
+        if (channelInteractor.isBroadcasting()){
+            channelInteractor.stop();
         }
-        if(interactor.isMute() || !isPlaying()){
+        if(channelInteractor.isMute() || !isPlaying()){
             isStreaming = true;
-            interactor.play(receiverStreamName, stream_id);
+            channelInteractor.play(receiverStreamName, stream_id);
             updateView(ChannelActivity.UIState.RECEIVING);
         }
     }
@@ -229,7 +270,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
 
     @Override
     public void onConnectionEvent(R5ConnectionEvent r5ConnectionEvent) {
-        showToast(r5ConnectionEvent.name());
+//        showToast(r5ConnectionEvent.name());
         switch (r5ConnectionEvent) {
             case DISCONNECTED:
                 if (isStreaming) {
@@ -239,7 +280,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                 break;
             case START_STREAMING:
                 if (isBroadcasting()) {
-                    openFireServer.sendNotification(interactor.getStreamName(), interactor.getCounter());
+                    openFireServer.sendNotification(channelInteractor.getStreamName(), channelInteractor.getCounter());
                     showToast("STREAMING");
                 }
                 streamStartTime = new Date();
@@ -248,14 +289,14 @@ public class ChannelPresenterImpl implements ChannelPresenter,
             case NET_STATUS:
                 switch (r5ConnectionEvent.message){
                     case "NetStream.Play.UnpublishNotify":
-                        interactor.muteAudio();
-                        interactor.stopListen();
+                        channelInteractor.muteAudio();
+                        channelInteractor.stopListen();
                         updateView(ChannelActivity.UIState.READY);
                         break;
                     case "NetStream.Play.PublishNotify":
                         updateView(ChannelActivity.UIState.RECEIVING);
                         if (isStreaming)
-                            startListen(receiverStreamName, String.valueOf(interactor.getCounter()));
+                            startListen(receiverStreamName, String.valueOf(channelInteractor.getCounter()));
                             streamStartTime = new Date();
 
                         break;
@@ -265,15 +306,15 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                 }
                 break;
             case ERROR:
-                interactor.stop();
+                channelInteractor.stop();
                 switch (r5ConnectionEvent.message){
                     case "No Valid Media Found":
                         /**
                          * TODO notify the stream is not active
                          */
-                        VoiceMail voiceMail = history.hasMessage(interactor.getFullReceivedStreamName());
+                        VoiceMail voiceMail = history.hasMessage(channelInteractor.getFullReceivedStreamName());
                         if (voiceMail != null){
-                            Log.d(TAG, "notifyMessage: " + interactor.getFullReceivedStreamName());
+                            Log.d(TAG, "notifyMessage: " + channelInteractor.getFullReceivedStreamName());
                             if (!voiceMail.isEmpty()) {
                                 if (playList == null)
                                     playList = new Playlist();
@@ -287,7 +328,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                              * Message is not related with the files on the Server.
                              * Cases:
                              * - Old Message
-                             * - Channel does not exist anymore
+                             * - ChannelDB does not exist anymore
                              *
                              * TODO Remove this old message from the server
                              */
@@ -326,7 +367,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                interactor.stopListen();
+                channelInteractor.stopListen();
                 updateView(ChannelActivity.UIState.READY);
             }
         }, time);
@@ -361,7 +402,22 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                 break;
             case AUTHENTICATED:
                 openFireServer.joinToChannel("randmcnally");
-                List<Message> oldMessages = openFireServer.getOldMessages();
+                final History history = new History();
+                history.setHistory(VoiceMail.createFromMessages(openFireServer.getOldMessages()));
+//                databaseInteractor.create(VoiceMailDB.create(new VoiceMail("randmcnally_3")), new DatabaseInteractor.CreateDatabaseListener() {
+//                    @Override
+//                    public void onResult(VoiceMailDB voiceMailDB) {
+//                        Log.d(TAG, "onResult: Create " + voiceMailDB.getName());
+//                    }
+//                });
+                databaseInteractor.read(new DatabaseInteractor.GetRowDatabaseListener() {
+                    @Override
+                    public void onResult(List<VoiceMailDB> voiceMailDBList) {
+                        List<VoiceMail> missedMessages = history.getMissedMessage(VoiceMail.createFromVoiceMailDB(voiceMailDBList));
+                        playList = Playlist.create(missedMessages);
+
+                    }
+                });
                 break;
             case CONNECTED:
 
@@ -386,7 +442,7 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                      */
 
                     startListen(streamName, streamId);
-                    Log.d(TAG, "notifyMessage: " + interactor.getFullReceivedStreamName());
+                    Log.d(TAG, "notifyMessage: " + channelInteractor.getFullReceivedStreamName());
                 }
             });
         }

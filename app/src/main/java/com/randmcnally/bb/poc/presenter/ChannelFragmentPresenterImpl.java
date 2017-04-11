@@ -64,7 +64,7 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
          * This is only for the Demo
          */
 //        channels = new ArrayList<>();
-//        Channel demoChannel = new Channel();
+//        ChannelDB demoChannel = new ChannelDB();
 //        demoChannel.setName("Rand McNally");
 //        demoChannel.setStreamName("rand_mcnally");
 //        channels.add(demoChannel);
@@ -103,11 +103,11 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
     }
 
     /**
-     * Add Channel allows you to save the String in the ptt-db Sqlite Database
+     * Add ChannelDB allows you to save the String in the ptt-db Sqlite Database
      * @return
      */
 //    public void addChannel(String text) {
-//        Channel channel = new Channel();
+//        ChannelDB channel = new ChannelDB();
 //        channel.setName(text);
 //        channelDao = daoSession.getChannelDao();
 //        channelDao.insert(channel);

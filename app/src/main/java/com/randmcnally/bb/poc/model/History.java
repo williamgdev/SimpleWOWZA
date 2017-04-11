@@ -3,6 +3,8 @@ package com.randmcnally.bb.poc.model;
 import com.randmcnally.bb.poc.dto.red5pro.Data;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileData;
 
+import org.jivesoftware.smack.packet.Message;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,5 +48,12 @@ public class History {
             }
         }
         return null;
+    }
+
+    public List<VoiceMail> getMissedMessage(List<VoiceMail> voiceMails) {
+        List<VoiceMail> missedMessages = history.subList(0, history.size());
+        missedMessages.removeAll(voiceMails);
+
+        return missedMessages;
     }
 }

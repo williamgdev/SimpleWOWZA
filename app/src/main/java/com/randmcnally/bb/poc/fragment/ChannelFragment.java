@@ -75,7 +75,7 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
     @Override
     public void sendText(String text) {
         /**
-         * Uncomment when the Add Channel is available
+         * Uncomment when the Add ChannelDB is available
          */
 //        presenter.addChannel(text);
     }

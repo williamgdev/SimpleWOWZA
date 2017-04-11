@@ -60,7 +60,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     protected void initializeUIComponents() {
         viewPager = (ViewPager) findViewById(R.id.pager);
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.addTab(tabLayout.newTab().setText("Channel"));
+        tabLayout.addTab(tabLayout.newTab().setText("ChannelDB"));
 //        tabLayout.addTab(tabLayout.newTab().setText("Contacts"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 

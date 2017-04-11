@@ -17,8 +17,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.custom.BBTouchListener;
+import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.presenter.ChannelPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
 import com.randmcnally.bb.poc.view.ChannelView;
@@ -108,6 +110,7 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
         presenter = new ChannelPresenterImpl(getIntent().getStringExtra("stream_name"),
                 getIntent().getStringExtra("channel_name"));
         presenter.attachView(this);
+        presenter.setDatabaseInteractor(((BBApplication) getApplication()).getDatabaseInteractor(this));
 
     }
 

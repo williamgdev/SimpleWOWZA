@@ -2,16 +2,12 @@ package com.randmcnally.bb.poc.interactor;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
-import com.randmcnally.bb.poc.custom.BBPlayer;
 import com.randmcnally.bb.poc.model.Playlist;
 import com.randmcnally.bb.poc.network.Red5ProApiManager;
 import com.randmcnally.bb.poc.util.BroadcasterStream;
 import com.randmcnally.bb.poc.util.ReceiverStream;
 import com.red5pro.streaming.event.R5ConnectionListener;
-
-import java.io.IOException;
 
 public class ChannelInteractor{
 
@@ -32,7 +28,7 @@ public class ChannelInteractor{
 
     public ChannelInteractor(String streamName, String channelName, R5ConnectionListener listener) {
         this._streamName = streamName;
-        publishStreamName = createPublishStreamName(streamName);
+        publishStreamName = getPublishStreamName(streamName);
         this.channelName = channelName;
         this.listener = listener;
 
@@ -43,7 +39,7 @@ public class ChannelInteractor{
 
     }
 
-    private String createPublishStreamName(String streamName) {
+    private String getPublishStreamName(String streamName) {
         return streamName + "_" + nextCounter();
     }
 
@@ -69,7 +65,7 @@ public class ChannelInteractor{
         isBroadcasting = true;
         isCheckingStream = false;
 
-        broadcasterStream.startBroadcast(createPublishStreamName(_streamName));
+        broadcasterStream.startBroadcast(getPublishStreamName(_streamName));
 
         return publishStreamName;
     }
@@ -95,11 +91,11 @@ public class ChannelInteractor{
             receiverStream = new ReceiverStream(listener);
         if (!isListening || isMute) {
             isListening = true;
+            this.receiverStreamName = receiverStreamName;
             counter = Integer.parseInt(stream_id);
-            receiverStream.play(receiverStreamName + "_" + counter);
+            receiverStream.play(getFullReceivedStreamName());
             isMute = false;
         }
-
     }
 
     public void stopListen() {
@@ -168,19 +164,8 @@ public class ChannelInteractor{
         return counter;
     }
 
-    public void play(Playlist playList) {
-        try {
-            BBPlayer player = new BBPlayer(playList, new BBPlayer.ListenerBBPlayer() {
-                @Override
-                public void onListener(BBPlayer.BBPLAYER state) {
-
-                }
-            });
-            player.play();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+    public String getFullReceivedStreamName() {
+        return receiverStreamName + "_" + counter;
     }
 
     public interface InteractorListener{
@@ -191,9 +176,4 @@ public class ChannelInteractor{
     public String getStreamName() {
         return _streamName;
     }
-
-    public String getFullReceivedStreamName(){
-        return receiverStreamName + "_" + counter;
-    }
-
 }

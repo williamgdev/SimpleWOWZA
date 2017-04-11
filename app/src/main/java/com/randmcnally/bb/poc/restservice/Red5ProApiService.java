@@ -15,7 +15,7 @@ public interface Red5ProApiService {
     @GET("applications/{appname}/streams/{streamname}")
     Call<LiveStreamResponse> getLiveStreamStatistics(@Path("appname") String appName,
                                                      @Path("streamname") String streamName,
-                                                         @Query("accessToken") String securityToken);
+                                                     @Query("accessToken") String securityToken);
 
     @GET("applications/{appname}/media")
     Call<RecordedFileResponse> getRecordedFiles(@Path("appname") String appName,

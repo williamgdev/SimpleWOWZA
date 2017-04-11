@@ -96,9 +96,14 @@ public class BBPlayer {
         @Override
         public void onCompletion(MediaPlayer mp) {
             if (playListAdded) {
-                if (!playlist.isEmpty())
+                if (!playlist.isEmpty()) {
                     playNextVoiceMessage();
-                listener.onListener(BBPLAYER.MESSAGE_COMPLETE);
+                    listener.onListener(BBPLAYER.MESSAGE_COMPLETE);
+                }
+                else{
+                    stop();
+                    listener.onListener(BBPLAYER.PLAYLIST_EMPTY);
+                }
             }
             else {
                 listener.onListener(BBPLAYER.AUDIO_STREAM_COMPLETED);
@@ -145,7 +150,7 @@ public class BBPlayer {
     }
 
     public enum BBPLAYER{
-        PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, MESSAGE_COMPLETE, PREPARING
+        PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, MESSAGE_COMPLETE, PLAYLIST_EMPTY, PREPARING
     }
 
     public interface ListenerBBPlayer{
