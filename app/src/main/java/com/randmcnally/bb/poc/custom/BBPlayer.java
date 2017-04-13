@@ -46,8 +46,10 @@ public class BBPlayer {
         mediaPlayer.setOnErrorListener(onErrorListener);
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
-        mediaPlayer.setDataSource(playlist.getOlderMessages().getUrl());
-        mediaPlayer.prepare();
+        if (!playlist.isEmpty()) {
+            mediaPlayer.setDataSource(playlist.getOlderMessages().getUrl());
+            mediaPlayer.prepare();
+        }
     }
 
     public boolean isPlaying() {

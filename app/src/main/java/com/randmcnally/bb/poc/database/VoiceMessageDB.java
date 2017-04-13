@@ -1,19 +1,15 @@
 package com.randmcnally.bb.poc.database;
 
-import com.randmcnally.bb.poc.model.VoiceMail;
+import com.randmcnally.bb.poc.model.VoiceMessage;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
-import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.NotNull;
 import org.greenrobot.greendao.annotation.Property;
 import org.greenrobot.greendao.annotation.Transient;
 
 @Entity
-public class VoiceMailDB {
-    @Id(autoincrement = true)
-    Long id;
-
+public class VoiceMessageDB {
     @NotNull
     @Property(nameInDb = "FILENAME")
     String name;
@@ -21,26 +17,15 @@ public class VoiceMailDB {
     @Transient
     private float fileSize;
 
-
-    @Generated(hash = 1570594893)
-    public VoiceMailDB(Long id, @NotNull String name) {
-        this.id = id;
+    @Generated(hash = 1115860857)
+    public VoiceMessageDB(@NotNull String name) {
         this.name = name;
     }
 
-    @Generated(hash = 2059075204)
-    public VoiceMailDB() {
+    @Generated(hash = 1106236341)
+    public VoiceMessageDB() {
     }
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    
     public String getName() {
         return name;
     }
@@ -57,11 +42,11 @@ public class VoiceMailDB {
         this.fileSize = fileSize;
     }
 
-    public static VoiceMailDB create(VoiceMail voiceMail) {
-        VoiceMailDB voiceMailDB = new VoiceMailDB();
-        voiceMailDB.setName(voiceMail.getName());
-        voiceMailDB.setFileSize(voiceMail.getFileSize());
-        return voiceMailDB;
+    public static VoiceMessageDB create(VoiceMessage voiceMessage) {
+        VoiceMessageDB voiceMessageDB = new VoiceMessageDB();
+        voiceMessageDB.setName(voiceMessage.getName());
+        voiceMessageDB.setFileSize(voiceMessage.getFileSize());
+        return voiceMessageDB;
     }
     
 }

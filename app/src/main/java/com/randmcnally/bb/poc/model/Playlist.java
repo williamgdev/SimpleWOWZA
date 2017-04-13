@@ -1,41 +1,39 @@
 package com.randmcnally.bb.poc.model;
 
-import org.jivesoftware.smack.packet.Message;
-
 import java.util.List;
 import java.util.Stack;
 
 public class Playlist {
-    Stack<VoiceMail> voiceMails = new Stack<>();
+    Stack<VoiceMessage> voiceMessages = new Stack<>();
 
-    public VoiceMail getOlderMessages() {
-        return voiceMails.pop();
+    public VoiceMessage getOlderMessages() {
+        return voiceMessages.pop();
     }
 
-    public void addMessage(VoiceMail voiceMail) {
-        voiceMails.push(voiceMail);
+    public void addMessage(VoiceMessage voiceMessage) {
+        voiceMessages.push(voiceMessage);
     }
 
     public boolean isEmpty() {
-        return voiceMails.isEmpty();
+        return voiceMessages.isEmpty();
     }
 
 //    public static Playlist create(List<Message> messageList) {
 //        Playlist playlist = new Playlist();
 //        for (Message msg :
 //                messageList) {
-//            playlist.addMessage(VoiceMail.create(msg));
+//            playlist.addMessage(VoiceMessage.create(msg));
 //        }
 //        return playlist;
 //
 //    }
 
 
-    public static Playlist create(List<VoiceMail> missedMessages) {
+    public static Playlist create(List<VoiceMessage> missedMessages) {
         Playlist playlist = new Playlist();
-        for (VoiceMail voiceMail :
+        for (VoiceMessage voiceMessage :
                 missedMessages) {
-            playlist.addMessage(voiceMail);
+            playlist.addMessage(voiceMessage);
         }
         return playlist;
     }

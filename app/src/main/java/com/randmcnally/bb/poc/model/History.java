@@ -1,25 +1,22 @@
 package com.randmcnally.bb.poc.model;
 
-import com.randmcnally.bb.poc.dto.red5pro.Data;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileData;
-
-import org.jivesoftware.smack.packet.Message;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class History {
-    private List<VoiceMail> history;
+    private List<VoiceMessage> history;
 
     public History() {
         this.history = new ArrayList<>();
     }
 
-    public void setHistory(List<VoiceMail> history) {
+    public void setHistory(List<VoiceMessage> history) {
         this.history = history;
     }
 
-    public List<VoiceMail> getHistory() {
+    public List<VoiceMessage> getHistory() {
         return history;
     }
 
@@ -34,14 +31,14 @@ public class History {
         for (RecordedFileData file :
                 recordedFiles) {
             if (file.getName().contains(extensionFile)) { //only save the .flv files
-                history.getHistory().add(VoiceMail.create(file));
+                history.getHistory().add(VoiceMessage.create(file));
             }
         }
         return history;
     }
 
-    public VoiceMail hasMessage(String s) {
-        for (VoiceMail msg :
+    public VoiceMessage hasMessage(String s) {
+        for (VoiceMessage msg :
                 history) {
             if (msg.getName().equals(s)){
                 return msg;
@@ -50,9 +47,9 @@ public class History {
         return null;
     }
 
-    public List<VoiceMail> getMissedMessage(List<VoiceMail> voiceMails) {
-        List<VoiceMail> missedMessages = history.subList(0, history.size());
-        missedMessages.removeAll(voiceMails);
+    public List<VoiceMessage> getMissedMessage(List<VoiceMessage> voiceMessages) {
+        List<VoiceMessage> missedMessages = history.subList(0, history.size());
+        missedMessages.removeAll(voiceMessages);
 
         return missedMessages;
     }

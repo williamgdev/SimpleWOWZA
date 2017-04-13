@@ -12,12 +12,12 @@ import android.widget.Toast;
 
 import com.randmcnally.bb.poc.activity.ChannelActivity;
 import com.randmcnally.bb.poc.custom.BBPlayer;
-import com.randmcnally.bb.poc.database.VoiceMailDB;
+import com.randmcnally.bb.poc.database.VoiceMessageDB;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.Playlist;
-import com.randmcnally.bb.poc.model.VoiceMail;
+import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.network.Red5ProApiManager;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
@@ -312,13 +312,13 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                         /**
                          * TODO notify the stream is not active
                          */
-                        VoiceMail voiceMail = history.hasMessage(channelInteractor.getFullReceivedStreamName());
-                        if (voiceMail != null){
+                        VoiceMessage voiceMessage = history.hasMessage(channelInteractor.getFullReceivedStreamName());
+                        if (voiceMessage != null){
                             Log.d(TAG, "notifyMessage: " + channelInteractor.getFullReceivedStreamName());
-                            if (!voiceMail.isEmpty()) {
+                            if (!voiceMessage.isEmpty()) {
                                 if (playList == null)
                                     playList = new Playlist();
-                                playList.addMessage(voiceMail);
+                                playList.addMessage(voiceMessage);
 
                             } else { // Check if it is a live message
 
@@ -402,20 +402,13 @@ public class ChannelPresenterImpl implements ChannelPresenter,
                 break;
             case AUTHENTICATED:
                 openFireServer.joinToChannel("randmcnally");
-                final History history = new History();
-                history.setHistory(VoiceMail.createFromMessages(openFireServer.getOldMessages()));
-//                databaseInteractor.create(VoiceMailDB.create(new VoiceMail("randmcnally_3")), new DatabaseInteractor.CreateDatabaseListener() {
-//                    @Override
-//                    public void onResult(VoiceMailDB voiceMailDB) {
-//                        Log.d(TAG, "onResult: Create " + voiceMailDB.getName());
-//                    }
-//                });
-                databaseInteractor.read(new DatabaseInteractor.GetRowDatabaseListener() {
+                final History historyOF = new History();
+                historyOF.setHistory(VoiceMessage.createFromMessages(openFireServer.getOldMessages()));
+                databaseInteractor.getVoiceMessages("randmcnally", new DatabaseInteractor.GetHistoryDBListener() {
                     @Override
-                    public void onResult(List<VoiceMailDB> voiceMailDBList) {
-                        List<VoiceMail> missedMessages = history.getMissedMessage(VoiceMail.createFromVoiceMailDB(voiceMailDBList));
+                    public void onResult(List<VoiceMessageDB> voiceMessages) {
+                        List<VoiceMessage> missedMessages = historyOF.getMissedMessage(VoiceMessage.createFromVoiceMessagelDB(voiceMessages));
                         playList = Playlist.create(missedMessages);
-
                     }
                 });
                 break;
