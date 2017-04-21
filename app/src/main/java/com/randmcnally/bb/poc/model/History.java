@@ -2,11 +2,15 @@ package com.randmcnally.bb.poc.model;
 
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileData;
 
+import org.jivesoftware.smack.packet.Message;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class History {
+public class History implements Serializable {
     private List<VoiceMessage> history;
+    Playlist missedMessages;
 
     public History() {
         this.history = new ArrayList<>();
@@ -16,8 +20,26 @@ public class History {
         this.history = history;
     }
 
-    public List<VoiceMessage> getHistory() {
+    public List<VoiceMessage> getVoiceMessages() {
         return history;
+    }
+
+    public Playlist getMissedMessages() {
+        return missedMessages;
+    }
+
+    public void setMissedMessages(Playlist missedMessages) {
+        this.missedMessages = missedMessages;
+    }
+
+    public VoiceMessage hasMessage(String s) {
+        for (VoiceMessage msg :
+                history) {
+            if (msg.getName().equals(s)){
+                return msg;
+            }
+        }
+        return null;
     }
 
     /**
@@ -31,26 +53,15 @@ public class History {
         for (RecordedFileData file :
                 recordedFiles) {
             if (file.getName().contains(extensionFile)) { //only save the .flv files
-                history.getHistory().add(VoiceMessage.create(file));
+                history.getVoiceMessages().add(VoiceMessage.create(file));
             }
         }
         return history;
     }
 
-    public VoiceMessage hasMessage(String s) {
-        for (VoiceMessage msg :
-                history) {
-            if (msg.getName().equals(s)){
-                return msg;
-            }
-        }
-        return null;
-    }
-
-    public List<VoiceMessage> getMissedMessage(List<VoiceMessage> voiceMessages) {
-        List<VoiceMessage> missedMessages = history.subList(0, history.size());
-        missedMessages.removeAll(voiceMessages);
-
-        return missedMessages;
+    public static History create(List<Message> messages) {
+        History history = new History();
+        history.setHistory(VoiceMessage.createFromMessages(messages));
+        return history;
     }
 }

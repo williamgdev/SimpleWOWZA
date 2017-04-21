@@ -16,7 +16,6 @@ public class BBPlayer {
     private MediaPlayer mediaPlayer;
     private boolean playListAdded;
 
-
     public BBPlayer(String url, ListenerBBPlayer listener) throws IOException {
         this.listener = listener;
         this.mediaUrl = url;
@@ -46,8 +45,10 @@ public class BBPlayer {
         mediaPlayer.setOnErrorListener(onErrorListener);
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
+        String url = "";
         if (!playlist.isEmpty()) {
-            mediaPlayer.setDataSource(playlist.getOlderMessages().getUrl());
+            url = playlist.getOlderMessages().getUrl();
+            mediaPlayer.setDataSource(url);
             mediaPlayer.prepare();
         }
     }
@@ -60,7 +61,7 @@ public class BBPlayer {
         playing = false;
         mediaPlayer.stop();
         mediaPlayer.release();
-        listener.onListener(BBPLAYER.STOPPED);
+        listener.onListener(BBPLAYERSTATE.STOPPED);
     }
 
     public void play() throws IOException {
@@ -68,7 +69,7 @@ public class BBPlayer {
         if (playListAdded){
             mediaPlayer.start();
         } else {
-            listener.onListener(BBPLAYER.PREPARING);
+            listener.onListener(BBPLAYERSTATE.PREPARING);
             mediaPlayer.prepareAsync();
         }
     }
@@ -89,7 +90,7 @@ public class BBPlayer {
         public void onPrepared(MediaPlayer mp) {
             if (!playListAdded){
                 mp.start();
-                listener.onListener(BBPLAYER.PLAYING);
+                listener.onListener(BBPLAYERSTATE.PLAYING);
             }
         }
     };
@@ -100,15 +101,15 @@ public class BBPlayer {
             if (playListAdded) {
                 if (!playlist.isEmpty()) {
                     playNextVoiceMessage();
-                    listener.onListener(BBPLAYER.MESSAGE_COMPLETE);
+                    listener.onListener(BBPLAYERSTATE.MESSAGE_COMPLETE);
                 }
                 else{
                     stop();
-                    listener.onListener(BBPLAYER.PLAYLIST_EMPTY);
+                    listener.onListener(BBPLAYERSTATE.PLAYLIST_EMPTY);
                 }
             }
             else {
-                listener.onListener(BBPLAYER.AUDIO_STREAM_COMPLETED);
+                listener.onListener(BBPLAYERSTATE.AUDIO_STREAM_COMPLETED);
             }
         }
     };
@@ -118,15 +119,15 @@ public class BBPlayer {
         public boolean onInfo(MediaPlayer mp, int what, int extra) {
             switch (what){
                 case MediaPlayer.MEDIA_INFO_BUFFERING_END:
-                    listener.onListener(BBPLAYER.AUDIO_STREAM_END);
+                    listener.onListener(BBPLAYERSTATE.AUDIO_STREAM_END);
                     break;
 
                 case MediaPlayer.MEDIA_INFO_BUFFERING_START:
-                    listener.onListener(BBPLAYER.AUDIO_STREAM_START);
+                    listener.onListener(BBPLAYERSTATE.AUDIO_STREAM_START);
                     break;
 
                 default:
-                    listener.onListener(BBPLAYER.INFO_UNKNOWN);
+                    listener.onListener(BBPLAYERSTATE.INFO_UNKNOWN);
             }
             return true;
 
@@ -138,7 +139,7 @@ public class BBPlayer {
         public boolean onError(MediaPlayer mp, int what, int extra) {
             switch (what) {
                 default:
-                    listener.onListener(BBPLAYER.ERROR_UNKNOWN);
+                    listener.onListener(BBPLAYERSTATE.ERROR_UNKNOWN);
                     break;
             }
             stop();
@@ -151,12 +152,12 @@ public class BBPlayer {
             mediaPlayer.stop();
     }
 
-    public enum BBPLAYER{
+    public enum BBPLAYERSTATE {
         PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, MESSAGE_COMPLETE, PLAYLIST_EMPTY, PREPARING
     }
 
     public interface ListenerBBPlayer{
-        void onListener(BBPLAYER state);
+        void onListener(BBPLAYERSTATE state);
     }
 
 }

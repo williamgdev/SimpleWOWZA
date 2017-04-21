@@ -20,22 +20,27 @@ import android.widget.Toast;
 import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.custom.BBTouchListener;
-import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
+import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.presenter.ChannelPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
+import com.randmcnally.bb.poc.util.FileUtil;
+import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.custom.PlayGifView;
+
+import java.io.Serializable;
 
 
 public class ChannelActivity extends BaseActivity implements ChannelView{
     ChannelPresenter presenter;
-    TextView txtState;
+    TextView txtState, txtMissedMessages;
     ImageView imgSpeak, imgBroadcast, iconBroadcast;
     LinearLayout layoutBroadcast, layoutSpeaker;
     RelativeLayout layoutText;
     PlayGifView gifLoading;
     UIState currentState;
     private AudioManager audioManager;
+    private Channel channel;
 
 //    private ActionBar actionbar;
 
@@ -64,6 +69,11 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
 
         updateUI(UIState.LOADING);
 
+    }
+
+    private void extractBundleData(Bundle extras) {
+        channel = (Channel) extras.getSerializable("channel");
+        channel.getLiveStream();
     }
 
     @Override
@@ -102,15 +112,17 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
         layoutBroadcast = (LinearLayout) findViewById(R.id.channel_layout_broadcast);
         layoutSpeaker = (LinearLayout) findViewById(R.id.channel_layout_speaker);
         layoutText = (RelativeLayout) findViewById(R.id.channel_layout_text);
+        txtMissedMessages = (TextView) findViewById(R.id.channel_badge_missed_messages);
 
     }
 
     @Override
     public void initializePresenter() {
-        presenter = new ChannelPresenterImpl(getIntent().getStringExtra("stream_name"),
-                getIntent().getStringExtra("channel_name"));
+        extractBundleData(getIntent().getExtras());
+        presenter = new ChannelPresenterImpl(channel);
         presenter.attachView(this);
         presenter.setDatabaseInteractor(((BBApplication) getApplication()).getDatabaseInteractor(this));
+        presenter.setOpenFireServer(((BBApplication) getApplication()).getOpenFireServer(this));
 
     }
 
@@ -175,6 +187,8 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
                 txtState.setTextColor(Color.WHITE);
 
                 break;
+            case CONFlICT:
+                break;
             case BROADCASTING_PREPARING:
                 gifLoading.setVisibility(View.VISIBLE);
                 imgSpeak.setVisibility(View.GONE);
@@ -215,6 +229,15 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
                 layoutBroadcast.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGray));
                 layoutText.setBackgroundColor(ContextCompat.getColor(this, R.color.colorBlue));
                 txtState.setTextColor(Color.WHITE);
+                break;
+
+            case MISSED_MESSAGE:
+                txtMissedMessages.setText(String.valueOf(presenter.getMissedMessages()));
+                txtMissedMessages.setVisibility(View.VISIBLE);
+                break;
+
+            case NO_MISSED_MESSAGE:
+                txtMissedMessages.setVisibility(View.INVISIBLE);
                 break;
 
             case ERROR:

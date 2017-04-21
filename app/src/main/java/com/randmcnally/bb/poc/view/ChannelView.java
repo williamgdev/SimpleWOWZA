@@ -6,7 +6,7 @@ import com.randmcnally.bb.poc.activity.ChannelActivity;
 
 public interface ChannelView extends BaseView {
     void showMessage(String text);
-    void updateView(ChannelActivity.UIState state);
+    void updateView(UIState state);
 
     AudioManager getAudioManager();
 
@@ -15,6 +15,6 @@ public interface ChannelView extends BaseView {
     void playBipSound();
 
     enum UIState {
-        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, BROADCASTING_PREPARING, BROADCASTING_STOPPING, ERROR
+        LOADING, READY, BROADCASTING, RECEIVING, CONFlICT, BROADCASTING_PREPARING, BROADCASTING_STOPPING, MISSED_MESSAGE, NO_MISSED_MESSAGE, ERROR
     }
 }

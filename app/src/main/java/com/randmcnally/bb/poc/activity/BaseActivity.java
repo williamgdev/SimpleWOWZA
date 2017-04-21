@@ -1,6 +1,8 @@
 package com.randmcnally.bb.poc.activity;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.view.BaseView;
@@ -93,6 +96,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
         if (progressBar != null) {
             progressBar.setVisibility(View.GONE);
         }
+    }
+
+    public void launch(Class<? extends Activity> activityClass) {
+        startActivity(new Intent(this, activityClass));
+    }
+
+    public void launch(Class<? extends Activity> activityClass, Bundle bundle) {
+        Intent intent = new Intent(this, activityClass);
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
     @IdRes

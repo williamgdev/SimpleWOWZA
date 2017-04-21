@@ -1,34 +1,44 @@
-package com.randmcnally.bb.poc.network;
+package com.randmcnally.bb.poc.interactor;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.randmcnally.bb.poc.dto.red5pro.LiveStreamResponse;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileResponse;
 import com.randmcnally.bb.poc.model.History;
+import com.randmcnally.bb.poc.model.Playlist;
+import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.restservice.Red5ProApiService;
+import com.randmcnally.bb.poc.view.ChannelView;
+import com.red5pro.streaming.event.R5ConnectionEvent;
+import com.red5pro.streaming.event.R5ConnectionListener;
+
+import java.util.Date;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
-public class Red5ProApiManager {
+public class Red5ProApiInteractor {
     public static final String IP_ADDRESS = "192.168.43.212";
     //  private static final String IP_ADDRESS = "192.168.1.233";
     public static final int STREAM_PORT = 8554;
     static final int API_PORT = 5080;
-    public static final String SDK_LICENSE_KEY = "2WDZ-GOA3-XZJJ-YFZE";
+    public static final String SDK_LICENSE_KEY = "X3UH-6RKQ-JKPE-NO3R";
     public static final String APP_ID = "com.randmcnally.bb.poc";
 
     public static final String ACCESS_TOKEN = "123";
     public static final String APP_NAME = "live";
 
-    private static Red5ProApiManager instance;
+    private static Red5ProApiInteractor instance;
     private Red5ProApiService apiService;
+    private boolean isCheckingStream;
 
-    public Red5ProApiManager() {
+
+    private Red5ProApiInteractor() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(getBaseUrlAPI())
                 .addConverterFactory(GsonConverterFactory.create())
@@ -38,9 +48,9 @@ public class Red5ProApiManager {
 
     }
 
-    public static Red5ProApiManager getInstance() {
+    public static Red5ProApiInteractor getInstance() {
         if (instance == null) {
-            instance = new Red5ProApiManager();
+            instance = new Red5ProApiInteractor();
         }
         return instance;
     }
@@ -100,7 +110,7 @@ public class Red5ProApiManager {
         };
     }
 
-    public interface LiveStreamApiListener extends BaseApiListener{
+    public interface LiveStreamApiListener extends BaseApiListener {
         void onSuccess(String s);
         void onError(String s);
     }
@@ -110,4 +120,46 @@ public class Red5ProApiManager {
         void onError(String s);
 
     }
+
+    /**
+     *
+     * @param streamName
+     *
+     * @deprecated  {will be removed in the next version} </br>
+     *              It is used to know if the stream are you working on is live.
+     */
+    @Deprecated
+    public void _checkStream(final String streamName) {
+        isCheckingStream = true;
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                getLiveStreamStatistics(streamName, new LiveStreamApiListener() {
+                    @Override
+                    public void onSuccess(String s) {
+
+                    }
+
+                    @Override
+                    public void onError(String s) {
+
+                    }
+                });
+            }
+        }, 500);
+    }
+
+
+    @Deprecated
+    public boolean isCheckingStream() {
+        return isCheckingStream;
+    }
+
+    public void stopCheckStream() {
+        isCheckingStream = false;
+    }
+
+
+
 }

@@ -1,30 +1,25 @@
 package com.randmcnally.bb.poc.util;
 
-import com.randmcnally.bb.poc.network.OpenFireApiManager;
+import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smackx.mam.MamManager;
-import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatException;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
-import org.jivesoftware.smackx.muc.packet.MUCInitialPresence;
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import needle.Needle;
@@ -42,6 +37,9 @@ public class OpenFireServer implements ConnectionListener {
     public static OpenFireServer getInstance(String UID) {
         if (instance.connection == null)
             instance.connectOpenFireServer(UID);
+        /**
+         * TODO check if UID is the same as a current connection
+         */
         return instance;
     }
 
@@ -62,8 +60,8 @@ public class OpenFireServer implements ConnectionListener {
         try {
             configBuilder = XMPPTCPConnectionConfiguration.builder();
             configBuilder.setUsernameAndPassword(uniqueUID, uniqueUID);
-            configBuilder.setXmppDomain(OpenFireApiManager.XMPP_DOMAIN);
-            configBuilder.setHost(OpenFireApiManager.HOST_NAME);
+            configBuilder.setXmppDomain(OpenFireApiInteractor.XMPP_DOMAIN);
+            configBuilder.setHost(OpenFireApiInteractor.HOST_NAME);
             connection = new XMPPTCPConnection(configBuilder.build());
             connection.addConnectionListener(this);
 
@@ -147,50 +145,62 @@ public class OpenFireServer implements ConnectionListener {
         listener.notifyStatusOpenFireServer(OpenFireServerListener.STATE.AUTHENTICATED, "");
     }
 
-    public void joinToChannel(String groupChatName) {
+    public void joinToChannel(String groupChatRoomId, AuthenticatedGroupChatListener listener) {
         MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
         DomainBareJid groupChatService;
         try {
+            /**
+             * TODO get the value for service domains depend of the name instead of 1.
+             */
             groupChatService = multiUserChatManager.getXMPPServiceDomains().get(1);
 
-            List<HostedRoom> rooms;
-            rooms = multiUserChatManager.getHostedRooms(groupChatService.asDomainBareJid());
-            multiUserChat = multiUserChatManager.getMultiUserChat(rooms.get(0).getJid());
+            List<HostedRoom> rooms = multiUserChatManager.getHostedRooms(groupChatService.asDomainBareJid());
+            for (HostedRoom room :
+                    rooms) {
+                if (room.getJid().getLocalpart().equals(groupChatRoomId)){
+                    multiUserChat = multiUserChatManager.getMultiUserChat(room.getJid());
+                }
+            }
+
             if (multiUserChat != null) {
                 if (!multiUserChat.isJoined()) {
                     multiUserChat.join(connection.getUser().getResourcepart());
                 }
+                listener.onSuccess(getOldMessages());
+            } else{
+                listener.onError("GroupChat not found");
             }
 
             return;
         } catch (InterruptedException e) {
             e.printStackTrace();
+            listener.onError(e.getMessage());
         } catch (XMPPException.XMPPErrorException e) {
+            listener.onError(e.getMessage());
             e.printStackTrace();
         } catch (SmackException.NotConnectedException e) {
+            listener.onError(e.getMessage());
             e.printStackTrace();
         } catch (SmackException.NoResponseException e) {
+            listener.onError(e.getMessage());
             e.printStackTrace();
         } catch (MultiUserChatException.NotAMucServiceException e) {
+            listener.onError(e.getMessage());
             e.printStackTrace();
         }
     }
 
-//    public void setMessageListener() {
-//        try {
-//            Message message = multiUserChat.nextMessage();
-//            while (message != null) {
-//                message = multiUserChat.nextMessage();
-//            }
-//        } catch (MultiUserChatException.MucNotJoinedException e) {
-//            e.printStackTrace();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
+    public void setMessageListener(final OpenFireMessageListener listener) {
+        multiUserChat.addMessageListener(new MessageListener() {
+            @Override
+            public void processMessage(final Message message) {
+                listener.notifyMessage(message.getSubject(), message.getBody());
 
-    public List<Message> getOldMessages() {
+            }
+        });
+    }
+
+    private List<Message> getOldMessages() {
         List<Message> oldMessages = new ArrayList<>();
         try {
             Message message = multiUserChat.nextMessage();
@@ -204,13 +214,6 @@ public class OpenFireServer implements ConnectionListener {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        multiUserChat.addMessageListener(new MessageListener() {
-            @Override
-            public void processMessage(final Message message) {
-                listener.notifyMessage(message.getSubject(), message.getBody());
-
-            }
-        });
         return oldMessages;
     }
 
@@ -243,14 +246,20 @@ public class OpenFireServer implements ConnectionListener {
 
     }
 
+    public interface AuthenticatedGroupChatListener{
+        void onSuccess(List<Message> history);
+        void onError(String message);
+    }
+
+    public interface OpenFireMessageListener{
+        void notifyMessage(String streamName, String streamId);
+    }
+
     public interface OpenFireServerListener {
         enum STATE {ERROR, CONNECTION_CLOSED, RECONNECTION_SUCCESS, RECONNECTION_FAILED, AUTHENTICATED, CONNECTED}
 
-        ;
-
         void notifyStatusOpenFireServer(STATE state, String message);
 
-        void notifyMessage(String streamName, String streamId);
     }
 
 }

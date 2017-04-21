@@ -1,5 +1,6 @@
 package com.randmcnally.bb.poc.fragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.randmcnally.bb.poc.activity.BaseActivity;
 import com.randmcnally.bb.poc.view.BaseView;
 
 public abstract class BaseFragment extends Fragment implements BaseView{
@@ -31,5 +33,13 @@ public abstract class BaseFragment extends Fragment implements BaseView{
     @Override
     public Context getContext() {
         return getActivity();
+    }
+
+    protected BaseActivity getBaseActivity(){
+        Activity activity = getActivity();
+        if (activity instanceof BaseActivity){
+            return (BaseActivity) activity;
+        }
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-package com.randmcnally.bb.poc.network;
+package com.randmcnally.bb.poc.interactor;
 
 interface BaseApiListener {
     int OK = 200;

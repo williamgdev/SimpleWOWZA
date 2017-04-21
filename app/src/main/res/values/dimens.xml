@@ -6,4 +6,6 @@
     <dimen name="item_text">30dp</dimen>
     <dimen name="channel_text">36dp</dimen>
     <dimen name="title">20dp</dimen>
+    <dimen name="badge_width">27dp</dimen>
+    <dimen name="badge_padding">2dp</dimen>
 </resources>

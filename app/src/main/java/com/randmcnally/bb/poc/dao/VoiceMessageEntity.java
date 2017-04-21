@@ -1,4 +1,4 @@
-package com.randmcnally.bb.poc.database;
+package com.randmcnally.bb.poc.dao;
 
 import com.randmcnally.bb.poc.model.VoiceMessage;
 
@@ -9,7 +9,7 @@ import org.greenrobot.greendao.annotation.Property;
 import org.greenrobot.greendao.annotation.Transient;
 
 @Entity
-public class VoiceMessageDB {
+public class VoiceMessageEntity {
     @NotNull
     @Property(nameInDb = "FILENAME")
     String name;
@@ -17,13 +17,13 @@ public class VoiceMessageDB {
     @Transient
     private float fileSize;
 
-    @Generated(hash = 1115860857)
-    public VoiceMessageDB(@NotNull String name) {
+    @Generated(hash = 493670510)
+    public VoiceMessageEntity(@NotNull String name) {
         this.name = name;
     }
 
-    @Generated(hash = 1106236341)
-    public VoiceMessageDB() {
+    @Generated(hash = 39617361)
+    public VoiceMessageEntity() {
     }
     
     public String getName() {
@@ -42,11 +42,11 @@ public class VoiceMessageDB {
         this.fileSize = fileSize;
     }
 
-    public static VoiceMessageDB create(VoiceMessage voiceMessage) {
-        VoiceMessageDB voiceMessageDB = new VoiceMessageDB();
-        voiceMessageDB.setName(voiceMessage.getName());
-        voiceMessageDB.setFileSize(voiceMessage.getFileSize());
-        return voiceMessageDB;
+    public static VoiceMessageEntity create(VoiceMessage voiceMessage) {
+        VoiceMessageEntity voiceMessageEntity = new VoiceMessageEntity();
+        voiceMessageEntity.setName(voiceMessage.getName());
+        voiceMessageEntity.setFileSize(voiceMessage.getFileSize());
+        return voiceMessageEntity;
     }
     
 }

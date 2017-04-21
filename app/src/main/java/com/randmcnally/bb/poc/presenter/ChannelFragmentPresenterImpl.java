@@ -1,38 +1,35 @@
 package com.randmcnally.bb.poc.presenter;
 
 import android.app.Activity;
-import android.content.Context;
+import android.os.Bundle;
 import android.widget.Toast;
 
-import com.randmcnally.bb.poc.dto.openfire.UserRequest;
+import com.randmcnally.bb.poc.dao.HistoryEntity;
+import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
+import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
+import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.Channel;
-import com.randmcnally.bb.poc.network.OpenFireApiManager;
-import com.randmcnally.bb.poc.util.FileUtil;
-import com.randmcnally.bb.poc.view.BaseView;
+import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
+import com.randmcnally.bb.poc.model.History;
+import com.randmcnally.bb.poc.model.Playlist;
+import com.randmcnally.bb.poc.model.VoiceMessage;
+import com.randmcnally.bb.poc.util.ChannelUtil;
+import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelFragmentView;
-import com.randmcnally.bb.poc.view.ChannelView;
+
+import org.jivesoftware.smack.packet.Message;
 
 import java.util.List;
 
 public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
-//    DaoSession daoSession;
     ChannelFragmentView channelFragmentView;
     List<Channel> channels;
-//    ChannelDao channelDao;
-    private OpenFireApiManager apiManager;
-
-    private void showToast(final String message){
-        ((Activity)channelFragmentView.getContext()).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(channelFragmentView.getContext(), message , Toast.LENGTH_LONG).show();
-            }
-        });
-
-    }
+    private OpenFireApiInteractor apiManager;
+    private DatabaseInteractor databaseInteractor;
+    private OpenFireServer openFireServer;
 
     @Override
-    public void registerDevice() {
+    public void getFavoriteChannels() {
         /**
          * The code below allows you to save the channel you already create
          */
@@ -44,38 +41,16 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
 //        channels = channelDao.loadAll();
 
 
-        String uniqueID = FileUtil.getDeviceUID(channelFragmentView.getContext());
-
-        apiManager = OpenFireApiManager.getInstance();
-        apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiManager.CreateUserApiListener() {
-            @Override
-            public void onSuccess(String s) {
-                showToast(s);
-            }
-
-            @Override
-            public void onError(String s) {
-                showToast(s);
-            }
-        });
-
-
-        /**
-         * This is only for the Demo
-         */
-//        channels = new ArrayList<>();
-//        ChannelDB demoChannel = new ChannelDB();
-//        demoChannel.setName("Rand McNally");
-//        demoChannel.setStreamName("rand_mcnally");
-//        channels.add(demoChannel);
 
     }
 
     @Override
     public void getChannels() {
-        apiManager.getChatRooms(new OpenFireApiManager.ChatRoomApiListener() {
+        apiManager = OpenFireApiInteractor.getInstance();
+        apiManager.getChatRooms(new OpenFireApiInteractor.ChatRoomApiListener() {
             @Override
-            public void onSuccess(List<Channel> channels) {
+            public void onSuccess(List<ChatRoom> chatRooms) {
+                channels = Channel.create(chatRooms);
                 channelFragmentView.setChannels(channels);
             }
 
@@ -87,9 +62,91 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
     }
 
     @Override
+    public void updateMissedMessages(final Channel channel) {
+        databaseInteractor.readByName(channel.getRoomId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+            @Override
+            public void onResult(HistoryEntity result) {
+                List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(result);
+                List<VoiceMessage> missedMessages = ChannelUtil.getMissedMessage(channel.getHistory().getVoiceMessages(), VoiceMessage.createFromVoiceMessagelEntity(voiceMessages));
+                channel.getHistory().setMissedMessages(Playlist.create(missedMessages));
+            }
+        });
+    }
+
+    @Override
     public void setChannels(List<Channel> channels) {
         this.channels = channels;
 
+    }
+
+    @Override
+    public Bundle getBundle(Channel channel) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("channel", channel);
+        return bundle;
+    }
+
+    @Override
+    public void setDatabaseInteractor(DatabaseInteractor databaseInteractor) {
+        this.databaseInteractor = databaseInteractor;
+    }
+
+    @Override
+    public void setOpenFireServer(final OpenFireServer openFireServer) {
+        this.openFireServer =  openFireServer;
+        openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
+            @Override
+            public void notifyStatusOpenFireServer(STATE state, String message) {
+                switch (state) {
+                    case ERROR:
+                        break;
+                    case CONNECTION_CLOSED:
+                        break;
+                    case RECONNECTION_SUCCESS:
+                        break;
+                    case RECONNECTION_FAILED:
+                        break;
+                    case AUTHENTICATED:
+                        for (Channel channel :
+                                channels) {
+                            getMissedMessages(openFireServer, channel);
+
+                        }
+
+                        break;
+                    case CONNECTED:
+                        break;
+                }
+            }
+
+        });
+    }
+
+    @Override
+    public void getMissedMessages(OpenFireServer openFireServer, final Channel channel) {
+        openFireServer.joinToChannel(channel.getRoomId(), new OpenFireServer.AuthenticatedGroupChatListener() {
+            @Override
+            public void onSuccess(List<Message> history) {
+                channel.setHistory(History.create(history));
+                updateMissedMessages(channel);
+                updateChannel();
+            }
+
+            @Override
+            public void onError(String message) {
+                showToast("No missed message");
+            }
+        });
+    }
+
+    @Override
+    public void updateChannel() {
+        ((Activity)channelFragmentView.getContext()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                channelFragmentView.setChannels(channels);
+            }
+        });
     }
 
     @Override
@@ -102,12 +159,22 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
         channelFragmentView = null;
     }
 
+    private void showToast(final String message){
+        ((Activity)channelFragmentView.getContext()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(channelFragmentView.getContext(), message , Toast.LENGTH_LONG).show();
+            }
+        });
+
+    }
+
     /**
-     * Add ChannelDB allows you to save the String in the ptt-db Sqlite Database
+     * Add ChannelEntity allows you to save the String in the ptt-db Sqlite Database
      * @return
      */
 //    public void addChannel(String text) {
-//        ChannelDB channel = new ChannelDB();
+//        ChannelEntity channel = new ChannelEntity();
 //        channel.setName(text);
 //        channelDao = daoSession.getChannelDao();
 //        channelDao.insert(channel);

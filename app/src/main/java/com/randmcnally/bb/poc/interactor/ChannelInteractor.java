@@ -1,73 +1,57 @@
 package com.randmcnally.bb.poc.interactor;
 
-import android.os.Handler;
-import android.os.Looper;
+import android.util.Log;
 
-import com.randmcnally.bb.poc.model.Playlist;
-import com.randmcnally.bb.poc.network.Red5ProApiManager;
+import com.randmcnally.bb.poc.model.Channel;
+import com.randmcnally.bb.poc.model.LiveStream;
 import com.randmcnally.bb.poc.util.BroadcasterStream;
 import com.randmcnally.bb.poc.util.ReceiverStream;
+import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
-public class ChannelInteractor{
+public class ChannelInteractor implements R5ConnectionListener{
 
-    private Red5ProApiManager apiService;
-
+    private static final String TAG = "ChannelInteractor ->";
+    private static ChannelInteractor instance;
+    private final ChannelInteractorListener listener;
     private BroadcasterStream broadcasterStream;
     private ReceiverStream receiverStream;
 
-    private String _streamName, publishStreamName, channelName;
     private boolean isBroadcasting, isListening;
-    private boolean isCheckingStream;
+    private boolean isStreaming;
 
-    private InteractorListener interatorListener;
-    private boolean isMute;
-    private R5ConnectionListener listener;
-    private String receiverStreamName;
-    private int counter;
+    private Channel channel;
 
-    public ChannelInteractor(String streamName, String channelName, R5ConnectionListener listener) {
-        this._streamName = streamName;
-        publishStreamName = getPublishStreamName(streamName);
-        this.channelName = channelName;
+    private ChannelInteractor(Channel channel, ChannelInteractorListener listener) {
         this.listener = listener;
+        this.channel = channel;
 
-        broadcasterStream = new BroadcasterStream(listener);
-        receiverStream = new ReceiverStream(listener);
-
-        apiService = Red5ProApiManager.getInstance();
-
+        broadcasterStream = new BroadcasterStream(this);
+        receiverStream = new ReceiverStream(this);
     }
 
-    private String getPublishStreamName(String streamName) {
-        return streamName + "_" + nextCounter();
-    }
+    public static ChannelInteractor getInstance(Channel channel, ChannelInteractorListener listener){
+        if (instance == null) {
+            instance = new ChannelInteractor(channel, listener);
+        }
+        return instance;
 
-    private int nextCounter() {
-        counter ++;
-        return getCounter();
-    }
-
-    public void setInteratorListener(InteractorListener interatorListener){
-        this.interatorListener = interatorListener;
     }
 
     /**
      *
      * @return name of the file created on the server
+     * @param id
      */
-    public String startBroadcast() {
+    public void startBroadcast(int id) {
         if (broadcasterStream == null)
-            broadcasterStream = new BroadcasterStream(listener);
+            broadcasterStream = new BroadcasterStream(this);
 
         if (isListening)
             stop();
         isBroadcasting = true;
-        isCheckingStream = false;
-
-        broadcasterStream.startBroadcast(getPublishStreamName(_streamName));
-
-        return publishStreamName;
+        channel.getLiveStream().setId(id);
+        broadcasterStream.startBroadcast(channel.getLiveStream().getPublishStreamName());
     }
 
     public void stop() {
@@ -84,24 +68,21 @@ public class ChannelInteractor{
 
     }
 
-    public void play(String receiverStreamName, String stream_id) {
-        this.receiverStreamName = receiverStreamName;
+    public void play(LiveStream liveStream) {
+        isStreaming = true;
+        this.channel.setLiveStream(liveStream);
 
         if (receiverStream == null)
-            receiverStream = new ReceiverStream(listener);
-        if (!isListening || isMute) {
+            receiverStream = new ReceiverStream(this);
+        if (!isListening) {
             isListening = true;
-            this.receiverStreamName = receiverStreamName;
-            counter = Integer.parseInt(stream_id);
-            receiverStream.play(getFullReceivedStreamName());
-            isMute = false;
+            receiverStream.play(liveStream.getPublishStreamName());
         }
     }
 
     public void stopListen() {
         if (isListening)
             stop();
-        stopCheckStream();
     }
 
     public boolean isBroadcasting() {
@@ -112,68 +93,76 @@ public class ChannelInteractor{
         return isListening;
     }
 
-    /**
-     *
-     * @param streamName
-     *
-     * @deprecated  {will be removed in the next version} </br>
-     *              It is used to know if the stream are you working on is live.
-     */
-    @Deprecated
-    public void _checkStream(final String streamName) {
-        isCheckingStream = true;
-        final Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                apiService.getLiveStreamStatistics(streamName, new Red5ProApiManager.LiveStreamApiListener() {
-                    @Override
-                    public void onSuccess(String s) {
-
-                    }
-
-                    @Override
-                    public void onError(String s) {
-
-                    }
-                });
-            }
-        }, 500);
-    }
-
-    @Deprecated
-    public boolean isCheckingStream() {
-        return isCheckingStream;
-    }
-
-    public void stopCheckStream() {
-        isCheckingStream = false;
-    }
-
-    public void muteAudio() {
-        isMute = true;
-    }
-
-    public boolean isMute() {
-        return isMute;
-    }
-
-    public int getCounter() {
-        if (counter > 5)
-            counter = 0;
-        return counter;
-    }
-
-    public String getFullReceivedStreamName() {
-        return receiverStreamName + "_" + counter;
-    }
-
-    public interface InteractorListener{
-        enum STATE {STREAM_CONNECTED, STREAM_DISCONNECTED}
-        void notifyInteractorState(STATE state);
-    }
-
     public String getStreamName() {
-        return _streamName;
+        return channel.getLiveStream().getStreamName();
+    }
+
+    @Override
+    public void onConnectionEvent(R5ConnectionEvent r5ConnectionEvent) {
+//        showToast(r5ConnectionEvent.name());
+        switch (r5ConnectionEvent) {
+            case DISCONNECTED:
+                if (isStreaming) {
+                    listener.notify(ChannelInteractorListener.STATE.STOPPED);
+                    isStreaming = false;
+                }
+                break;
+            case START_STREAMING:
+                listener.notify(ChannelInteractorListener.STATE.STARTED);
+                break;
+            case NET_STATUS:
+                switch (r5ConnectionEvent.message){
+                    case "NetStream.Play.UnpublishNotify":
+                        stopListen();
+                        listener.notify(ChannelInteractorListener.STATE.AUDIO_MUTE);
+                        break;
+                    case "NetStream.Play.PublishNotify":
+                        listener.notify(ChannelInteractorListener.STATE.AUDIO_UNMUTE);
+
+                        break;
+                    default:
+                        Log.d(TAG, "onConnectionEvent: " + r5ConnectionEvent.name());
+                        break;
+                }
+                break;
+            case ERROR:
+                stop();
+                switch (r5ConnectionEvent.message){
+                    case "No Valid Media Found":
+                        listener.notify(ChannelInteractorListener.STATE.MEDIA_NOT_FOUND);
+                        break;
+                    default:
+                        Log.d(TAG, "onConnectionEvent: " + r5ConnectionEvent.name());
+                }
+            case CLOSE:
+                listener.notify(ChannelInteractorListener.STATE.CLOSED);
+                break;
+            case VIDEO_UNMUTE:
+            case CONNECTED:
+//                if (!isBroadcasting())
+//                    bcStartTime = new Date();
+            case AUDIO_UNMUTE:
+                listener.notify(ChannelInteractorListener.STATE.AUDIO_STARTED_LISTEN);
+                break;
+            case LICENSE_VALID:
+                break;
+            case TIMEOUT:
+            case STOP_STREAMING:
+            case AUDIO_MUTE:
+            case VIDEO_MUTE:
+            case LICENSE_ERROR:
+            default:
+                Log.d(TAG, "onConnectionEvent: " + r5ConnectionEvent.name());
+                break;
+        }
+    }
+
+    public boolean isStreaming() {
+        return isStreaming;
+    }
+
+    public interface ChannelInteractorListener{
+        enum STATE {STARTED, AUDIO_MUTE, AUDIO_UNMUTE, MEDIA_NOT_FOUND, CLOSED, AUDIO_STARTED_LISTEN, STOPPED}
+        void notify(STATE state);
     }
 }

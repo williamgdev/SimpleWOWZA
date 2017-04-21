@@ -1,13 +1,12 @@
 package com.randmcnally.bb.poc.fragment;
 
-import android.content.Context;
-import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Toast;
 
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.ChannelsAdapter;
 import com.randmcnally.bb.poc.model.Channel;
@@ -16,7 +15,6 @@ import com.randmcnally.bb.poc.presenter.ChannelFragmentPresenterImpl;
 import com.randmcnally.bb.poc.activity.ChannelActivity;
 import com.randmcnally.bb.poc.view.ChannelFragmentView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,26 +54,11 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
 //
 //    }
 
-/**
- * openReceiverActivity method is deprecated
-  */
-//    public static void openReceiverActivity(Context context, String url) {
-//        Intent intent = new Intent(context, ReceiverActivity.class);
-//        intent.putExtra("url", url);
-//        context.startActivity(intent);
-//    }
-
-    public static void openChannelActivity(Context context, Channel channel) {
-        Intent intent = new Intent(context, ChannelActivity.class);
-        intent.putExtra("stream_name", channel.getStreamName());
-        intent.putExtra("channel_name", channel.getName());
-        context.startActivity(intent);
-    }
 
     @Override
     public void sendText(String text) {
         /**
-         * Uncomment when the Add ChannelDB is available
+         * Uncomment when the Add ChannelEntity is available
          */
 //        presenter.addChannel(text);
     }
@@ -99,7 +82,10 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
     public void initializePresenter() {
         presenter = new ChannelFragmentPresenterImpl();
         presenter.attachView(this);
-        presenter.registerDevice();
+
+        presenter.setDatabaseInteractor(((BBApplication) getBaseActivity().getApplication()).getDatabaseInteractor(getContext()));
+        presenter.setOpenFireServer(((BBApplication) getBaseActivity().getApplication()).getOpenFireServer(getContext()));
+        presenter.getFavoriteChannels();
         presenter.getChannels();
 
     }
@@ -110,8 +96,13 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
         recyclerView.setAdapter(channelsAdapter);
     }
 
+    @Override
+    public void onChannelSelected(Channel channel) {
+        getBaseActivity().launch(ChannelActivity.class, presenter.getBundle(channel));
+    }
+
     private ChannelsAdapter getChannelAdapter(List<Channel> channels) {
-        return new ChannelsAdapter(getActivity(), channels);
+        return new ChannelsAdapter(getContext(), this, channels);
     }
 
     @Override
@@ -119,4 +110,5 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
         super.onDestroy();
         presenter.detachView();
     }
+
 }

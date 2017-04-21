@@ -2,16 +2,17 @@ package com.randmcnally.bb.poc.model;
 
 import android.support.annotation.NonNull;
 
-import com.randmcnally.bb.poc.database.VoiceMessageDB;
+import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileData;
-import com.randmcnally.bb.poc.network.Red5ProApiManager;
+import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
 
 import org.jivesoftware.smack.packet.Message;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VoiceMessage {
+public class VoiceMessage implements Serializable {
     String name;
 
     private float fileSize;
@@ -33,7 +34,7 @@ public class VoiceMessage {
     }
 
     public String getUrl() {
-        return Red5ProApiManager.getURLStream(name);
+        return Red5ProApiInteractor.getURLStream(name);
     }
 
     public boolean isEmpty() {
@@ -65,15 +66,15 @@ public class VoiceMessage {
         return voiceMessages;
     }
 
-    public static List<VoiceMessage> createFromVoiceMessagelDB(List<VoiceMessageDB> voiceMessageDBList) {
-        if (voiceMessageDBList == null || voiceMessageDBList.size() == 0){
+    public static List<VoiceMessage> createFromVoiceMessagelEntity(List<VoiceMessageEntity> voiceMessageEntityList) {
+        if (voiceMessageEntityList == null || voiceMessageEntityList.size() == 0){
             return new ArrayList<>();
         }
         List<VoiceMessage> voiceMessages = new ArrayList<>();
-        for (VoiceMessageDB voiceMessageDB :
-                voiceMessageDBList) {
-            VoiceMessage voiceMessage = new VoiceMessage(voiceMessageDB.getName());
-            voiceMessage.setFileSize(voiceMessageDB.getFileSize());
+        for (VoiceMessageEntity voiceMessageEntity :
+                voiceMessageEntityList) {
+            VoiceMessage voiceMessage = new VoiceMessage(voiceMessageEntity.getName());
+            voiceMessage.setFileSize(voiceMessageEntity.getFileSize());
             voiceMessages.add(voiceMessage);
         }
         return voiceMessages;

@@ -1,9 +1,10 @@
 package com.randmcnally.bb.poc.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Stack;
 
-public class Playlist {
+public class Playlist implements Serializable{
     Stack<VoiceMessage> voiceMessages = new Stack<>();
 
     public VoiceMessage getOlderMessages() {
@@ -36,5 +37,9 @@ public class Playlist {
             playlist.addMessage(voiceMessage);
         }
         return playlist;
+    }
+
+    public int size() {
+        return voiceMessages.size();
     }
 }

@@ -1,4 +1,4 @@
-package com.randmcnally.bb.poc.database;
+package com.randmcnally.bb.poc.dao;
 
 
 import org.greenrobot.greendao.annotation.Entity;
@@ -10,7 +10,7 @@ import org.greenrobot.greendao.annotation.Generated;
 @Entity(indexes = {
         @Index(value = "name DESC", unique = true)
 })
-public class ChannelDB {
+public class ChannelEntity {
 
     @Id
     private Long id;
@@ -32,13 +32,8 @@ public class ChannelDB {
 
     private String appName;
 
-
-    public ChannelDB() {
-    }
-
-
-    @Generated(hash = 1663486796)
-    public ChannelDB(Long id, @NotNull String name, String rtspUrl,
+    @Generated(hash = 1283674453)
+    public ChannelEntity(Long id, @NotNull String name, String rtspUrl,
             String streamName, String playBackUrl, String primaryServer,
             String code, int hostPort, String appName) {
         this.id = id;
@@ -52,6 +47,9 @@ public class ChannelDB {
         this.appName = appName;
     }
 
+    @Generated(hash = 781881457)
+    public ChannelEntity() {
+    }
 
     public String getRtspUrl() {
         return rtspUrl;

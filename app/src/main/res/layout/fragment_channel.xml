@@ -10,7 +10,7 @@ android:layout_height="match_parent">
     android:layout_height="match_parent"
     android:id="@+id/channel_recycler_view"/>
 
-<!-- Add ChannelDB Feature
+<!-- Add ChannelEntity Feature
 <android.support.design.widget.FloatingActionButton-->
     <!--android:layout_width="wrap_content"-->
     <!--android:id="@+id/channel_fab"-->

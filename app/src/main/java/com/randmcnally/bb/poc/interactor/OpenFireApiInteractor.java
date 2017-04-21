@@ -1,8 +1,11 @@
-package com.randmcnally.bb.poc.network;
+package com.randmcnally.bb.poc.interactor;
 
+import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoomResponse;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
 import com.randmcnally.bb.poc.model.Channel;
+import com.randmcnally.bb.poc.model.GroupChat;
+import com.randmcnally.bb.poc.network.OpenFireInterceptor;
 import com.randmcnally.bb.poc.restservice.OpenFireApiService;
 
 import java.util.List;
@@ -13,16 +16,16 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
-public class OpenFireApiManager {
+public class OpenFireApiInteractor {
     public static final String HOST_NAME = "192.168.43.212";
     public static final String BASE_URL = "http://" + HOST_NAME + ":9090/plugins/restapi/v1/";
     public static final String GROUPCHAT_SERVICE = "randmcnally";
     public static final String XMPP_DOMAIN = "openfire.test";
 
-    private static OpenFireApiManager instance;
+    private static OpenFireApiInteractor instance;
     private OpenFireApiService apiService;
 
-    private OpenFireApiManager() {
+    private OpenFireApiInteractor() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(OpenFireInterceptor.buildHttpClient())
@@ -34,9 +37,9 @@ public class OpenFireApiManager {
     }
 
 
-    public static OpenFireApiManager getInstance() {
+    public static OpenFireApiInteractor getInstance() {
         if (instance == null) {
-            instance = new OpenFireApiManager();
+            instance = new OpenFireApiInteractor();
         }
         return instance;
     }
@@ -106,7 +109,7 @@ public class OpenFireApiManager {
                 switch (response.code()) {
                     case ChatRoomApiListener.OK:
                         if (response.body().getChatRooms() != null) {
-                            listener.onSuccess(Channel.create(response.body().getChatRooms()));
+                            listener.onSuccess(response.body().getChatRooms());
                         }
                         break;
                     default:
@@ -124,7 +127,7 @@ public class OpenFireApiManager {
 
 
     public interface ChatRoomApiListener extends BaseApiListener {
-        void onSuccess(List<Channel> channels);
+        void onSuccess(List<ChatRoom> channels);
         void onError(String s);
     }
 

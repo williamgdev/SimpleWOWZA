@@ -9,15 +9,18 @@ import android.widget.TextView;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.model.Channel;
-import com.randmcnally.bb.poc.fragment.ChannelFragment;
+import com.randmcnally.bb.poc.view.ChannelFragmentView;
 
 import java.util.List;
+import java.util.StringTokenizer;
 
 public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.ChannelViewHolder> {
+    private final ChannelFragmentView view;
     Context context;
     List<Channel> channels;
 
-    public ChannelsAdapter(Context context, List<Channel> channels) {
+    public ChannelsAdapter(Context context, ChannelFragmentView view,  List<Channel> channels) {
+        this.view = view;
         this.context = context;
         this.channels = channels;
     }
@@ -34,23 +37,16 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
     }
 
     @Override
-    public void onBindViewHolder(ChannelViewHolder holder, final int position) {
+    public void onBindViewHolder(final ChannelViewHolder holder, final int position) {
         holder.setName(channels.get(position).getName());
+        if (channels.get(position).getHistory() != null)
+            holder.setNumber(channels.get(position).getHistory().getMissedMessages().size());
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ChannelFragment.openChannelActivity(context, channels.get(position));
-//                ChannelFragment.openChannelActivity(context, "a1abd153");
+                view.onChannelSelected(channels.get(position));
             }
         });
-
-//        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-//            @Override
-//            public boolean onLongClick(View v) {
-//                ChannelFragment.openReceiverActivity(context, GoCoderSDK.getUrlStream());
-//                return true;
-//            }
-//        });
     }
 
     public Channel getChannel(int position) {
@@ -64,16 +60,26 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
 
     public class ChannelViewHolder extends RecyclerView.ViewHolder {
         private TextView txtName;
+        TextView txtMissedMessages;
 
         public ChannelViewHolder(View view) {
             super(view);
             txtName = (TextView) view.findViewById(R.id.channel_item_name);
+            txtMissedMessages = (TextView) view.findViewById(R.id.channel_badge_missed_messages);
         }
 
         public void setName(String name) {
             txtName.setText(name);
         }
-
+        public void setNumber(int number) {
+            if (number != 0){
+                txtMissedMessages.setVisibility(View.VISIBLE);
+                txtMissedMessages.setText(String.valueOf(number));
+            }
+            else{
+                txtMissedMessages.setVisibility(View.INVISIBLE);
+            }
+        }
 
     }
 

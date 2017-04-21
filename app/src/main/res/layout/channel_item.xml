@@ -20,6 +20,7 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             >
             <!--<TextView-->
                 <!--android:id="@+id/channel_item_id"-->
@@ -30,11 +31,24 @@
 
             <TextView
                 android:id="@+id/channel_item_name"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:textSize="@dimen/item_text"
+                android:layout_marginLeft="@dimen/badge_width"
                 android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/channel_badge_missed_messages"
+                android:layout_width="@dimen/badge_width"
+                android:layout_height="@dimen/badge_width"
+                android:gravity="center"
+                android:padding="@dimen/badge_padding"
+                android:textColor="@android:color/primary_text_dark"
+                android:background="@drawable/badge_item_count"
+                android:text="0"
+                android:layout_marginLeft="@dimen/badge_padding"
+                android:visibility="invisible"
+                />
 
 
         </LinearLayout>

@@ -4,10 +4,12 @@ import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.PagerAdapter;
 import com.randmcnally.bb.poc.presenter.HomePresenter;
 import com.randmcnally.bb.poc.presenter.HomePresenterImpl;
+import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.view.HomeView;
 
 
@@ -43,7 +45,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
 
     @Override
     protected boolean isToolbarAdded() {
-        return true;
+        return false;
     }
 
     @Override
@@ -60,7 +62,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     protected void initializeUIComponents() {
         viewPager = (ViewPager) findViewById(R.id.pager);
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.addTab(tabLayout.newTab().setText("ChannelDB"));
+        tabLayout.addTab(tabLayout.newTab().setText("Channels"));
 //        tabLayout.addTab(tabLayout.newTab().setText("Contacts"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
@@ -110,7 +112,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     }
 
     @Override
-    public void updateView(ChannelActivity.UIState state) {
+    public void updateView(ChannelView.UIState state) {
         // Update here the UI
     }
 
@@ -123,6 +125,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     public void initializePresenter() {
         presenter = new HomePresenterImpl();
         presenter.attachView(this);
+        presenter.setOpenFireServer(((BBApplication) getApplication()).getOpenFireServer(this));
     }
 
 
