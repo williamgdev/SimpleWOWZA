@@ -2,6 +2,7 @@ package com.randmcnally.bb.poc.presenter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
@@ -14,7 +15,7 @@ import com.randmcnally.bb.poc.view.HomeView;
 
 
 public class HomePresenterImpl implements HomePresenter {
-    private static final String TAG = "HomePresenterImpl";
+    private static final String TAG = "HomePresenterImpl ->";
 
     HomeView homeView;
 
@@ -29,26 +30,13 @@ public class HomePresenterImpl implements HomePresenter {
     }
 
     @Override
-    public void setOpenFireServer(OpenFireServer openFireServer) {
+    public void setOpenFireServer(final OpenFireServer openFireServer) {
+        openFireServer.connectOpenFireServer();
         openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
             @Override
             public void notifyStatusOpenFireServer(STATE state, String message) {
                 switch (state) {
                     case ERROR:
-//                        String uniqueID = FileUtil.getDeviceUID(channelFragmentView.getContext());
-//
-//                        apiManager = OpenFireApiInteractor.getInstance();
-//                        apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiInteractor.CreateUserApiListener() {
-//                            @Override
-//                            public void onSuccess(String s) {
-//                                showToast(s);
-//                            }
-//
-//                            @Override
-//                            public void onError(String s) {
-//                                showToast(s);
-//                            }
-//                        });
                         break;
                     case CONNECTION_CLOSED:
                         break;
@@ -58,6 +46,24 @@ public class HomePresenterImpl implements HomePresenter {
                         break;
                     case AUTHENTICATED:
                         showToast("Connected");
+                        Log.d(TAG, "notifyStatusOpenFireServer: User created successfully");
+                        break;
+                    case NOT_AUTHORIZED:
+                        String uniqueID = FileUtil.getDeviceUID(homeView.getContext());
+
+                        OpenFireApiInteractor apiManager = OpenFireApiInteractor.getInstance();
+                        apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiInteractor.CreateUserApiListener() {
+                            @Override
+                            public void onSuccess(String s) {
+                                openFireServer.connectOpenFireServer();
+                            }
+
+                            @Override
+                            public void onError(String s) {
+                                showToast(s);
+                            }
+                        });
+
                         break;
                     case CONNECTED:
                         break;

@@ -18,10 +18,11 @@ import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelFragmentView;
 
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.util.List;
 
-public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
+public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
     ChannelFragmentView channelFragmentView;
     List<Channel> channels;
     private OpenFireApiInteractor apiManager;
@@ -39,7 +40,6 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
 //        daoSession = daoMaster.newSession();
 //        channelDao = daoSession.getChannelDao();
 //        channels = channelDao.loadAll();
-
 
 
     }
@@ -93,7 +93,8 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
 
     @Override
     public void setOpenFireServer(final OpenFireServer openFireServer) {
-        this.openFireServer =  openFireServer;
+        this.openFireServer = openFireServer;
+        openFireServer.connectOpenFireServer();
         openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
             @Override
             public void notifyStatusOpenFireServer(STATE state, String message) {
@@ -110,9 +111,7 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
                         for (Channel channel :
                                 channels) {
                             getMissedMessages(openFireServer, channel);
-
                         }
-
                         break;
                     case CONNECTED:
                         break;
@@ -123,8 +122,22 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
     }
 
     @Override
-    public void getMissedMessages(OpenFireServer openFireServer, final Channel channel) {
-        openFireServer.joinToChannel(channel.getRoomId(), new OpenFireServer.AuthenticatedGroupChatListener() {
+    public void getMissedMessages(final OpenFireServer openFireServer, final Channel channel) {
+        openFireServer.getGroupChatRoom(channel.getRoomId(), new OpenFireServer.OpenFireListener<MultiUserChat>() {
+            @Override
+            public void onSuccess(MultiUserChat chat) {
+                getMissedMessages(chat, channel);
+            }
+
+            @Override
+            public void onError(String message) {
+                showToast(message);
+            }
+        });
+    }
+
+    private void getMissedMessages(MultiUserChat chat, final Channel channel) {
+        openFireServer.joinToGroupChat(chat, new OpenFireServer.OpenFireListener<List<Message>>() {
             @Override
             public void onSuccess(List<Message> history) {
                 channel.setHistory(History.create(history));
@@ -134,14 +147,14 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
 
             @Override
             public void onError(String message) {
-                showToast("No missed message");
+                showToast(message);
             }
         });
     }
 
     @Override
     public void updateChannel() {
-        ((Activity)channelFragmentView.getContext()).runOnUiThread(new Runnable() {
+        ((Activity) channelFragmentView.getContext()).runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 channelFragmentView.setChannels(channels);
@@ -159,11 +172,11 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter{
         channelFragmentView = null;
     }
 
-    private void showToast(final String message){
-        ((Activity)channelFragmentView.getContext()).runOnUiThread(new Runnable() {
+    private void showToast(final String message) {
+        ((Activity) channelFragmentView.getContext()).runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(channelFragmentView.getContext(), message , Toast.LENGTH_LONG).show();
+                Toast.makeText(channelFragmentView.getContext(), message, Toast.LENGTH_LONG).show();
             }
         });
 

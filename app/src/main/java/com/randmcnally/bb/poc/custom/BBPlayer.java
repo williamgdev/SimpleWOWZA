@@ -1,7 +1,9 @@
 package com.randmcnally.bb.poc.custom;
 
+import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 
 import com.randmcnally.bb.poc.model.Playlist;
 
@@ -15,41 +17,44 @@ public class BBPlayer {
     private boolean playing;
     private MediaPlayer mediaPlayer;
     private boolean playListAdded;
+    Context context;
 
-    public BBPlayer(String url, ListenerBBPlayer listener) throws IOException {
+    public BBPlayer(String url, ListenerBBPlayer listener, Context context) throws IOException {
+        this.context = context;
         this.listener = listener;
         this.mediaUrl = url;
         playing = false;
-        mediaPlayer = new MediaPlayer();
+
+        mediaPlayer = MediaPlayer.create(context, Uri.parse(url));
+
         mediaPlayer.setOnInfoListener(onInfoListener);
         mediaPlayer.setOnErrorListener(onErrorListener);
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setDataSource(url);
+//        mediaPlayer.setDataSource(url);
 
     }
 
-    public BBPlayer(Playlist playlist, ListenerBBPlayer listener) throws IOException {
+    public BBPlayer(Playlist playlist, ListenerBBPlayer listener, Context context) throws IOException {
+        this.context = context;
         this.listener = listener;
         this.playlist = playlist;
         playing = false;
         playListAdded = true;
-        createMediaPlayer();
+        createMediaPlayer(context);
 
     }
 
-    private void createMediaPlayer() throws IOException {
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnInfoListener(onInfoListener);
-        mediaPlayer.setOnErrorListener(onErrorListener);
-        mediaPlayer.setOnPreparedListener(onPreparedListener);
-        mediaPlayer.setOnCompletionListener(onCompletionListener);
+    private void createMediaPlayer(Context context) throws IOException {
         String url = "";
         if (!playlist.isEmpty()) {
             url = playlist.getOlderMessages().getUrl();
-            mediaPlayer.setDataSource(url);
-            mediaPlayer.prepare();
+            mediaPlayer = MediaPlayer.create(context, Uri.parse(url));
+            mediaPlayer.setOnInfoListener(onInfoListener);
+            mediaPlayer.setOnErrorListener(onErrorListener);
+            mediaPlayer.setOnPreparedListener(onPreparedListener);
+            mediaPlayer.setOnCompletionListener(onCompletionListener);
         }
     }
 
@@ -77,7 +82,7 @@ public class BBPlayer {
     private void playNextVoiceMessage() {
         mediaPlayer.release();
         try {
-            createMediaPlayer();
+            createMediaPlayer(context);
             play();
         } catch (IOException e) {
             e.printStackTrace();

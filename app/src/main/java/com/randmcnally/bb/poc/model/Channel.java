@@ -31,6 +31,9 @@ public class Channel extends GroupChat implements Serializable{
     }
 
     public void setLiveStream(LiveStream liveStream) {
+        /**
+         * TODO Implement list of LiveStreams
+         */
         this.liveStream = liveStream;
     }
 
@@ -51,5 +54,10 @@ public class Channel extends GroupChat implements Serializable{
     private static Channel create(ChatRoom chatRoom) {
         Channel channel = new Channel(chatRoom.getNaturalName(), chatRoom.getRoomName());
         return channel;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

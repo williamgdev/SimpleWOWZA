@@ -9,7 +9,7 @@ import com.randmcnally.bb.poc.util.ReceiverStream;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
-public class ChannelInteractor implements R5ConnectionListener{
+public class ChannelInteractor implements R5ConnectionListener {
 
     private static final String TAG = "ChannelInteractor ->";
     private static ChannelInteractor instance;
@@ -30,18 +30,16 @@ public class ChannelInteractor implements R5ConnectionListener{
         receiverStream = new ReceiverStream(this);
     }
 
-    public static ChannelInteractor getInstance(Channel channel, ChannelInteractorListener listener){
-        if (instance == null) {
+    public static ChannelInteractor getInstance(Channel channel, ChannelInteractorListener listener) {
+        if (instance == null || !instance.channel.equals(channel)) {
             instance = new ChannelInteractor(channel, listener);
         }
         return instance;
-
     }
 
     /**
-     *
-     * @return name of the file created on the server
      * @param id
+     * @return name of the file created on the server
      */
     public void startBroadcast(int id) {
         if (broadcasterStream == null)
@@ -59,8 +57,7 @@ public class ChannelInteractor implements R5ConnectionListener{
             broadcasterStream.stopBroadcast();
             isBroadcasting = false;
             broadcasterStream = null; //Testing if it is work
-        }
-        else if(isListening) {
+        } else if (isListening) {
             receiverStream.stop();
             isListening = false;
             receiverStream = null;
@@ -111,7 +108,7 @@ public class ChannelInteractor implements R5ConnectionListener{
                 listener.notify(ChannelInteractorListener.STATE.STARTED);
                 break;
             case NET_STATUS:
-                switch (r5ConnectionEvent.message){
+                switch (r5ConnectionEvent.message) {
                     case "NetStream.Play.UnpublishNotify":
                         stopListen();
                         listener.notify(ChannelInteractorListener.STATE.AUDIO_MUTE);
@@ -127,7 +124,7 @@ public class ChannelInteractor implements R5ConnectionListener{
                 break;
             case ERROR:
                 stop();
-                switch (r5ConnectionEvent.message){
+                switch (r5ConnectionEvent.message) {
                     case "No Valid Media Found":
                         listener.notify(ChannelInteractorListener.STATE.MEDIA_NOT_FOUND);
                         break;
@@ -161,8 +158,9 @@ public class ChannelInteractor implements R5ConnectionListener{
         return isStreaming;
     }
 
-    public interface ChannelInteractorListener{
+    public interface ChannelInteractorListener {
         enum STATE {STARTED, AUDIO_MUTE, AUDIO_UNMUTE, MEDIA_NOT_FOUND, CLOSED, AUDIO_STARTED_LISTEN, STOPPED}
+
         void notify(STATE state);
     }
 }

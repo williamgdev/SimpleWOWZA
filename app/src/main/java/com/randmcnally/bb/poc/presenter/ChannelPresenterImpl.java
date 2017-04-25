@@ -10,34 +10,24 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.randmcnally.bb.poc.custom.BBPlayer;
-import com.randmcnally.bb.poc.dao.HistoryEntity;
-import com.randmcnally.bb.poc.dao.HistoryEntityDao;
-import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.LiveStream;
-import com.randmcnally.bb.poc.model.Playlist;
-import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
-import com.randmcnally.bb.poc.util.ChannelUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
 
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.List;
 
-
-
-public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.OpenFireMessageListener, ChannelInteractor.ChannelInteractorListener{
+public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.OpenFireMessageListener, ChannelInteractor.ChannelInteractorListener {
     private static final String TAG = "Broadcast ->";
 
     ChannelView channelView;
@@ -53,17 +43,16 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
     Red5ProApiInteractor red5ProApiInteractor;
 
     History red5ProHistory;
-    private Playlist playList;
-    private Channel channel;
+    private Channel activeChannel;
     private OpenFireServer openFireServer;
-
+    private MultiUserChat currentChat;
 
     public ChannelPresenterImpl(Channel channel) {
         /**
          * TODO Get the id from the last stream created
          */
-        this.channel = channel;
-        this.channel.setLiveStream(new LiveStream(channel.getRoomId(), 0)); //the stream name is created with the same name as a roomId
+        this.activeChannel = channel;
+        this.activeChannel.setLiveStream(new LiveStream(channel.getRoomId(), 0)); //the stream name is created with the same name as a roomId
         this.channelInteractor = ChannelInteractor.getInstance(channel, this);
         red5ProApiInteractor = Red5ProApiInteractor.getInstance();
         red5ProApiInteractor.getRecordedFiles(new Red5ProApiInteractor.RecordedFileApiListener() {
@@ -87,21 +76,28 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
     private BroadcastReceiver localNotificationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String online = "";
-
             if (intent.getStringExtra("online") != null) {
-                online = intent.getStringExtra("online");
-            }
-            if (online.equals("true")) {
-                if (intent.getStringExtra("stream_name") != null && intent.getStringExtra("stream_id") != null) {
-                    channel.setLiveStream(new LiveStream(intent.getStringExtra("stream_name"), Integer.parseInt(intent.getStringExtra("stream_id"))));
-                    startListen(channel.getLiveStream());
+                String online = intent.getStringExtra("online");
+
+                if (online.equals("true")) {
+                    if (intent.getStringExtra("stream_name") != null && intent.getStringExtra("stream_id") != null) {
+                        String streamName = intent.getStringExtra("stream_name");
+                        int streamId = Integer.parseInt(intent.getStringExtra("stream_id"));
+
+                        if (activeChannel.getLiveStream().getStreamName().equals(streamName)) {
+                            activeChannel.setLiveStream(new LiveStream(intent.getStringExtra("stream_name"), streamId));
+                            startListen(activeChannel.getLiveStream());
+                        } else {
+                            /**
+                             * TODO Save the message in the Muted Channel
+                             */
+                            showToast("The Channel is not active");
+                        }
+                    } else {
+                        showToast("Error: No stream name received");
+                    }
+                } else {
                 }
-                else {
-                    Toast.makeText(context, "Error: No stream name received", Toast.LENGTH_SHORT).show();
-                }
-            }
-            else {
             }
         }
     };
@@ -139,28 +135,40 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
     }
 
     @Override
-    public void setOpenFireServer(OpenFireServer openFireServer) {
+    public void setOpenFireServer(final OpenFireServer openFireServer) {
         this.openFireServer = openFireServer;
-            openFireServer.joinToChannel(channel.getRoomId(), new OpenFireServer.AuthenticatedGroupChatListener() {
-                @Override
-                public void onSuccess(List<Message> history) {
-                    updateView(ChannelView.UIState.MISSED_MESSAGE);
+        openFireServer.getGroupChatRoom(activeChannel.getRoomId(), new OpenFireServer.OpenFireListener<MultiUserChat>() {
+            @Override
+            public void onSuccess(MultiUserChat chat) {
+                getMissedMessages(chat);
+                setCurrentChat(chat);
+            }
 
-                }
+            @Override
+            public void onError(String message) {
+                showToast(message);
+            }
+        });
+    }
 
-                @Override
-                public void onError(String message) {
-                    showToast("No missed messages");
-                }
-            });
+    private void getMissedMessages(MultiUserChat chat) {
+        openFireServer.joinToGroupChat(chat, new OpenFireServer.OpenFireListener<List<Message>>() {
+            @Override
+            public void onSuccess(List<Message> history) {
+                updateView(ChannelView.UIState.MISSED_MESSAGE);
+            }
 
-        openFireServer.setMessageListener(this);
-
+            @Override
+            public void onError(String message) {
+                showToast(message);
+            }
+        });
+        openFireServer.setMessageListener(chat, this);
     }
 
     @Override
     public int getMissedMessages() {
-        return channel.getHistory().getMissedMessages().size();
+        return activeChannel.getHistory().getMissedMessages().size();
     }
 
     @Override
@@ -195,9 +203,9 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
         if (preparing) {
             preparing = false;
             updateView(ChannelView.UIState.READY);
-            if (playList != null) {
+            if (activeChannel.getHistory().getMissedMessages() != null) {
                 try {
-                    BBPlayer bbPlayer = new BBPlayer(playList, new BBPlayer.ListenerBBPlayer() {
+                    BBPlayer bbPlayer = new BBPlayer(activeChannel.getHistory().getMissedMessages(), new BBPlayer.ListenerBBPlayer() {
                         @Override
                         public void onListener(BBPlayer.BBPLAYERSTATE state) {
                             switch (state) {
@@ -225,7 +233,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
                                     break;
                             }
                         }
-                    });
+                    }, channelView.getContext());
                     bbPlayer.play();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -278,7 +286,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
         }
     }
 
-    private void showToast(final String message){
+    private void showToast(final String message) {
         if (channelView != null) {
             ((Activity) channelView.getContext()).runOnUiThread(new Runnable() {
                 @Override
@@ -291,21 +299,22 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
     }
 
     public void startListen(LiveStream liveStream) {
-        this.channel.setLiveStream(liveStream);
+        activeChannel.setLiveStream(liveStream);
         bcStartTime = new Date();
-         if (channelInteractor.isBroadcasting()){
+        if (channelInteractor.isBroadcasting()) {
             channelInteractor.stop();
         }
-        if(!isPlaying()){
+        if (!isPlaying()) {
             channelInteractor.play(liveStream);
             updateView(ChannelView.UIState.RECEIVING);
         }
     }
 
     private int nextCounter() {
-        counter ++;
+        counter++;
         return getCounter();
     }
+
     public int getCounter() {
         if (counter > 5)
             counter = 0;
@@ -400,20 +409,25 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
                 public void run() {
                     /**
                      * TODO
-                     * 1- Check if the channel is the active and the stream name is related with the channel name
+                     *
                      * 2- remove the messages depends of the limit declared in the stream. actual is 5
                      * 3- check all channels and notify the user the message for each one
                      * 4- create a state to know when the message is already listened. No start listen the user message
                      * 5- check the file already exists
                      */
-                    channel.setLiveStream(new LiveStream(streamName, Integer.parseInt(streamId)));
-                    startListen(channel.getLiveStream());
-                    Log.d(TAG, "notifyMessage: " + channel.getLiveStream().getPublishStreamName());
+                    if (activeChannel.getLiveStream().getStreamName().equals(streamName)) {
+                        activeChannel.setLiveStream(new LiveStream(streamName, Integer.parseInt(streamId)));
+                        startListen(activeChannel.getLiveStream());
+                        Log.d(TAG, "notifyMessage: " + activeChannel.getLiveStream().getPublishStreamName());
+                    } else {
+                        /**
+                         * TODO  Save the message in the Muted Channel
+                         * SAME in BroadcastReceiver localNotificationReceiver onReceive
+                         */
+                    }
                 }
             });
         }
-
-
     }
 
     @Override
@@ -421,7 +435,14 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
         switch (state) {
             case STARTED:
                 if (isBroadcasting()) {
-                    openFireServer.sendNotification(channel.getLiveStream().getStreamName(), channel.getLiveStream().getId());
+                    if (activeChannel.getLiveStream().getStreamName().equals(currentChat.getRoom().getLocalpart().toString())) {
+                        openFireServer.sendNotification(currentChat, activeChannel.getLiveStream().getStreamName(), activeChannel.getLiveStream().getId());
+
+                    } else {
+                        /**
+                         * TODO check if it is the actual channel
+                         */
+                    }
                     showToast("STREAMING");
                 }
                 streamStartTime = new Date();
@@ -432,36 +453,36 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
             case AUDIO_UNMUTE:
                 updateView(ChannelView.UIState.RECEIVING);
                 if (channelInteractor.isStreaming())
-                    channel.getLiveStream().setId(getCounter());
-                    startListen(channel.getLiveStream());
+                    activeChannel.getLiveStream().setId(getCounter());
+                startListen(activeChannel.getLiveStream());
                 streamStartTime = new Date();
                 break;
             case MEDIA_NOT_FOUND:
                 /**
                  * TODO notify the stream is not active
-                 */
 
-                VoiceMessage voiceMessage = red5ProHistory.hasMessage(channel.getLiveStream().getPublishStreamName());
-                if (voiceMessage != null){
-                    Log.d(TAG, "notifyMessage: " + channel.getLiveStream().getPublishStreamName());
-                    if (!voiceMessage.isEmpty()) {
-                        if (playList == null)
-                            playList = new Playlist();
-                        playList.addMessage(voiceMessage);
 
-                    } else { // Check if it is a live message
+                 VoiceMessage voiceMessage = red5ProHistory.hasMessage(channel.getLiveStream().getPublishStreamName());
+                 if (voiceMessage != null){
+                 Log.d(TAG, "notifyMessage: " + channel.getLiveStream().getPublishStreamName());
+                 if (!voiceMessage.isEmpty()) {
+                 if (playList == null)
+                 playList = new Playlist();
+                 playList.addMessage(voiceMessage);
 
-                    }
-                } else {
-                    /**
-                     * Message is not related with the files on the Server.
-                     * Cases:
-                     * - Old Message
-                     * - ChannelEntity does not exist anymore
-                     *
-                     * TODO Remove this old message from the server
-                     */
-                }
+                 } else { // Check if it is a live message
+
+                 }
+                 } else {
+                 /**
+                 * Message is not related with the files on the Server.
+                 * Cases:
+                 * - Old Message
+                 * - ChannelEntity does not exist anymore
+                 *
+                 * TODO Remove this old message from the server
+
+                 }*/
                 break;
             case CLOSED:
                 if (isPlaying() || isBroadcasting())
@@ -474,5 +495,9 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
                 updateView(ChannelView.UIState.READY);
                 break;
         }
+    }
+
+    public void setCurrentChat(MultiUserChat currentChat) {
+        this.currentChat = currentChat;
     }
 }
