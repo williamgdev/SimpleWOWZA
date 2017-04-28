@@ -39,8 +39,8 @@ public class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.Channe
     @Override
     public void onBindViewHolder(final ChannelViewHolder holder, final int position) {
         holder.setName(channels.get(position).getName());
-        if (channels.get(position).getHistory() != null)
-            holder.setNumber(channels.get(position).getHistory().getMissedMessages().size());
+        holder.setNumber(channels.get(position).getHistory().getMissedMessages().size());
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

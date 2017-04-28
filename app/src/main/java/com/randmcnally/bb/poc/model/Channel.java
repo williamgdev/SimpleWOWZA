@@ -16,6 +16,8 @@ public class Channel extends GroupChat implements Serializable{
     public Channel(String channelName, String roomId) {
         super(roomId);
         this.name = channelName;
+        history = new History();
+        liveStream = new LiveStream(channelName);
     }
 
     public History getHistory() {

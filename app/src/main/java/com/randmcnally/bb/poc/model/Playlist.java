@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.Stack;
 
 public class Playlist implements Serializable{
-    Stack<VoiceMessage> voiceMessages = new Stack<>();
+    Stack<VoiceMessage> voiceMessages;
+
+    public Playlist() {
+        voiceMessages = new Stack<>();
+    }
 
     public VoiceMessage getOlderMessages() {
         return voiceMessages.pop();

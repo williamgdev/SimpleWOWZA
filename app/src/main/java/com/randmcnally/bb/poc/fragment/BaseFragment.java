@@ -25,6 +25,8 @@ public abstract class BaseFragment extends Fragment implements BaseView{
         return view;
     }
 
+    protected abstract void initializePresenter();
+
     @LayoutRes
     protected abstract int getLayoutID();
 

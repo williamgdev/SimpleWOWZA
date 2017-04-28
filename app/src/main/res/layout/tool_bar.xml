@@ -1,31 +1,29 @@
-<android.support.v7.widget.Toolbar
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_alignParentTop="true"
     android:background="@color/colorBlack"
     android:elevation="6dp"
-    android:minHeight="?attr/actionBarSize"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:minHeight="?attr/actionBarSize">
 
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:id="@+id/toolbar_icon"
-            android:src="@drawable/icon_r_m"
-            android:visibility="gone"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:id="@+id/toolbar_txt_title"
-            android:textSize="@dimen/title"
-            android:textColor="@color/colorGray"
-            android:layout_gravity="center"
-            android:text="@string/app_name"
-            android:layout_marginLeft="@dimen/fab_margin"
-            />
-    </android.support.v7.widget.Toolbar>
-    <!--android:textColor="@color/colorGray"-->
+    <ImageView
+        android:id="@+id/toolbar_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@drawable/icon_r_m"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/toolbar_txt_title"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginLeft="@dimen/fab_margin"
+        android:text="@string/app_name"
+        android:textColor="@color/colorGray"
+        android:textSize="@dimen/title" />
+</android.support.v7.widget.Toolbar>
+<!--android:textColor="@color/colorGray"-->

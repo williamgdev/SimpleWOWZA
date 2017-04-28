@@ -17,10 +17,13 @@ import retrofit2.Retrofit;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 public class OpenFireApiInteractor {
-    public static final String HOST_NAME = "192.168.43.212";
-    public static final String BASE_URL = "http://" + HOST_NAME + ":9090/plugins/restapi/v1/";
     public static final String GROUPCHAT_SERVICE = "randmcnally";
-    public static final String XMPP_DOMAIN = "openfire.test";
+//    public static final String XMPP_DOMAIN = "openfire.test";
+//        public static final String HOST_NAME = "192.168.43.212";
+    public static final String XMPP_DOMAIN = "ec2-54-214-229-152.us-west-2.compute.amazonaws.com";
+    public static final String HOST_NAME = "54.214.229.152";
+
+    public static final String BASE_URL = "http://" + HOST_NAME + ":9090/plugins/restapi/v1/";
 
     private static OpenFireApiInteractor instance;
     private OpenFireApiService apiService;

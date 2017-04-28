@@ -23,12 +23,15 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Red5ProApiInteractor {
-    public static final String IP_ADDRESS = "192.168.43.212";
-    //  private static final String IP_ADDRESS = "192.168.1.233";
     public static final int STREAM_PORT = 8554;
     static final int API_PORT = 5080;
-    public static final String SDK_LICENSE_KEY = "X3UH-6RKQ-JKPE-NO3R";
     public static final String APP_ID = "com.randmcnally.bb.poc";
+//
+//    public static final String IP_ADDRESS = "192.168.43.212";
+//    public static final String SDK_LICENSE_KEY = "X3UH-6RKQ-JKPE-NO3R";
+//    AWS Config
+    public static final String IP_ADDRESS = "54.214.229.152";
+    public static final String SDK_LICENSE_KEY = "YZF3-4Y36-3ROB-CSXV";
 
     public static final String ACCESS_TOKEN = "123";
     public static final String APP_NAME = "live";

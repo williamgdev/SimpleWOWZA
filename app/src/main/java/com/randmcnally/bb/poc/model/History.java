@@ -14,6 +14,7 @@ public class History implements Serializable {
 
     public History() {
         this.history = new ArrayList<>();
+        missedMessages = new Playlist();
     }
 
     public void setHistory(List<VoiceMessage> history) {

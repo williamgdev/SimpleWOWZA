@@ -15,7 +15,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.view.BaseView;
@@ -39,6 +38,8 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
         initializePresenter();
 
     }
+
+    protected abstract void initializePresenter();
 
     protected void setToolbarTitle(String title){
         if (isToolbarAdded()) {

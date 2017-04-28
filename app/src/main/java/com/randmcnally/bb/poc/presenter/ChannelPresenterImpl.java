@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.OpenFireMessageListener, ChannelInteractor.ChannelInteractorListener {
+public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor.ChannelInteractorListener {
     private static final String TAG = "Broadcast ->";
 
     ChannelView channelView;
@@ -140,7 +140,6 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
         openFireServer.getGroupChatRoom(activeChannel.getRoomId(), new OpenFireServer.OpenFireListener<MultiUserChat>() {
             @Override
             public void onSuccess(MultiUserChat chat) {
-                getMissedMessages(chat);
                 setCurrentChat(chat);
             }
 
@@ -149,21 +148,57 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
                 showToast(message);
             }
         });
+        this.openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
+            @Override
+            public void notifyStatusOpenFireServer(STATE state, String message) {
+                
+            }
+
+            @Override
+            public void notifyMessage(final String streamName, final String streamId) {
+                if (!isBroadcasting()) {
+                    final Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            /**
+                             * TODO
+                             *
+                             * 2- remove the messages depends of the limit declared in the stream. actual is 5
+                             * 3- check all channels and notify the user the message for each one
+                             * 4- create a state to know when the message is already listened. No start listen the user message
+                             * 5- check the file already exists
+                             */
+                            if (activeChannel.getLiveStream().getStreamName().equals(streamName)) {
+                                activeChannel.setLiveStream(new LiveStream(streamName, Integer.parseInt(streamId)));
+                                startListen(activeChannel.getLiveStream());
+                                Log.d(TAG, "notifyMessage: " + activeChannel.getLiveStream().getPublishStreamName());
+                            } else {
+                                /**
+                                 * TODO  Save the message in the Muted Channel
+                                 * SAME in BroadcastReceiver localNotificationReceiver onReceive
+                                 */
+                            }
+                        }
+                    });
+                }
+            }
+        });
     }
 
     private void getMissedMessages(MultiUserChat chat) {
-        openFireServer.joinToGroupChat(chat, new OpenFireServer.OpenFireListener<List<Message>>() {
-            @Override
-            public void onSuccess(List<Message> history) {
-                updateView(ChannelView.UIState.MISSED_MESSAGE);
-            }
-
-            @Override
-            public void onError(String message) {
-                showToast(message);
-            }
-        });
-        openFireServer.setMessageListener(chat, this);
+//        openFireServer.joinToGroupChat(chat, new OpenFireServer.OpenFireListener<List<Message>>() {
+//            @Override
+//            public void onSuccess(List<Message> history) {
+//                updateView(ChannelView.UIState.MISSED_MESSAGE);
+//            }
+//
+//            @Override
+//            public void onError(String message) {
+//                showToast(message);
+//            }
+//        });
+//        openFireServerœ.setMessageListener(chat, this);
     }
 
     @Override
@@ -233,7 +268,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
                                     break;
                             }
                         }
-                    }, channelView.getContext());
+                    });
                     bbPlayer.play();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -398,36 +433,6 @@ public class ChannelPresenterImpl implements ChannelPresenter, OpenFireServer.Op
         streamStartTime = null;
         bcStartTime = null;
         return timeDelay;
-    }
-
-    @Override
-    public void notifyMessage(final String streamName, final String streamId) {
-        if (!isBroadcasting()) {
-            final Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    /**
-                     * TODO
-                     *
-                     * 2- remove the messages depends of the limit declared in the stream. actual is 5
-                     * 3- check all channels and notify the user the message for each one
-                     * 4- create a state to know when the message is already listened. No start listen the user message
-                     * 5- check the file already exists
-                     */
-                    if (activeChannel.getLiveStream().getStreamName().equals(streamName)) {
-                        activeChannel.setLiveStream(new LiveStream(streamName, Integer.parseInt(streamId)));
-                        startListen(activeChannel.getLiveStream());
-                        Log.d(TAG, "notifyMessage: " + activeChannel.getLiveStream().getPublishStreamName());
-                    } else {
-                        /**
-                         * TODO  Save the message in the Muted Channel
-                         * SAME in BroadcastReceiver localNotificationReceiver onReceive
-                         */
-                    }
-                }
-            });
-        }
     }
 
     @Override

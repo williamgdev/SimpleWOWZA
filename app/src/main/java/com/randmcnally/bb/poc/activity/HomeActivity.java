@@ -50,7 +50,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
 
     @Override
     protected int getProgressbarID() {
-        return R.id.main_progress;
+        return R.id.home_progress;
     }
 
     @Override
@@ -65,7 +65,11 @@ public class HomeActivity extends BaseActivity implements HomeView {
         tabLayout.addTab(tabLayout.newTab().setText("Channels"));
 //        tabLayout.addTab(tabLayout.newTab().setText("Contacts"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        updateView(ChannelView.UIState.LOADING);
 
+    }
+
+    private void setAdapter() {
         pagerAdapter = new PagerAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(pagerAdapter);
@@ -86,7 +90,6 @@ public class HomeActivity extends BaseActivity implements HomeView {
 
             }
         });
-
     }
 
 //    @Override
@@ -114,6 +117,13 @@ public class HomeActivity extends BaseActivity implements HomeView {
     @Override
     public void updateView(ChannelView.UIState state) {
         // Update here the UI
+        switch (state){
+            case LOADING:
+                break;
+            case READY:
+                setAdapter();
+                break;
+        }
     }
 
     @Override

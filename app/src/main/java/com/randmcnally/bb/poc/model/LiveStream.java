@@ -13,6 +13,11 @@ public class LiveStream implements Serializable {
         this.id = id;
     }
 
+    public LiveStream(String streamName) {
+        this.streamName = streamName;
+        id = 0;
+    }
+
     public int getId() {
         return id;
     }

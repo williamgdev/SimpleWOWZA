@@ -2,6 +2,7 @@ package com.randmcnally.bb.poc.presenter;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.randmcnally.bb.poc.dao.HistoryEntity;
@@ -20,9 +21,12 @@ import com.randmcnally.bb.poc.view.ChannelFragmentView;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
+    private static final String TAG = "ChannelFragmentPresenterImpl ->";
     ChannelFragmentView channelFragmentView;
     List<Channel> channels;
     private OpenFireApiInteractor apiManager;
@@ -50,19 +54,20 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
         apiManager.getChatRooms(new OpenFireApiInteractor.ChatRoomApiListener() {
             @Override
             public void onSuccess(List<ChatRoom> chatRooms) {
-                channels = Channel.create(chatRooms);
-                channelFragmentView.setChannels(channels);
+                setChannels(Channel.create(chatRooms));
+                getMissedMessages(openFireServer.getGroupChatHistoryHashMap(), chatRooms);
+                updateChannel();
             }
 
             @Override
             public void onError(String s) {
-
+                showToast(s);
             }
         });
     }
 
     @Override
-    public void updateMissedMessages(final Channel channel) {
+    public void updateChannelMissedMessages(final Channel channel) {
         databaseInteractor.readByName(channel.getRoomId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
             @Override
             public void onResult(HistoryEntity result) {
@@ -93,63 +98,26 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
 
     @Override
     public void setOpenFireServer(final OpenFireServer openFireServer) {
+        Log.d(TAG, "setOpenFireServer: run");
         this.openFireServer = openFireServer;
-        openFireServer.connectOpenFireServer();
-        openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
-            @Override
-            public void notifyStatusOpenFireServer(STATE state, String message) {
-                switch (state) {
-                    case ERROR:
-                        break;
-                    case CONNECTION_CLOSED:
-                        break;
-                    case RECONNECTION_SUCCESS:
-                        break;
-                    case RECONNECTION_FAILED:
-                        break;
-                    case AUTHENTICATED:
-                        for (Channel channel :
-                                channels) {
-                            getMissedMessages(openFireServer, channel);
-                        }
-                        break;
-                    case CONNECTED:
-                        break;
-                }
-            }
-
-        });
     }
 
     @Override
-    public void getMissedMessages(final OpenFireServer openFireServer, final Channel channel) {
-        openFireServer.getGroupChatRoom(channel.getRoomId(), new OpenFireServer.OpenFireListener<MultiUserChat>() {
-            @Override
-            public void onSuccess(MultiUserChat chat) {
-                getMissedMessages(chat, channel);
-            }
+    public void getMissedMessages(final HashMap<MultiUserChat, List<Message>> groupChatHistoryHashMap, final List<ChatRoom> chatRooms) {
+        Log.d(TAG, "getMissedMessages: Run");
 
-            @Override
-            public void onError(String message) {
-                showToast(message);
+        if (groupChatHistoryHashMap.size() != 0){
+            for (Map.Entry<MultiUserChat, List<Message>> groupChatMessage :
+                    groupChatHistoryHashMap.entrySet()) {
+                for (Channel channel :
+                        channels) {
+                    if (groupChatMessage.getKey().getSubject().equals(channel.getName())){
+                        channel.setHistory(History.create(groupChatMessage.getValue()));
+                        updateChannelMissedMessages(channel);
+                    }
+                }
             }
-        });
-    }
-
-    private void getMissedMessages(MultiUserChat chat, final Channel channel) {
-        openFireServer.joinToGroupChat(chat, new OpenFireServer.OpenFireListener<List<Message>>() {
-            @Override
-            public void onSuccess(List<Message> history) {
-                channel.setHistory(History.create(history));
-                updateMissedMessages(channel);
-                updateChannel();
-            }
-
-            @Override
-            public void onError(String message) {
-                showToast(message);
-            }
-        });
+        }
     }
 
     @Override

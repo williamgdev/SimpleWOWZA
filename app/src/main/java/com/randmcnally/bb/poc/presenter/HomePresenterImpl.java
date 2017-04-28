@@ -11,7 +11,14 @@ import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.BaseView;
+import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.view.HomeView;
+
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+
+import java.util.HashMap;
+import java.util.List;
 
 
 public class HomePresenterImpl implements HomePresenter {
@@ -31,7 +38,9 @@ public class HomePresenterImpl implements HomePresenter {
 
     @Override
     public void setOpenFireServer(final OpenFireServer openFireServer) {
+        homeView.showProgress();
         openFireServer.connectOpenFireServer();
+
         openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
             @Override
             public void notifyStatusOpenFireServer(STATE state, String message) {
@@ -45,8 +54,23 @@ public class HomePresenterImpl implements HomePresenter {
                     case RECONNECTION_FAILED:
                         break;
                     case AUTHENTICATED:
-                        showToast("Connected");
-                        Log.d(TAG, "notifyStatusOpenFireServer: User created successfully");
+                        openFireServer.join(new OpenFireServer.OpenFireListener<HashMap<MultiUserChat, List<Message>>>() {
+                            @Override
+                            public void onSuccess(HashMap<MultiUserChat, List<Message>> result) {
+                                /**
+                                 * TODO Cash the channel on the database
+                                 */
+                                Log.d(TAG, "onSuccess: Join");
+                                hideProgress();
+                                updateUI(ChannelView.UIState.READY);
+                            }
+
+                            @Override
+                            public void onError(String message) {
+                                showToast(message);
+                            }
+                        });
+                        Log.d(TAG, "notifyStatusOpenFireServer: OpenFire Authenticated Successfully");
                         break;
                     case NOT_AUTHORIZED:
                         String uniqueID = FileUtil.getDeviceUID(homeView.getContext());
@@ -55,6 +79,7 @@ public class HomePresenterImpl implements HomePresenter {
                         apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiInteractor.CreateUserApiListener() {
                             @Override
                             public void onSuccess(String s) {
+                                Log.d(TAG, "notifyStatusOpenFireServer: User created successfully");
                                 openFireServer.connectOpenFireServer();
                             }
 
@@ -70,6 +95,11 @@ public class HomePresenterImpl implements HomePresenter {
                 }
             }
 
+            @Override
+            public void notifyMessage(String streamName, String streamId) {
+                Log.d(TAG, "notifyMessage: " + streamName + "_" + streamId);
+            }
+
         });
 
     }
@@ -80,6 +110,28 @@ public class HomePresenterImpl implements HomePresenter {
                 @Override
                 public void run() {
                     Toast.makeText(homeView.getContext(), message, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    private void updateUI(final ChannelView.UIState state) {
+        if (homeView != null) {
+            ((Activity) homeView.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    homeView.updateView(state);
+                }
+            });
+        }
+    }
+
+    private void hideProgress() {
+        if (homeView != null) {
+            ((Activity) homeView.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    homeView.hideProgress();
                 }
             });
         }

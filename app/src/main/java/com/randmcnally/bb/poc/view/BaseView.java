@@ -6,7 +6,6 @@ public interface BaseView {
     void showProgress();
     void hideProgress();
     void showError(String error);
-    void initializePresenter();
     Context getContext();
 }
 
