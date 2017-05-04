@@ -129,7 +129,7 @@ public class ChannelInteractor implements R5ConnectionListener {
                         listener.notify(ChannelInteractorListener.STATE.MEDIA_NOT_FOUND);
                         break;
                     default:
-                        Log.d(TAG, "onConnectionEvent: " + r5ConnectionEvent.name());
+                        Log.d(TAG, "onConnectionEvent: " + r5ConnectionEvent.name() + " - " + r5ConnectionEvent.message);
                 }
             case CLOSE:
                 listener.notify(ChannelInteractorListener.STATE.CLOSED);

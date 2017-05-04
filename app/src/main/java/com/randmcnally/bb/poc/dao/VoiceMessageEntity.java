@@ -48,5 +48,19 @@ public class VoiceMessageEntity {
         voiceMessageEntity.setFileSize(voiceMessage.getFileSize());
         return voiceMessageEntity;
     }
-    
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj instanceof VoiceMessageEntity) {
+            VoiceMessageEntity that = (VoiceMessageEntity)obj;
+            return (this.getName().equals(that.getName())  && this.getFileSize() == that.getFileSize());
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return this.getName();
+    }
 }

@@ -27,10 +27,27 @@ public class ChannelUtil {
 
 
 
+    public static String getJsonFromHistory(HistoryEntity history, List<VoiceMessageEntity> voiceMessages) {
+        Type listType = new TypeToken<List<VoiceMessageEntity>>() {
+        }.getType();
+        Gson gson = new Gson();
+        return gson.toJson(voiceMessages, listType);
+    }
+
+
+
     public static List<VoiceMessage> getMissedMessage(List<VoiceMessage> history, List<VoiceMessage> voiceMessages) {
         List<VoiceMessage> missedMessages = history.subList(0, history.size());
         missedMessages.removeAll(voiceMessages);
 
         return missedMessages;
+    }
+
+    public static String getPublishName(String streamName, String streamId) {
+        return streamName + "_" + streamId;
+    }
+
+    public static String getPublishName(String streamName, int streamId) {
+        return streamName + "_" + streamId;
     }
 }

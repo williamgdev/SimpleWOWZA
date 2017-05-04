@@ -4,6 +4,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 
 import com.randmcnally.bb.poc.model.Playlist;
+import com.randmcnally.bb.poc.model.VoiceMessage;
 
 import java.io.IOException;
 
@@ -15,6 +16,7 @@ public class BBPlayer {
     private boolean playing;
     private MediaPlayer mediaPlayer;
     private boolean playListAdded;
+    private VoiceMessage actualVoiceMessage;
 
     public BBPlayer(String url, ListenerBBPlayer listener) throws IOException {
         this.listener = listener;
@@ -30,7 +32,7 @@ public class BBPlayer {
 
     }
 
-    public BBPlayer(Playlist playlist, ListenerBBPlayer listener) throws IOException {
+    public BBPlayer(Playlist playlist, ListenerPlaylistBBPlayer listener) throws IOException {
         this.listener = listener;
         this.playlist = playlist;
         playing = false;
@@ -45,10 +47,9 @@ public class BBPlayer {
         mediaPlayer.setOnErrorListener(onErrorListener);
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
-        String url = "";
         if (!playlist.isEmpty()) {
-            url = playlist.getOlderMessages().getUrl();
-            mediaPlayer.setDataSource(url);
+            actualVoiceMessage = playlist.getOlderMessages();
+            mediaPlayer.setDataSource(actualVoiceMessage.getUrl());
             mediaPlayer.prepare();
         }
     }
@@ -100,8 +101,8 @@ public class BBPlayer {
         public void onCompletion(MediaPlayer mp) {
             if (playListAdded) {
                 if (!playlist.isEmpty()) {
+                    ((ListenerPlaylistBBPlayer)listener).onMessageCompleted(actualVoiceMessage);
                     playNextVoiceMessage();
-                    listener.onListener(BBPLAYERSTATE.MESSAGE_COMPLETE);
                 }
                 else{
                     stop();
@@ -153,11 +154,15 @@ public class BBPlayer {
     }
 
     public enum BBPLAYERSTATE {
-        PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, MESSAGE_COMPLETE, PLAYLIST_EMPTY, PREPARING
+        PLAYING, AUDIO_STREAM_COMPLETED, AUDIO_STREAM_END, AUDIO_STREAM_START, INFO_UNKNOWN, ERROR_UNKNOWN, STOPPED, PLAYLIST_EMPTY, PREPARING
     }
 
     public interface ListenerBBPlayer{
         void onListener(BBPLAYERSTATE state);
+    }
+
+    public interface ListenerPlaylistBBPlayer extends ListenerBBPlayer{
+        void onMessageCompleted(VoiceMessage voiceMessage);
     }
 
 }

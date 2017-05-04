@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
 import com.randmcnally.bb.poc.dao.DaoMaster;
 import com.randmcnally.bb.poc.dao.DaoSession;
 import com.randmcnally.bb.poc.dao.HistoryEntity;
-import com.randmcnally.bb.poc.dao.HistoryEntityDao;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
@@ -39,11 +38,18 @@ public class DatabaseInteractor {
         return query.list();
     }
 
-    public void readByName(String name, DatabaseListener<HistoryEntity> listener){
+    public void readByNameOrCreate(String name, final DatabaseListener<HistoryEntity> listener){
         List<HistoryEntity> histories = getAllRows();
         int index = findItem(name, histories);
         if (index > histories.size() || index == -1){
-            listener.onResult(new HistoryEntity());
+            HistoryEntity history = new HistoryEntity();
+            history.setId(name);
+            create(history, new DatabaseListener<HistoryEntity>() {
+                @Override
+                public void onResult(HistoryEntity result) {
+                    listener.onResult(result);
+                }
+            });
         }else {
             listener.onResult(histories.get(index));
         }
@@ -64,9 +70,10 @@ public class DatabaseInteractor {
         return -1;
     }
 
-    public void update(String name, DatabaseListener<HistoryEntityDao> listener, String json) {
-        daoSession.getHistoryEntityDao().update(new HistoryEntity(name, json));
-        listener.onResult(daoSession.getHistoryEntityDao());
+    public void update(String name, DatabaseListener<HistoryEntity> listener, String json) {
+        HistoryEntity historyEntity = new HistoryEntity(name, json);
+        daoSession.getHistoryEntityDao().update(historyEntity);
+        listener.onResult(daoSession.getHistoryEntityDao().load(historyEntity.getId()));
     }
 
     public void read(DatabaseListener<List<HistoryEntity>> listener) {

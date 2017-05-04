@@ -2,6 +2,7 @@ package com.randmcnally.bb.poc.util;
 
 import android.util.Log;
 
+import com.randmcnally.bb.poc.custom.BBGroupChat;
 import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
@@ -35,7 +36,7 @@ public class OpenFireServer implements ConnectionListener {
     private OpenFireServerListener listener;
     private AbstractXMPPConnection connection;
     private MultiUserChatManager multiUserChatManager;
-    private HashMap<MultiUserChat, List<Message>> groupChatHistoryHashMap;
+    private HashMap<String,BBGroupChat> groupChatHistoryHashMap;
 
     private OpenFireServer(String UID) {
         XMPPTCPConnectionConfiguration.Builder configBuilder;
@@ -76,12 +77,12 @@ public class OpenFireServer implements ConnectionListener {
         this.listener = listener;
     }
 
-    private void addGroupChat(MultiUserChat chat, List<Message> result) {
-        groupChatHistoryHashMap.put(chat, result);
+    private void addGroupChat(BBGroupChat bbGroupChat) {
+        groupChatHistoryHashMap.put(bbGroupChat.getUniqueIdentifier(), bbGroupChat);
 
     }
 
-    public HashMap<MultiUserChat, List<Message>> getGroupChatHistoryHashMap() {
+    public HashMap<String, BBGroupChat> getGroupChatHistoryHashMap() {
         return groupChatHistoryHashMap;
     }
 
@@ -148,7 +149,7 @@ public class OpenFireServer implements ConnectionListener {
             listener.notifyStatusOpenFireServer(OpenFireServerListener.STATE.ERROR, "Error login");
     }
 
-    public void join(final OpenFireListener<HashMap<MultiUserChat, List<Message>>> listener) {
+    public void join(final OpenFireListener<HashMap<String, BBGroupChat>> listener) {
         getHostedRooms(new OpenFireListener<List<HostedRoom>>() {
             @Override
             public void onSuccess(List<HostedRoom> result) {
@@ -158,7 +159,7 @@ public class OpenFireServer implements ConnectionListener {
                     joinToGroupChat(chat, new OpenFireListener<List<Message>>() {
                         @Override
                         public void onSuccess(List<Message> result) {
-                            Log.d(TAG, "onSuccess: Joint to the GroupChat - " + chat.getNickname().toString());
+                            Log.d(TAG, "onSuccess: Joint to the GroupChat - " + chat.getSubject());
                         }
 
                         @Override
@@ -205,7 +206,8 @@ public class OpenFireServer implements ConnectionListener {
             @Override
             public void onSuccess(List<Message> result) {
                 multiUserChat.addMessageListener(messageListener);
-                addGroupChat(multiUserChat, result);
+                BBGroupChat bbGroupChat = new BBGroupChat(multiUserChat, result);
+                addGroupChat(bbGroupChat);
                 listener.onSuccess(result);
             }
 

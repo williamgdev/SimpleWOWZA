@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileData;
 import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
+import com.randmcnally.bb.poc.util.ChannelUtil;
 
 import org.jivesoftware.smack.packet.Message;
 
@@ -52,9 +53,15 @@ public class VoiceMessage implements Serializable {
         return voiceMessage;
     }
 
+    public static VoiceMessage create(String streamName, String streamId) {
+        VoiceMessage voiceMessage = new VoiceMessage(ChannelUtil.getPublishName(streamName, streamId));
+        return voiceMessage;
+    }
+
+
     @NonNull
     private static String getNameFromMessage(Message msg) {
-        return msg.getSubject() + "_" + msg.getBody();
+        return ChannelUtil.getPublishName(msg.getSubject(), msg.getBody());
     }
 
     public static List<VoiceMessage> createFromMessages(List<Message> messages) {
@@ -88,5 +95,10 @@ public class VoiceMessage implements Serializable {
             return (this.getName().equals(that.getName())  && this.getFileSize() == that.getFileSize());
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return this.getName();
     }
 }

@@ -30,7 +30,7 @@ public class Red5ProApiInteractor {
 //    public static final String IP_ADDRESS = "192.168.43.212";
 //    public static final String SDK_LICENSE_KEY = "X3UH-6RKQ-JKPE-NO3R";
 //    AWS Config
-    public static final String IP_ADDRESS = "54.214.229.152";
+    public static final String IP_ADDRESS = "54.212.192.196";
     public static final String SDK_LICENSE_KEY = "YZF3-4Y36-3ROB-CSXV";
 
     public static final String ACCESS_TOKEN = "123";

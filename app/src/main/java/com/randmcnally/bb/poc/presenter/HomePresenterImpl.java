@@ -5,9 +5,11 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.randmcnally.bb.poc.custom.BBGroupChat;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
+import com.randmcnally.bb.poc.util.ChannelUtil;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.BaseView;
@@ -54,9 +56,9 @@ public class HomePresenterImpl implements HomePresenter {
                     case RECONNECTION_FAILED:
                         break;
                     case AUTHENTICATED:
-                        openFireServer.join(new OpenFireServer.OpenFireListener<HashMap<MultiUserChat, List<Message>>>() {
+                        openFireServer.join(new OpenFireServer.OpenFireListener<HashMap<String, BBGroupChat>>() {
                             @Override
-                            public void onSuccess(HashMap<MultiUserChat, List<Message>> result) {
+                            public void onSuccess(HashMap<String, BBGroupChat> result) {
                                 /**
                                  * TODO Cash the channel on the database
                                  */
@@ -97,7 +99,7 @@ public class HomePresenterImpl implements HomePresenter {
 
             @Override
             public void notifyMessage(String streamName, String streamId) {
-                Log.d(TAG, "notifyMessage: " + streamName + "_" + streamId);
+                Log.d(TAG, "notifyMessage: " + ChannelUtil.getPublishName(streamName, streamId));
             }
 
         });

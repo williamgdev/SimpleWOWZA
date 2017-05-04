@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.randmcnally.bb.poc.custom.BBGroupChat;
 import com.randmcnally.bb.poc.dao.HistoryEntity;
 import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
@@ -18,12 +19,8 @@ import com.randmcnally.bb.poc.util.ChannelUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelFragmentView;
 
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.muc.MultiUserChat;
-
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
     private static final String TAG = "ChannelFragmentPresenterImpl ->";
@@ -68,7 +65,7 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
 
     @Override
     public void updateChannelMissedMessages(final Channel channel) {
-        databaseInteractor.readByName(channel.getRoomId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+        databaseInteractor.readByNameOrCreate(channel.getRoomId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
             @Override
             public void onResult(HistoryEntity result) {
                 List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(result);
@@ -103,20 +100,19 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
     }
 
     @Override
-    public void getMissedMessages(final HashMap<MultiUserChat, List<Message>> groupChatHistoryHashMap, final List<ChatRoom> chatRooms) {
-        Log.d(TAG, "getMissedMessages: Run");
+    public void getMissedMessages(final HashMap<String, BBGroupChat> groupChatHistoryHashMap, final List<ChatRoom> chatRooms) {
+        Log.d(TAG, "getListenedMessages: Run");
 
         if (groupChatHistoryHashMap.size() != 0){
-            for (Map.Entry<MultiUserChat, List<Message>> groupChatMessage :
-                    groupChatHistoryHashMap.entrySet()) {
-                for (Channel channel :
-                        channels) {
-                    if (groupChatMessage.getKey().getSubject().equals(channel.getName())){
-                        channel.setHistory(History.create(groupChatMessage.getValue()));
-                        updateChannelMissedMessages(channel);
-                    }
+
+            for (Channel channel :
+                    channels) {
+                if (groupChatHistoryHashMap.containsKey(channel.getRoomId())){
+                    channel.setHistory(History.create(groupChatHistoryHashMap.get(channel.getRoomId()).getMessages()));
+                    updateChannelMissedMessages(channel);
                 }
             }
+
         }
     }
 

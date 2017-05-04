@@ -11,16 +11,20 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.randmcnally.bb.poc.custom.BBPlayer;
+import com.randmcnally.bb.poc.dao.ChannelEntity;
+import com.randmcnally.bb.poc.dao.HistoryEntity;
+import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.LiveStream;
 import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
+import com.randmcnally.bb.poc.model.VoiceMessage;
+import com.randmcnally.bb.poc.util.ChannelUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
 
-import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.io.IOException;
@@ -156,49 +160,61 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
 
             @Override
             public void notifyMessage(final String streamName, final String streamId) {
-                if (!isBroadcasting()) {
-                    final Handler handler = new Handler(Looper.getMainLooper());
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            /**
-                             * TODO
-                             *
-                             * 2- remove the messages depends of the limit declared in the stream. actual is 5
-                             * 3- check all channels and notify the user the message for each one
-                             * 4- create a state to know when the message is already listened. No start listen the user message
-                             * 5- check the file already exists
-                             */
-                            if (activeChannel.getLiveStream().getStreamName().equals(streamName)) {
-                                activeChannel.setLiveStream(new LiveStream(streamName, Integer.parseInt(streamId)));
-                                startListen(activeChannel.getLiveStream());
-                                Log.d(TAG, "notifyMessage: " + activeChannel.getLiveStream().getPublishStreamName());
-                            } else {
+                final LiveStream streamReceived = new LiveStream(streamName, Integer.parseInt(streamId));
+                if (activeChannel.getLiveStream().getStreamName().equals(streamName)){
+                    if (!isBroadcasting()){
+                        final Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
                                 /**
-                                 * TODO  Save the message in the Muted Channel
-                                 * SAME in BroadcastReceiver localNotificationReceiver onReceive
+                                 * TODO
+                                 *
+                                 * 2- remove the messages depends of the limit declared in the stream. actual is 5
+                                 * 3- check all channels and notify the user the message for each one
+                                 * 4- create a state to know when the message is already listened. No start listen the user message
+                                 * 5- check the file already exists
                                  */
+
+                                activeChannel.setLiveStream(streamReceived);
+                                startListen(activeChannel.getLiveStream());
+                                Log.d(TAG, "notifyMessage: " + streamReceived.getPublishStreamName());
+
                             }
-                        }
-                    });
+                        });
+                    } else {
+                        notifyListenedMessage(streamReceived);
+                    }
+                } else {
+                    notifyMissedMessage(streamReceived);
+                }
+
+            }
+        });
+    }
+
+    private void notifyMissedMessage(final LiveStream streamReceived) {
+        databaseInteractor.readByNameOrCreate(streamReceived.getStreamName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+            @Override
+            public void onResult(HistoryEntity history) {
+                if (history.getId() != null) {
+                    VoiceMessageEntity voiceMessageEntity = new VoiceMessageEntity(ChannelUtil.getPublishName(streamReceived.getStreamName(), streamReceived.getId()));
+                    addListenedMessages(history, voiceMessageEntity); //TODO create a Add/Remove VoiceMessage
                 }
             }
         });
     }
 
-    private void getMissedMessages(MultiUserChat chat) {
-//        openFireServer.joinToGroupChat(chat, new OpenFireServer.OpenFireListener<List<Message>>() {
-//            @Override
-//            public void onSuccess(List<Message> history) {
-//                updateView(ChannelView.UIState.MISSED_MESSAGE);
-//            }
-//
-//            @Override
-//            public void onError(String message) {
-//                showToast(message);
-//            }
-//        });
-//        openFireServerœ.setMessageListener(chat, this);
+    private void notifyListenedMessage(final LiveStream streamReceived) {
+        databaseInteractor.readByNameOrCreate(streamReceived.getStreamName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+            @Override
+            public void onResult(HistoryEntity history) {
+                if (history.getId() != null) {
+                    VoiceMessageEntity voiceMessageEntity = new VoiceMessageEntity(ChannelUtil.getPublishName(streamReceived.getStreamName(), streamReceived.getId()));
+                    removeListenedMessages(history, voiceMessageEntity); //TODO create a Add/Remove VoiceMessage
+                }
+            }
+        });
     }
 
     @Override
@@ -240,7 +256,21 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
             updateView(ChannelView.UIState.READY);
             if (activeChannel.getHistory().getMissedMessages() != null) {
                 try {
-                    BBPlayer bbPlayer = new BBPlayer(activeChannel.getHistory().getMissedMessages(), new BBPlayer.ListenerBBPlayer() {
+                    final BBPlayer bbPlayer = new BBPlayer(activeChannel.getHistory().getMissedMessages(), new BBPlayer.ListenerPlaylistBBPlayer() {
+                        @Override
+                        public void onMessageCompleted(final VoiceMessage voiceMessage) {
+                            Log.d(TAG, "onListener: MESSAGE_COMPLETE");
+                            databaseInteractor.readByNameOrCreate(activeChannel.getName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+                                @Override
+                                public void onResult(HistoryEntity history) {
+                                    if (history.getId() != null) {
+                                        VoiceMessageEntity voiceMessageEntity = VoiceMessageEntity.create(voiceMessage);
+                                        addListenedMessages(history, voiceMessageEntity);
+                                    }
+                                }
+                            });
+                        }
+
                         @Override
                         public void onListener(BBPlayer.BBPLAYERSTATE state) {
                             switch (state) {
@@ -257,9 +287,6 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
                                 case ERROR_UNKNOWN:
                                     break;
                                 case STOPPED:
-                                    break;
-                                case MESSAGE_COMPLETE:
-                                    Log.d(TAG, "onListener: MESSAGE_COMPLETE");
                                     break;
                                 case PLAYLIST_EMPTY:
                                     updateView(ChannelView.UIState.NO_MISSED_MESSAGE);
@@ -288,7 +315,6 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
                 channelInteractor.stop();
                 channelView.setMicrophoneMute(false);
                 updateView(ChannelView.UIState.READY);
-//                sendNotification(false);
             }
         }, time);
 
@@ -356,58 +382,44 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
         return counter;
     }
 
-//    public void getMissedMessages(String name, List<Message> history) {
-//        final History historyOF = new History();
-//        historyOF.setHistory(VoiceMessage.createFromMessages(history));
-//        databaseInteractor.readByName(name, new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-//            @Override
-//            public void onResult(HistoryEntity result) {
-//                List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(result);
-//                List<VoiceMessage> missedMessages = ChannelUtil.getMissedMessage(historyOF.getVoiceMessages(), VoiceMessage.createFromVoiceMessagelEntity(voiceMessages));
-//                showToast(String.valueOf(missedMessages.size()));
-//
-//            }
-//        });
-//    }
-//
-//    private void getListenedMessages(final History historyOF, String name) {
-//        databaseInteractor.readByName(name, new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-//            @Override
-//            public void onResult(HistoryEntity result) {
-//                List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(result);
-//                List<VoiceMessage> missedMessages = ChannelUtil.getMissedMessage(historyOF.getVoiceMessages(), VoiceMessage.createFromVoiceMessagelEntity(voiceMessages));
-//                showToast(String.valueOf(missedMessages.size()));
-//
-//            }
-//        });
-//    }
+    private void removeListenedMessages(HistoryEntity history, VoiceMessageEntity voiceMessage) {
+        List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(history);
+        voiceMessages.remove(voiceMessage);
 
+        String json = ChannelUtil.getJsonFromHistory(history, voiceMessages);
 
-//    public void updateHistory(HistoryEntity history, VoiceMessageEntity voiceMessage) {
-//        List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(history);
-//        voiceMessages.add(voiceMessage);
-//        /**
-//         * Todo get limit of message globally. Actual is 5.
-//         */
-//        if (voiceMessages.size() > 5) {
-//            voiceMessages.remove(0);
-//            // if limit reached, remove the first one
-//            // because the first one will be the oldest.
-//        }
-//
-//        Type listType = new TypeToken<List<VoiceMessageEntity>>() {
-//        }.getType();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(voiceMessages, listType);
-//
-//        databaseInteractor.update(history.getId(), new DatabaseInteractor.DatabaseListener<HistoryEntityDao>() {
-//            @Override
-//            public void onResult(HistoryEntityDao result) {
-//                Log.d(TAG, "onResult: Saved Voice Messages");
-//            }
-//        }, json);
-//
-//    }
+        databaseInteractor.update(history.getId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+            @Override
+            public void onResult(HistoryEntity result) {
+                Log.d(TAG, "onResult: Saved Voice Messages " + result.getId() + " - " + result.getMessages().toString());
+            }
+        }, json);
+
+    }
+
+    private void addListenedMessages(HistoryEntity history, VoiceMessageEntity voiceMessage) {
+        List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(history);
+        voiceMessages.add(voiceMessage);
+
+        /**
+         * Todo get limit of message globally. Actual is 5.
+         */
+        if (voiceMessages.size() > 5) {
+            voiceMessages.remove(0);
+            // if limit reached, remove the first one
+            // because the first one will be the oldest.
+        }
+
+        String json = ChannelUtil.getJsonFromHistory(history, voiceMessages);
+
+        databaseInteractor.update(history.getId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+            @Override
+            public void onResult(HistoryEntity result) {
+                Log.d(TAG, "onResult: Saved Voice Messages " + result.getId() + " - " + result.getMessages().toString());
+            }
+        }, json);
+
+    }
 
     public void stopListen() {
         long time = getTimeDelay();

@@ -3,6 +3,7 @@ package com.randmcnally.bb.poc.dao;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
+import org.greenrobot.greendao.annotation.Keep;
 import org.greenrobot.greendao.annotation.NotNull;
 
 import java.util.List;
@@ -21,8 +22,10 @@ public class HistoryEntity {
         this.messages = messages;
     }
 
-    @Generated(hash = 1235354573)
+    @Keep
     public HistoryEntity() {
+        id = "";
+        messages = "";
     }
 
     public String getId() {
@@ -54,5 +57,10 @@ public class HistoryEntity {
             }
         }
         return -1;
+    }
+
+    @Override
+    public String toString() {
+        return this.getId() + "-" + messages;
     }
 }

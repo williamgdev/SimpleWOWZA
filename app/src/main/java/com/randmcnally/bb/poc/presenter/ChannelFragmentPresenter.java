@@ -2,6 +2,7 @@ package com.randmcnally.bb.poc.presenter;
 
 import android.os.Bundle;
 
+import com.randmcnally.bb.poc.custom.BBGroupChat;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.Channel;
@@ -22,7 +23,7 @@ public interface ChannelFragmentPresenter extends BasePresenter<ChannelFragmentV
 
     void updateChannel();
 
-    void getMissedMessages(HashMap<MultiUserChat, List<Message>> openFireServer, List<ChatRoom> chatRooms);
+    void getMissedMessages(HashMap<String, BBGroupChat> groupChatHistoryHashMap, List<ChatRoom> chatRooms);
 
     void updateChannelMissedMessages(Channel channel);
 

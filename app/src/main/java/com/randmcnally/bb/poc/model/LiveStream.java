@@ -1,5 +1,7 @@
 package com.randmcnally.bb.poc.model;
 
+import com.randmcnally.bb.poc.util.ChannelUtil;
+
 import java.io.Serializable;
 
 public class LiveStream implements Serializable {
@@ -31,7 +33,7 @@ public class LiveStream implements Serializable {
     }
 
     public String getPublishStreamName() {
-        return streamName + "_" + id;
+        return ChannelUtil.getPublishName(streamName, id);
     }
 
 }

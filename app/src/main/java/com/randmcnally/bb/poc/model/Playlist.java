@@ -15,8 +15,17 @@ public class Playlist implements Serializable{
         return voiceMessages.pop();
     }
 
-    public void addMessage(VoiceMessage voiceMessage) {
-        voiceMessages.push(voiceMessage);
+    /**
+     *
+     * @param voiceMessage
+     * @return false if the item already exist
+     */
+    public boolean addMessage(VoiceMessage voiceMessage) {
+        if (voiceMessages.contains(voiceMessage)) {
+            return false;
+        }
+        return voiceMessages.push(voiceMessage) != null;
+
     }
 
     public boolean isEmpty() {
