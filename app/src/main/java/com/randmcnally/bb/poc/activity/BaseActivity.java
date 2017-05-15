@@ -39,12 +39,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
 
     }
 
-    protected abstract void initializePresenter();
-
     protected void setToolbarTitle(String title){
-        if (isToolbarAdded()) {
-            titleToolBar.setText(getTitle().toString());
+        if (!isToolbarAdded()) {
+            return;
         }
+        titleToolBar.setText(title);
     }
 
     public void setToolbar() {
@@ -109,11 +108,13 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
         startActivity(intent);
     }
 
+    @LayoutRes
+    protected abstract int getLayoutID();
+
     @IdRes
     protected abstract int getToolbarLogoID();
 
-    @LayoutRes
-    protected abstract int getLayoutID();
+    protected abstract boolean isToolBarLogoAdded();
 
     @IdRes
     protected abstract int getToolbarID();
@@ -127,7 +128,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
 
     protected abstract void initializeUIComponents();
 
-    protected abstract boolean isToolBarLogoAdded();
+    protected abstract void initializePresenter();
 
     @Override
     public Context getContext() {

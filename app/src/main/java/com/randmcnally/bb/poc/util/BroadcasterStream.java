@@ -10,8 +10,8 @@ public class BroadcasterStream extends BaseStream{
 
     private static final String TAG = "BroadcasterStream ->";
 
-    public BroadcasterStream(R5ConnectionListener listener) {
-        super(listener);
+    public BroadcasterStream(R5ConnectionListener listener, String ipAddress) {
+        super(listener, ipAddress);
         R5Microphone r5Microphone = new R5Microphone();
         stream.attachMic(r5Microphone);
     }

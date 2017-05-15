@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.dto.red5pro.LiveStreamResponse;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileResponse;
 import com.randmcnally.bb.poc.model.History;
@@ -30,7 +31,7 @@ public class Red5ProApiInteractor {
 //    public static final String IP_ADDRESS = "192.168.43.212";
 //    public static final String SDK_LICENSE_KEY = "X3UH-6RKQ-JKPE-NO3R";
 //    AWS Config
-    public static final String IP_ADDRESS = "54.212.192.196";
+
     public static final String SDK_LICENSE_KEY = "YZF3-4Y36-3ROB-CSXV";
 
     public static final String ACCESS_TOKEN = "123";
@@ -41,9 +42,9 @@ public class Red5ProApiInteractor {
     private boolean isCheckingStream;
 
 
-    private Red5ProApiInteractor() {
+    private Red5ProApiInteractor(String ipAddress) {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(getBaseUrlAPI())
+                .baseUrl(getBaseUrlAPI(ipAddress))
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -51,20 +52,20 @@ public class Red5ProApiInteractor {
 
     }
 
-    public static Red5ProApiInteractor getInstance() {
+    public static Red5ProApiInteractor getInstance(String ipAddress) {
         if (instance == null) {
-            instance = new Red5ProApiInteractor();
+            instance = new Red5ProApiInteractor(ipAddress);
         }
         return instance;
     }
 
-    public static String getURLStream(String streamName){
+    public static String getURLStream(String streamName, String ipAddress){
         //http://192.168.43.212:5080/live/streams/randmcnally_3.flv
-        return "http://" + IP_ADDRESS + ":" + API_PORT + "/live/streams/" + streamName + ".flv";
+        return "http://" + ipAddress + ":" + API_PORT + "/live/streams/" + streamName + ".flv";
     }
 
-    public static String getBaseUrlAPI(){
-        return "http://" + IP_ADDRESS + ":" + API_PORT + "/api/v1/";
+    public static String getBaseUrlAPI(String ipAddress){
+        return "http://" + ipAddress + ":" + API_PORT + "/api/v1/";
     }
 
     public void getLiveStreamStatistics(String streamName, LiveStreamApiListener listener){

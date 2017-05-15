@@ -1,5 +1,6 @@
 package com.randmcnally.bb.poc.interactor;
 
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoomResponse;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
@@ -18,19 +19,16 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 public class OpenFireApiInteractor {
     public static final String GROUPCHAT_SERVICE = "randmcnally";
-//    public static final String XMPP_DOMAIN = "openfire.test";
+    public static final String XMPP_DOMAIN = "openfire.test";
 //        public static final String HOST_NAME = "192.168.43.212";
-    public static final String XMPP_DOMAIN = "ip-172-31-6-205.us-west-2.compute.internal";
-    public static final String HOST_NAME = "54.212.192.196";
-
-    public static final String BASE_URL = "http://" + HOST_NAME + ":9090/plugins/restapi/v1/";
+//    public static final String XMPP_DOMAIN = "ip-172-31-6-205.us-west-2.compute.internal";
 
     private static OpenFireApiInteractor instance;
     private OpenFireApiService apiService;
 
-    private OpenFireApiInteractor() {
+    private OpenFireApiInteractor(String ipAddress) {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(getBaseUrl(ipAddress))
                 .client(OpenFireInterceptor.buildHttpClient())
                 .addConverterFactory(SimpleXmlConverterFactory.create())
                 .build();
@@ -39,10 +37,13 @@ public class OpenFireApiInteractor {
 
     }
 
+    private String getBaseUrl(String ipAddress) {
+        return "http://" + ipAddress + ":9090/plugins/restapi/v1/";
+    }
 
-    public static OpenFireApiInteractor getInstance() {
+    public static OpenFireApiInteractor getInstance(String ipAddress) {
         if (instance == null) {
-            instance = new OpenFireApiInteractor();
+            instance = new OpenFireApiInteractor(ipAddress);
         }
         return instance;
     }
@@ -127,7 +128,6 @@ public class OpenFireApiInteractor {
             }
         };
     }
-
 
     public interface ChatRoomApiListener extends BaseApiListener {
         void onSuccess(List<ChatRoom> channels);

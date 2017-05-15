@@ -10,8 +10,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.custom.BBPlayer;
-import com.randmcnally.bb.poc.dao.ChannelEntity;
 import com.randmcnally.bb.poc.dao.HistoryEntity;
 import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.interactor.ChannelInteractor;
@@ -29,10 +29,10 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 
 public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor.ChannelInteractorListener {
     private static final String TAG = "Broadcast ->";
+    private static String ipAddress;
 
     ChannelView channelView;
     ChannelInteractor channelInteractor;
@@ -44,7 +44,6 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
 
     Date streamStartTime;
     Date bcStartTime;
-    Red5ProApiInteractor red5ProApiInteractor;
 
     History red5ProHistory;
     private Channel activeChannel;
@@ -56,20 +55,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
          * TODO Get the id from the last stream created
          */
         this.activeChannel = channel;
-        this.activeChannel.setLiveStream(new LiveStream(channel.getRoomId(), 0)); //the stream name is created with the same name as a roomId
-        this.channelInteractor = ChannelInteractor.getInstance(channel, this);
-        red5ProApiInteractor = Red5ProApiInteractor.getInstance();
-        red5ProApiInteractor.getRecordedFiles(new Red5ProApiInteractor.RecordedFileApiListener() {
-            @Override
-            public void onSuccess(History history) {
-                setRed5ProHistory(history);
-            }
-
-            @Override
-            public void onError(String s) {
-
-            }
-        });
+        this.activeChannel.setLiveStream(new LiveStream(channel.getName(), 0)); //the stream name is created with the same
 
     }
 
@@ -114,7 +100,11 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
     @Override
     public void loadData() {
         updateView(ChannelView.UIState.READY);
-
+        this.ipAddress = ((BBApplication) channelView.getContext().getApplicationContext()).IP_ADDRESS;
+        this.channelInteractor = ChannelInteractor.getInstance(activeChannel, this, ipAddress);
+        if (activeChannel.getHistory().getMissedMessages().size() > 0) {
+            updateView(ChannelView.UIState.MISSED_MESSAGE);
+        }
     }
 
     @Override
@@ -141,7 +131,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
     @Override
     public void setOpenFireServer(final OpenFireServer openFireServer) {
         this.openFireServer = openFireServer;
-        openFireServer.getGroupChatRoom(activeChannel.getRoomId(), new OpenFireServer.OpenFireListener<MultiUserChat>() {
+        openFireServer.getGroupChatRoom(activeChannel.getName(), new OpenFireServer.OpenFireListener<MultiUserChat>() {
             @Override
             public void onSuccess(MultiUserChat chat) {
                 setCurrentChat(chat);
@@ -183,36 +173,12 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
                             }
                         });
                     } else {
-                        notifyListenedMessage(streamReceived);
+                        ChannelUtil.notifyMessageMissed(streamReceived, databaseInteractor);
                     }
                 } else {
-                    notifyMissedMessage(streamReceived);
+                    ChannelUtil.notifyMessageListened(streamReceived, databaseInteractor);
                 }
-
-            }
-        });
-    }
-
-    private void notifyMissedMessage(final LiveStream streamReceived) {
-        databaseInteractor.readByNameOrCreate(streamReceived.getStreamName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-            @Override
-            public void onResult(HistoryEntity history) {
-                if (history.getId() != null) {
-                    VoiceMessageEntity voiceMessageEntity = new VoiceMessageEntity(ChannelUtil.getPublishName(streamReceived.getStreamName(), streamReceived.getId()));
-                    addListenedMessages(history, voiceMessageEntity); //TODO create a Add/Remove VoiceMessage
-                }
-            }
-        });
-    }
-
-    private void notifyListenedMessage(final LiveStream streamReceived) {
-        databaseInteractor.readByNameOrCreate(streamReceived.getStreamName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-            @Override
-            public void onResult(HistoryEntity history) {
-                if (history.getId() != null) {
-                    VoiceMessageEntity voiceMessageEntity = new VoiceMessageEntity(ChannelUtil.getPublishName(streamReceived.getStreamName(), streamReceived.getId()));
-                    removeListenedMessages(history, voiceMessageEntity); //TODO create a Add/Remove VoiceMessage
-                }
+                updateView(ChannelView.UIState.MISSED_MESSAGE);
             }
         });
     }
@@ -220,6 +186,11 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
     @Override
     public int getMissedMessages() {
         return activeChannel.getHistory().getMissedMessages().size();
+    }
+
+    @Override
+    public Channel getActiveChannel() {
+        return activeChannel;
     }
 
     @Override
@@ -256,16 +227,17 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
             updateView(ChannelView.UIState.READY);
             if (activeChannel.getHistory().getMissedMessages() != null) {
                 try {
-                    final BBPlayer bbPlayer = new BBPlayer(activeChannel.getHistory().getMissedMessages(), new BBPlayer.ListenerPlaylistBBPlayer() {
+                    final BBPlayer bbPlayer = new BBPlayer(activeChannel.getHistory().getMissedMessages(), ipAddress, new BBPlayer.ListenerPlaylistBBPlayer() {
                         @Override
                         public void onMessageCompleted(final VoiceMessage voiceMessage) {
                             Log.d(TAG, "onListener: MESSAGE_COMPLETE");
-                            databaseInteractor.readByNameOrCreate(activeChannel.getName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+                            databaseInteractor.readOrCreateHistoryByName(activeChannel.getName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
                                 @Override
                                 public void onResult(HistoryEntity history) {
                                     if (history.getId() != null) {
                                         VoiceMessageEntity voiceMessageEntity = VoiceMessageEntity.create(voiceMessage);
-                                        addListenedMessages(history, voiceMessageEntity);
+                                        ChannelUtil.addListenedMessages(history, voiceMessageEntity, databaseInteractor);
+                                        updateView(ChannelView.UIState.MISSED_MESSAGE);
                                     }
                                 }
                             });
@@ -273,6 +245,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
 
                         @Override
                         public void onListener(BBPlayer.BBPLAYERSTATE state) {
+//                            Log.d(TAG, "onListener: BBPLAYER." + state.toString());
                             switch (state) {
                                 case PLAYING:
                                     break;
@@ -380,45 +353,6 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
         if (counter > 5)
             counter = 0;
         return counter;
-    }
-
-    private void removeListenedMessages(HistoryEntity history, VoiceMessageEntity voiceMessage) {
-        List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(history);
-        voiceMessages.remove(voiceMessage);
-
-        String json = ChannelUtil.getJsonFromHistory(history, voiceMessages);
-
-        databaseInteractor.update(history.getId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-            @Override
-            public void onResult(HistoryEntity result) {
-                Log.d(TAG, "onResult: Saved Voice Messages " + result.getId() + " - " + result.getMessages().toString());
-            }
-        }, json);
-
-    }
-
-    private void addListenedMessages(HistoryEntity history, VoiceMessageEntity voiceMessage) {
-        List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(history);
-        voiceMessages.add(voiceMessage);
-
-        /**
-         * Todo get limit of message globally. Actual is 5.
-         */
-        if (voiceMessages.size() > 5) {
-            voiceMessages.remove(0);
-            // if limit reached, remove the first one
-            // because the first one will be the oldest.
-        }
-
-        String json = ChannelUtil.getJsonFromHistory(history, voiceMessages);
-
-        databaseInteractor.update(history.getId(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-            @Override
-            public void onResult(HistoryEntity result) {
-                Log.d(TAG, "onResult: Saved Voice Messages " + result.getId() + " - " + result.getMessages().toString());
-            }
-        }, json);
-
     }
 
     public void stopListen() {

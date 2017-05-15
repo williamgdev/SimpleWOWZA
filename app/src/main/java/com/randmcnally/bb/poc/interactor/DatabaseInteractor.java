@@ -3,9 +3,12 @@ package com.randmcnally.bb.poc.interactor;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.randmcnally.bb.poc.dao.ChannelEntity;
 import com.randmcnally.bb.poc.dao.DaoMaster;
 import com.randmcnally.bb.poc.dao.DaoSession;
 import com.randmcnally.bb.poc.dao.HistoryEntity;
+import com.randmcnally.bb.poc.model.Channel;
+import com.randmcnally.bb.poc.util.ChannelUtil;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 
@@ -31,20 +34,22 @@ public class DatabaseInteractor {
         return instance;
     }
 
-    private List<HistoryEntity> getAllRows() {
+    // History methods //
+
+    private List<HistoryEntity> getAllHistoryRows() {
         QueryBuilder<HistoryEntity> query = daoSession.getHistoryEntityDao().queryBuilder();
         if(query.count() == 0)
             return new ArrayList<>();
         return query.list();
     }
 
-    public void readByNameOrCreate(String name, final DatabaseListener<HistoryEntity> listener){
-        List<HistoryEntity> histories = getAllRows();
-        int index = findItem(name, histories);
+    public void readOrCreateHistoryByName(String name, final DatabaseListener<HistoryEntity> listener){
+        List<HistoryEntity> histories = getAllHistoryRows();
+        int index = findHistoryItem(name, histories);
         if (index > histories.size() || index == -1){
             HistoryEntity history = new HistoryEntity();
             history.setId(name);
-            create(history, new DatabaseListener<HistoryEntity>() {
+            createHistory(history, new DatabaseListener<HistoryEntity>() {
                 @Override
                 public void onResult(HistoryEntity result) {
                     listener.onResult(result);
@@ -61,7 +66,7 @@ public class DatabaseInteractor {
      * @param histories
      * @return If the name it does not exist the result is -1.
      */
-    private int findItem(String name, List<HistoryEntity> histories) {
+    private int findHistoryItem(String name, List<HistoryEntity> histories) {
         for (int i = 0; i < histories.size(); i++) {
             if (histories.get(i).getId().equals(name)) {
                 return i;
@@ -70,37 +75,80 @@ public class DatabaseInteractor {
         return -1;
     }
 
-    public void update(String name, DatabaseListener<HistoryEntity> listener, String json) {
+    public void updateHistory(String name, DatabaseListener<HistoryEntity> listener, String json) {
         HistoryEntity historyEntity = new HistoryEntity(name, json);
         daoSession.getHistoryEntityDao().update(historyEntity);
         listener.onResult(daoSession.getHistoryEntityDao().load(historyEntity.getId()));
     }
 
-    public void read(DatabaseListener<List<HistoryEntity>> listener) {
-        List<HistoryEntity> history = getAllRows();
+    public void readHistory(DatabaseListener<List<HistoryEntity>> listener) {
+        List<HistoryEntity> history = getAllHistoryRows();
         listener.onResult(history);
     }
 
-    public void create(HistoryEntity history, DatabaseListener<HistoryEntity> listener) {
-        long key = daoSession.getHistoryEntityDao().insert(history);
+    public void createHistory(HistoryEntity history, DatabaseListener<HistoryEntity> listener) {
+        long index = daoSession.getHistoryEntityDao().insert(history);
         listener.onResult(daoSession.getHistoryEntityDao().load(history.getId()));
     }
 
-//    public interface GetHistoriesDBListener {
-//        void onResult(List<HistoryEntity> histories);
-//    }
-//
-//    public interface GetHistoryDBListener {
-//        void onResult(List<VoiceMessageEntity> voiceMessages);
-//    }
-//
-//    public interface CreateHistoryDBListener {
-//        void onResult(HistoryEntity history);
-//    }
-//
-//    public interface AddVoiceMessageDBListener {
-//        void onResult(HistoryEntityDao historyEntityDao);
-//    }
+    // Channel methods //
+
+    private List<ChannelEntity> getAllChannelRows() {
+        QueryBuilder<ChannelEntity> query = daoSession.getChannelEntityDao().queryBuilder();
+        if(query.count() == 0)
+            return new ArrayList<>();
+        return query.list();
+    }
+    public void readChannels(DatabaseListener<List<ChannelEntity>> listener) {
+        listener.onResult(getAllChannelRows());
+    }
+
+    public void saveChannels(List<Channel> channels, DatabaseListener<List<ChannelEntity>> listener) {
+        List<ChannelEntity> channelEntities = getAllChannelRows();
+        for (Channel channel :
+                channels) {
+            for (ChannelEntity channelEntity :
+                    channelEntities) {
+                if (channel.getName().equals(channelEntity.getName())) {
+                    String json = ChannelUtil.getJsonFromVoiceMesssage(channel.getHistory().getVoiceMessages());
+                    HistoryEntity historyEntity = new HistoryEntity(channel.getName(), json);
+                    channelEntity.setHistoryEntity(historyEntity);
+                    daoSession.update(channelEntity);
+                }
+            }
+        }
+        listener.onResult(channelEntities);
+    }
+
+    public void createChannel(Channel channel, DatabaseListener<ChannelEntity> listener) {
+        ChannelEntity channelEntity = new ChannelEntity(channel.getName(), channel.isFavorite(), channel.getFullName());
+        HistoryEntity historyEntity = new HistoryEntity(channel.getName(), ChannelUtil.getJsonFromVoiceMesssage(channel.getHistory().getVoiceMessages()));
+        channelEntity.setHistoryEntity(historyEntity);
+
+        long index = daoSession.getChannelEntityDao().insert(channelEntity);
+        listener.onResult(daoSession.getChannelEntityDao().load(historyEntity.getId()));
+    }
+
+    public void updateChannel(Channel channel, DatabaseListener<ChannelEntity> listener) {
+        for (ChannelEntity channelEntity :
+                getAllChannelRows()) {
+            if (channel.getName().equals(channelEntity.getName())){
+
+                channelEntity.setFavorite(channel.isFavorite());
+
+                HistoryEntity historyEntity = new HistoryEntity(channel.getName(), ChannelUtil.getJsonFromVoiceMesssage(channel.getHistory().getVoiceMessages()));
+                channelEntity.setHistoryEntity(historyEntity);
+
+                daoSession.getChannelEntityDao().update(channelEntity);
+                listener.onResult(daoSession.getChannelEntityDao().load(channelEntity.getName()));
+            }
+        }
+
+    }
+
+    public void removeChannel(String channelName) {
+        daoSession.getChannelEntityDao().deleteByKey(channelName);
+    }
 
     public interface DatabaseListener<T>{
         void onResult(T result);

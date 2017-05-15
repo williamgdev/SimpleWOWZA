@@ -16,7 +16,7 @@ public class BBGroupChat {
     }
 
     public String getUniqueIdentifier(){
-        return chat.getSubject();
+        return chat.getRoom().getLocalpart().toString();
     }
 
     public List<Message> getMessages() {

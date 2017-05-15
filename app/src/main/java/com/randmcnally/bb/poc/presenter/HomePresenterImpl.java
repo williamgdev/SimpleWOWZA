@@ -1,32 +1,30 @@
 package com.randmcnally.bb.poc.presenter;
 
 import android.app.Activity;
-import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.randmcnally.bb.poc.custom.BBGroupChat;
+import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
+import com.randmcnally.bb.poc.model.LiveStream;
 import com.randmcnally.bb.poc.util.ChannelUtil;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
-import com.randmcnally.bb.poc.view.BaseView;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.view.HomeView;
-
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.muc.MultiUserChat;
-
-import java.util.HashMap;
-import java.util.List;
 
 
 public class HomePresenterImpl implements HomePresenter {
     private static final String TAG = "HomePresenterImpl ->";
 
-    HomeView homeView;
+    private HomeView homeView;
+    private DatabaseInteractor databaseInteractor;
+    private LiveStream streamReceived;
 
     @Override
     public void attachView(HomeView homeView) {
@@ -56,28 +54,14 @@ public class HomePresenterImpl implements HomePresenter {
                     case RECONNECTION_FAILED:
                         break;
                     case AUTHENTICATED:
-                        openFireServer.join(new OpenFireServer.OpenFireListener<HashMap<String, BBGroupChat>>() {
-                            @Override
-                            public void onSuccess(HashMap<String, BBGroupChat> result) {
-                                /**
-                                 * TODO Cash the channel on the database
-                                 */
-                                Log.d(TAG, "onSuccess: Join");
-                                hideProgress();
-                                updateUI(ChannelView.UIState.READY);
-                            }
-
-                            @Override
-                            public void onError(String message) {
-                                showToast(message);
-                            }
-                        });
+                        hideProgress();
+                        updateUI(ChannelView.UIState.READY);
                         Log.d(TAG, "notifyStatusOpenFireServer: OpenFire Authenticated Successfully");
                         break;
                     case NOT_AUTHORIZED:
                         String uniqueID = FileUtil.getDeviceUID(homeView.getContext());
 
-                        OpenFireApiInteractor apiManager = OpenFireApiInteractor.getInstance();
+                        OpenFireApiInteractor apiManager = OpenFireApiInteractor.getInstance(((BBApplication) homeView.getContext().getApplicationContext()).IP_ADDRESS);
                         apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiInteractor.CreateUserApiListener() {
                             @Override
                             public void onSuccess(String s) {
@@ -99,11 +83,27 @@ public class HomePresenterImpl implements HomePresenter {
 
             @Override
             public void notifyMessage(String streamName, String streamId) {
+                streamReceived = new LiveStream(streamName, Integer.parseInt(streamId));
+                ChannelUtil.notifyMessageMissed(streamReceived, databaseInteractor);
                 Log.d(TAG, "notifyMessage: " + ChannelUtil.getPublishName(streamName, streamId));
+
+                sendMissedMessageBroadcast();
             }
 
         });
+    }
 
+    private void sendMissedMessageBroadcast(){
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("live_stream", streamReceived);
+        Intent intent = new Intent("RMBB_MISSED_MESSAGE");
+        intent.putExtras(bundle);
+        LocalBroadcastManager.getInstance(homeView.getContext()).sendBroadcast(intent);
+    }
+
+    @Override
+    public void setDatabaseInteractor(DatabaseInteractor databaseInteractor) {
+        this.databaseInteractor = databaseInteractor;
     }
 
     private void showToast(final String message){

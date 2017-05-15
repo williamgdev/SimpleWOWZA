@@ -4,6 +4,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.randmcnally.bb.poc.BBApplication;
@@ -86,7 +87,7 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
         presenter.setDatabaseInteractor(((BBApplication) getBaseActivity().getApplication()).getDatabaseInteractor(getContext()));
         presenter.setOpenFireServer(((BBApplication) getBaseActivity().getApplication()).getOpenFireServer(getContext()));
         presenter.getFavoriteChannels();
-        presenter.getChannels();
+        presenter.updateChannelsFromServer();
 
     }
 
@@ -98,7 +99,16 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
 
     @Override
     public void onChannelSelected(Channel channel) {
-        getBaseActivity().launch(ChannelActivity.class, presenter.getBundle(channel));
+        if (channel.isFavorite()) {
+            getBaseActivity().launch(ChannelActivity.class, presenter.getBundle(channel));
+        } else {
+            Toast.makeText(getContext(), channel.getFullName() + " is not selected as a Favorite.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onChannelFavoriteSelected(Channel channel) {
+        presenter.setFavoriteChannel(channel);
     }
 
     private ChannelsAdapter getChannelAdapter(List<Channel> channels) {

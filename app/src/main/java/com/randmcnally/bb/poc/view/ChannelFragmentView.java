@@ -8,5 +8,8 @@ import java.util.List;
 
 public interface ChannelFragmentView extends BaseView{
     void setChannels(List<Channel> channels);
+
     void onChannelSelected(Channel channel);
+
+    void onChannelFavoriteSelected(Channel channel);
 }

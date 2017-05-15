@@ -23,12 +23,8 @@ import com.randmcnally.bb.poc.custom.BBTouchListener;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.presenter.ChannelPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
-import com.randmcnally.bb.poc.util.FileUtil;
-import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.custom.PlayGifView;
-
-import java.io.Serializable;
 
 
 public class ChannelActivity extends BaseActivity implements ChannelView{
@@ -56,12 +52,13 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         }
 
-        setToolbarTitle(getIntent().getStringExtra("channel_name"));
+        setToolbarTitle(channel.getFullName());
         setToolbarBackIcon(R.drawable.ic_arrow_back_white);
 
         audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
 
         layoutBroadcast.setOnTouchListener(bbTouchListener);
+        layoutSpeaker.setOnClickListener(speakerClickListener);
 
 //
 //        setToolbarBackIcon(R.drawable.ic_arrow_back_white);
@@ -321,5 +318,15 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
         super.onResume();
         presenter.attachView(this);
     }
+
+
+    private View.OnClickListener speakerClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("history", presenter.getActiveChannel().getHistory());
+            launch(ChannelHistoryActivity.class, bundle);
+        }
+    };
 
 }

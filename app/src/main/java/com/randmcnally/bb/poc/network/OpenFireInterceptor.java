@@ -9,8 +9,8 @@ import okhttp3.Response;
 
 
 public class OpenFireInterceptor implements Interceptor {
-//    private String authorization = "Basic YWRtaW46cmFuZHBhc3Mx";
-    private String authorization = "45skga0Wj4yuDWlB";
+    private String authorization = "Basic YWRtaW46cmFuZHBhc3Mx";
+//    private String authorization = "45skga0Wj4yuDWlB";
 
     @Override
     public Response intercept(Chain chain) throws IOException {

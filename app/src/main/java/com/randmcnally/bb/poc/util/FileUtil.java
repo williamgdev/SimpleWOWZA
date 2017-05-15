@@ -14,7 +14,7 @@ import static android.content.Context.MODE_PRIVATE;
 
 public class FileUtil {
 
-    private static final String TAG = "FileUtil";
+    private static final String TAG = "FileUtil ->";
 
     public static File getOutputMediaFile(File savedFile, String folderName) {
         // To be safe, you should check that the SDCard is mounted

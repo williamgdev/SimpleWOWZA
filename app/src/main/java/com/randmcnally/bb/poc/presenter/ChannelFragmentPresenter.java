@@ -3,14 +3,10 @@ package com.randmcnally.bb.poc.presenter;
 import android.os.Bundle;
 
 import com.randmcnally.bb.poc.custom.BBGroupChat;
-import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelFragmentView;
-
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,19 +15,25 @@ public interface ChannelFragmentPresenter extends BasePresenter<ChannelFragmentV
 
     void getFavoriteChannels();
 
-    void getChannels();
+    void joinToFavoritesChannels();
+
+    void updateChannelsFromServer();
 
     void updateChannel();
 
-    void getMissedMessages(HashMap<String, BBGroupChat> groupChatHistoryHashMap, List<ChatRoom> chatRooms);
+    void getMissedMessages(HashMap<String, BBGroupChat> groupChatHistoryHashMap);
 
     void updateChannelMissedMessages(Channel channel);
 
-    void setChannels(List<Channel> channels);
+    void setChannels(List<Channel> favoritesChannels);
+
+    void saveChannelsOnDatabase(List<Channel> channels);
 
     Bundle getBundle(Channel channel);
 
     void setDatabaseInteractor(DatabaseInteractor databaseInteractor);
 
     void setOpenFireServer(OpenFireServer openFireServer);
+
+    void setFavoriteChannel(Channel channel);
 }

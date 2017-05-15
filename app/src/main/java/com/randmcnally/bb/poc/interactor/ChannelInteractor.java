@@ -14,6 +14,7 @@ public class ChannelInteractor implements R5ConnectionListener {
     private static final String TAG = "ChannelInteractor ->";
     private static ChannelInteractor instance;
     private final ChannelInteractorListener listener;
+    private final String ipAddress;
     private BroadcasterStream broadcasterStream;
     private ReceiverStream receiverStream;
 
@@ -22,17 +23,18 @@ public class ChannelInteractor implements R5ConnectionListener {
 
     private Channel channel;
 
-    private ChannelInteractor(Channel channel, ChannelInteractorListener listener) {
+    private ChannelInteractor(Channel channel, ChannelInteractorListener listener, String ipAddress) {
         this.listener = listener;
         this.channel = channel;
+        this.ipAddress = ipAddress;
 
-        broadcasterStream = new BroadcasterStream(this);
-        receiverStream = new ReceiverStream(this);
+        broadcasterStream = new BroadcasterStream(this, ipAddress);
+        receiverStream = new ReceiverStream(this, ipAddress);
     }
 
-    public static ChannelInteractor getInstance(Channel channel, ChannelInteractorListener listener) {
+    public static ChannelInteractor getInstance(Channel channel, ChannelInteractorListener listener, String ipAddress) {
         if (instance == null || !instance.channel.equals(channel)) {
-            instance = new ChannelInteractor(channel, listener);
+            instance = new ChannelInteractor(channel, listener, ipAddress);
         }
         return instance;
     }
@@ -43,7 +45,7 @@ public class ChannelInteractor implements R5ConnectionListener {
      */
     public void startBroadcast(int id) {
         if (broadcasterStream == null)
-            broadcasterStream = new BroadcasterStream(this);
+            broadcasterStream = new BroadcasterStream(this, ipAddress);
 
         if (isListening)
             stop();
@@ -70,7 +72,7 @@ public class ChannelInteractor implements R5ConnectionListener {
         this.channel.setLiveStream(liveStream);
 
         if (receiverStream == null)
-            receiverStream = new ReceiverStream(this);
+            receiverStream = new ReceiverStream(this, ipAddress);
         if (!isListening) {
             isListening = true;
             receiverStream.play(liveStream.getPublishStreamName());

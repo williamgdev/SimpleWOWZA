@@ -3,6 +3,7 @@ package com.randmcnally.bb.poc.custom;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 
+import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
 import com.randmcnally.bb.poc.model.Playlist;
 import com.randmcnally.bb.poc.model.VoiceMessage;
 
@@ -10,6 +11,7 @@ import java.io.IOException;
 
 public class BBPlayer {
     private static final String TAG = "BBPlayer ->";
+    private static String ipAddress;
     ListenerBBPlayer listener;
     String mediaUrl;
     Playlist playlist;
@@ -32,7 +34,8 @@ public class BBPlayer {
 
     }
 
-    public BBPlayer(Playlist playlist, ListenerPlaylistBBPlayer listener) throws IOException {
+    public BBPlayer(Playlist playlist, String ipAddress, ListenerPlaylistBBPlayer listener) throws IOException {
+        this.ipAddress = ipAddress;
         this.listener = listener;
         this.playlist = playlist;
         playing = false;
@@ -49,7 +52,7 @@ public class BBPlayer {
         mediaPlayer.setOnCompletionListener(onCompletionListener);
         if (!playlist.isEmpty()) {
             actualVoiceMessage = playlist.getOlderMessages();
-            mediaPlayer.setDataSource(actualVoiceMessage.getUrl());
+            mediaPlayer.setDataSource(Red5ProApiInteractor.getURLStream(actualVoiceMessage.getName(), ipAddress));
             mediaPlayer.prepare();
         }
     }
@@ -68,6 +71,7 @@ public class BBPlayer {
     public void play() throws IOException {
         playing = true;
         if (playListAdded){
+            ((ListenerPlaylistBBPlayer)listener).onMessageCompleted(actualVoiceMessage);
             mediaPlayer.start();
         } else {
             listener.onListener(BBPLAYERSTATE.PREPARING);
@@ -101,7 +105,6 @@ public class BBPlayer {
         public void onCompletion(MediaPlayer mp) {
             if (playListAdded) {
                 if (!playlist.isEmpty()) {
-                    ((ListenerPlaylistBBPlayer)listener).onMessageCompleted(actualVoiceMessage);
                     playNextVoiceMessage();
                 }
                 else{

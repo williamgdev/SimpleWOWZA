@@ -34,10 +34,6 @@ public class VoiceMessage implements Serializable {
         return name;
     }
 
-    public String getUrl() {
-        return Red5ProApiInteractor.getURLStream(name);
-    }
-
     public boolean isEmpty() {
         return fileSize == 0;
     }

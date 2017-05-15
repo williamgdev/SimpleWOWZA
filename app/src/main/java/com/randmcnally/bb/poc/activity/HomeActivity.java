@@ -135,6 +135,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     public void initializePresenter() {
         presenter = new HomePresenterImpl();
         presenter.attachView(this);
+        presenter.setDatabaseInteractor(((BBApplication) getApplication()).getDatabaseInteractor(this));
         presenter.setOpenFireServer(((BBApplication) getApplication()).getOpenFireServer(this));
     }
 

@@ -1,9 +1,12 @@
 package com.randmcnally.bb.poc.presenter;
 
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
+import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelView;
+
+import java.io.Serializable;
 
 public interface ChannelPresenter extends BasePresenter<ChannelView> {
     void loadData();
@@ -27,4 +30,6 @@ public interface ChannelPresenter extends BasePresenter<ChannelView> {
     void setOpenFireServer(OpenFireServer openFireServer);
 
     int getMissedMessages();
+
+    Channel getActiveChannel();
 }

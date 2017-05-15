@@ -38,14 +38,14 @@ public class OpenFireServer implements ConnectionListener {
     private MultiUserChatManager multiUserChatManager;
     private HashMap<String,BBGroupChat> groupChatHistoryHashMap;
 
-    private OpenFireServer(String UID) {
+    private OpenFireServer(String UID, String ipAddress) {
         XMPPTCPConnectionConfiguration.Builder configBuilder;
         configBuilder = XMPPTCPConnectionConfiguration.builder();
         configBuilder.setUsernameAndPassword(UID, UID);
         try {
             configBuilder.setXmppDomain(OpenFireApiInteractor.XMPP_DOMAIN);
 
-            configBuilder.setHost(OpenFireApiInteractor.HOST_NAME);
+            configBuilder.setHost(ipAddress);
             connection = new XMPPTCPConnection(configBuilder.build());
             connection.addConnectionListener(this);
 
@@ -55,9 +55,9 @@ public class OpenFireServer implements ConnectionListener {
         groupChatHistoryHashMap = new HashMap<>();
     }
 
-    public static OpenFireServer getInstance(String UID) {
+    public static OpenFireServer getInstance(String UID, String ipAddress) {
         if (instance == null){
-            instance = new OpenFireServer(UID);
+            instance = new OpenFireServer(UID, ipAddress);
         }
         /**
          * TODO check if UID is the same as a current connection
@@ -159,7 +159,7 @@ public class OpenFireServer implements ConnectionListener {
                     joinToGroupChat(chat, new OpenFireListener<List<Message>>() {
                         @Override
                         public void onSuccess(List<Message> result) {
-                            Log.d(TAG, "onSuccess: Joint to the GroupChat - " + chat.getSubject());
+                            Log.d(TAG, "onSuccess: Joint to the GroupChat - " + chat.getRoom().getLocalpart());
                         }
 
                         @Override
@@ -179,7 +179,7 @@ public class OpenFireServer implements ConnectionListener {
 
     }
 
-    private void joinToGroupChat(final MultiUserChat multiUserChat, final OpenFireListener<List<Message>> listener) {
+    public void joinToGroupChat(final MultiUserChat multiUserChat, final OpenFireListener<List<Message>> listener) {
 
         if (!multiUserChat.isJoined()) {
             try {
@@ -276,7 +276,7 @@ public class OpenFireServer implements ConnectionListener {
                     /**
                      * TODO get the value for service domains depend of the name instead of 0.
                      */
-                    groupChatService = multiUserChatManager.getXMPPServiceDomains().get(0);
+                    groupChatService = multiUserChatManager.getXMPPServiceDomains().get(1);
 
                     List<HostedRoom> rooms = multiUserChatManager.getHostedRooms(groupChatService.asDomainBareJid());
                     if (rooms != null)
@@ -315,7 +315,7 @@ public class OpenFireServer implements ConnectionListener {
             listener.onError(e.getMessage());
             e.printStackTrace();
         }
-        listener.onSuccess(oldMessages); ;
+        listener.onSuccess(oldMessages);
     }
 
     @Override
