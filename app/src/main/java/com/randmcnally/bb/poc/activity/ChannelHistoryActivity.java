@@ -86,6 +86,7 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
     @Override
     protected void initializePresenter() {
         channelHistoryPresenter = new ChannelHistoryPresenterImpl();
+        channelHistoryPresenter.attachView(this);
         extractBundleData(getIntent().getExtras());
 
     }
@@ -113,7 +114,12 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
     }
 
     private HistoryAdapter getHistoryAdapter() {
-        return new HistoryAdapter(this, channelHistoryPresenter);
+        return new HistoryAdapter(this, channelHistoryPresenter.getVoiceMessages());
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        channelHistoryPresenter.detachView();
+    }
 }

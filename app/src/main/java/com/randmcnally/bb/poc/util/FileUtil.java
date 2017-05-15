@@ -2,6 +2,8 @@ package com.randmcnally.bb.poc.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
@@ -56,5 +58,14 @@ public class FileUtil {
         editor.putString("UUID", uniqueID);
         editor.apply();
         return uniqueID;
+    }
+
+    public static int getMetaDataFileDuration(Context context, String pathStr){
+        Uri uri = Uri.parse(pathStr);
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(context,uri);
+        String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        int millSecond = Integer.parseInt(durationStr);
+        return millSecond;
     }
 }

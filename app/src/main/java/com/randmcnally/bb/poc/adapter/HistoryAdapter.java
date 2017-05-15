@@ -12,18 +12,17 @@ import android.widget.TextView;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.model.VoiceMessage;
-import com.randmcnally.bb.poc.presenter.ChannelHistoryPresenter;
 import com.randmcnally.bb.poc.view.ChannelHistoryView;
 
 import java.util.List;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>{
+    private final List<VoiceMessage> history;
     private final Context context;
-    private final ChannelHistoryPresenter channelHistoryPresenter;
 
-    public HistoryAdapter(Context context, ChannelHistoryPresenter channelHistoryPresenter) {
+    public HistoryAdapter(Context context, List<VoiceMessage> history) {
         this.context = context;
-        this.channelHistoryPresenter = channelHistoryPresenter;
+        this.history = history;
     }
 
     @Override
@@ -35,13 +34,12 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
 
     @Override
     public void onBindViewHolder(final HistoryViewHolder holder, final int position) {
-        holder.setText(channelHistoryPresenter.getMessageName(position));
-        holder.setOnClickListener(position);
+        holder.bindData(history.get(position), position);
     }
 
     @Override
     public int getItemCount() {
-        return channelHistoryPresenter.getMessageSize();
+        return history.size();
     }
 
     public class HistoryViewHolder extends RecyclerView.ViewHolder {
@@ -49,7 +47,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         TextView txtNameMessage;
         SeekBar seekBar;
         ImageView imagePlayButton;
-        boolean iconPause;
+        private boolean iconPause;
 
         public HistoryViewHolder(View itemView) {
             super(itemView);
@@ -66,23 +64,23 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         public void switchIconControl(int position) {
             if (iconPause) {
                 imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
-                channelHistoryPresenter.onMessagePause(position, seekBar);
+//                channelHistoryPresenter.onMessagePause(position, seekBar);
             } else {
                 imagePlayButton.setImageResource(R.drawable.ic_pause_circle_filled_black_24dp);
-                channelHistoryPresenter.onMessagePlay(position, seekBar);
+//                channelHistoryPresenter.onMessagePlay(position, seekBar);
             }
             iconPause = !iconPause;
         }
 
-        public void setOnClickListener(final int position) {
+        public void bindData(VoiceMessage voiceMessage, final int position) {
+            setText(voiceMessage.getName());
             layoutControl.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (v.getContext() instanceof ChannelHistoryView) {
-                        switchIconControl(position);
-                    }
+                    switchIconControl(position);
                 }
             });
+
         }
     }
 }
