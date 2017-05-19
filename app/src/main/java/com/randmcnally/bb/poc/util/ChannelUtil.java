@@ -1,27 +1,38 @@
 package com.randmcnally.bb.poc.util;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.randmcnally.bb.poc.custom.BBGroupChat;
 import com.randmcnally.bb.poc.dao.ChannelEntity;
 import com.randmcnally.bb.poc.dao.HistoryEntity;
 import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
+import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.LiveStream;
+import com.randmcnally.bb.poc.model.Playlist;
 import com.randmcnally.bb.poc.model.VoiceMessage;
+
+import org.jivesoftware.smack.packet.Message;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 
 public class ChannelUtil {
 
     private static final String TAG = "ChannelUtil ->";
+    /**
+     * Todo get limit of message globally. Actual is 5 and start from 0.
+     */
+    private static final int HISTORY_LIMIT = 5;
 
     @NonNull
     public static List<VoiceMessageEntity> voiceMessageEntityToList(HistoryEntity result) {
@@ -53,7 +64,11 @@ public class ChannelUtil {
     }
 
     public static List<VoiceMessage> getMissedMessage(List<VoiceMessage> history, List<VoiceMessage> voiceMessages) {
-        List<VoiceMessage> missedMessages = history.subList(0, history.size());
+        List<VoiceMessage> missedMessages = new ArrayList<>();
+        for (VoiceMessage voiceMessage :
+                history) {
+            missedMessages.add(voiceMessage);
+        }
         missedMessages.removeAll(voiceMessages);
 
         return missedMessages;
@@ -99,10 +114,7 @@ public class ChannelUtil {
         List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(history);
         voiceMessages.add(voiceMessage);
 
-        /**
-         * Todo get limit of message globally. Actual is 5 and start from 0.
-         */
-        if (voiceMessages.size() - 1 > 5) {
+        if (voiceMessages.size() - 1 > HISTORY_LIMIT) {
             voiceMessages.remove(0);
             // if limit reached, remove the first one
             // because the first one will be the oldest.
@@ -151,5 +163,41 @@ public class ChannelUtil {
             }
         }
         return null;
+    }
+
+
+    public static List<HistoryMessage> convertToHistoryMessage(List<VoiceMessage> voiceMessages) {
+        List<HistoryMessage> result = new ArrayList<>();
+        for (int i = 0; i < voiceMessages.size(); i++) {
+            result.add(new HistoryMessage(voiceMessages.get(i), i));
+        }
+        return result;
+    }
+
+    public static void updateChannelMissedMessages(final Channel channel, DatabaseInteractor databaseInteractor ) {
+        databaseInteractor.readOrCreateHistoryByName(channel.getName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
+            @Override
+            public void onResult(HistoryEntity result) {
+                List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(result);
+                List<VoiceMessage> missedMessages = ChannelUtil.getMissedMessage(channel.getHistory().getVoiceMessages(), VoiceMessage.createFromVoiceMessagelEntity(voiceMessages));
+                channel.getHistory().setMissedMessages(Playlist.create(missedMessages));
+            }
+        });
+    }
+
+    public static void addMessageToHistory(History history, VoiceMessage voiceMessage) {
+        history.getVoiceMessages().add(voiceMessage);
+        if (history.getVoiceMessages().size() - 1 > HISTORY_LIMIT) {
+            history.getVoiceMessages().remove(0);
+            // if limit reached, remove the first one
+            // because the first one will be the oldest.
+        }
+    }
+
+    public static void addMessageToBBGroupChat(List<Message> messageList, Message message) {
+        messageList.add(message);
+        if (messageList.size() > 5){
+            messageList.remove(0);
+        }
     }
 }

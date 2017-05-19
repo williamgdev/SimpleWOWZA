@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
@@ -323,10 +324,17 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
     private View.OnClickListener speakerClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Bundle bundle = new Bundle();
-            bundle.putSerializable("history", presenter.getActiveChannel().getHistory());
+            Bundle bundle = getBundle();
             launch(ChannelHistoryActivity.class, bundle);
         }
     };
+
+    @NonNull
+    private Bundle getBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("history", presenter.getActiveChannel().getHistory());
+        bundle.putString("channel_name", presenter.getActiveChannel().getName());
+        return bundle;
+    }
 
 }

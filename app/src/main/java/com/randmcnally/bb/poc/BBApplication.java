@@ -10,9 +10,11 @@ import com.randmcnally.bb.poc.util.OpenFireServer;
 
 
 public class BBApplication extends Application {
-    public static final String IP_ADDRESS = "192.168.43.212";
-//    public static final String IP_ADDRESS = "52.10.208.192";
+//    public static final String IP_ADDRESS = "10.200.248.43";
+//    public static final String IP_ADDRESS = "192.168.43.212";
+    public static final String IP_ADDRESS = "54.201.166.96";
 //    public static final String IP_ADDRESS = "ec2-52-10-208-192.us-west-2.compute.amazonaws.com";
+
     DatabaseInteractor interactor;
     OpenFireServer openFireServer;
 

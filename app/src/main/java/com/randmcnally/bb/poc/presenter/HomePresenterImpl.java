@@ -19,16 +19,20 @@ import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.view.HomeView;
 
 
-public class HomePresenterImpl implements HomePresenter {
+public class HomePresenterImpl implements HomePresenter, OpenFireServer.OpenFireServerListener {
     private static final String TAG = "HomePresenterImpl ->";
 
     private HomeView homeView;
     private DatabaseInteractor databaseInteractor;
     private LiveStream streamReceived;
+    private OpenFireServer openFireServer;
 
     @Override
     public void attachView(HomeView homeView) {
         this.homeView = homeView;
+        if (openFireServer != null){
+            openFireServer.setListener(this);
+        }
     }
 
     @Override
@@ -39,58 +43,57 @@ public class HomePresenterImpl implements HomePresenter {
     @Override
     public void setOpenFireServer(final OpenFireServer openFireServer) {
         homeView.showProgress();
+        this.openFireServer = openFireServer;
         openFireServer.connectOpenFireServer();
 
-        openFireServer.setListener(new OpenFireServer.OpenFireServerListener() {
-            @Override
-            public void notifyStatusOpenFireServer(STATE state, String message) {
-                switch (state) {
-                    case ERROR:
-                        break;
-                    case CONNECTION_CLOSED:
-                        break;
-                    case RECONNECTION_SUCCESS:
-                        break;
-                    case RECONNECTION_FAILED:
-                        break;
-                    case AUTHENTICATED:
-                        hideProgress();
-                        updateUI(ChannelView.UIState.READY);
-                        Log.d(TAG, "notifyStatusOpenFireServer: OpenFire Authenticated Successfully");
-                        break;
-                    case NOT_AUTHORIZED:
-                        String uniqueID = FileUtil.getDeviceUID(homeView.getContext());
+        openFireServer.setListener(this);
+    }
 
-                        OpenFireApiInteractor apiManager = OpenFireApiInteractor.getInstance(((BBApplication) homeView.getContext().getApplicationContext()).IP_ADDRESS);
-                        apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiInteractor.CreateUserApiListener() {
-                            @Override
-                            public void onSuccess(String s) {
-                                Log.d(TAG, "notifyStatusOpenFireServer: User created successfully");
-                                openFireServer.connectOpenFireServer();
-                            }
+    @Override
+    public void notifyStatusOpenFireServer(STATE state, String message) {
+        switch (state) {
+            case ERROR:
+                break;
+            case CONNECTION_CLOSED:
+                break;
+            case RECONNECTION_SUCCESS:
+                break;
+            case RECONNECTION_FAILED:
+                break;
+            case AUTHENTICATED:
+                hideProgress();
+                updateUI(ChannelView.UIState.READY);
+                Log.d(TAG, "notifyStatusOpenFireServer: OpenFire Authenticated Successfully");
+                break;
+            case NOT_AUTHORIZED:
+                String uniqueID = FileUtil.getDeviceUID(homeView.getContext());
 
-                            @Override
-                            public void onError(String s) {
-                                showToast(s);
-                            }
-                        });
+                OpenFireApiInteractor apiManager = OpenFireApiInteractor.getInstance(((BBApplication) homeView.getContext().getApplicationContext()).IP_ADDRESS);
+                apiManager.createUser(new UserRequest(uniqueID, uniqueID), new OpenFireApiInteractor.CreateUserApiListener() {
+                    @Override
+                    public void onSuccess(String s) {
+                        Log.d(TAG, "notifyStatusOpenFireServer: User created successfully");
+                        openFireServer.connectOpenFireServer();
+                    }
 
-                        break;
-                    case CONNECTED:
-                        break;
-                }
-            }
+                    @Override
+                    public void onError(String s) {
+                        showToast(s);
+                    }
+                });
 
-            @Override
-            public void notifyMessage(String streamName, String streamId) {
-                streamReceived = new LiveStream(streamName, Integer.parseInt(streamId));
-                ChannelUtil.notifyMessageMissed(streamReceived, databaseInteractor);
-                Log.d(TAG, "notifyMessage: " + ChannelUtil.getPublishName(streamName, streamId));
+                break;
+            case CONNECTED:
+                break;
+        }
+    }
 
-                sendMissedMessageBroadcast();
-            }
-
-        });
+    @Override
+    public void notifyMessage(String streamName, String streamId) {
+        streamReceived = new LiveStream(streamName, Integer.parseInt(streamId));
+        ChannelUtil.notifyMessageMissed(streamReceived, databaseInteractor);
+        Log.d(TAG, "notifyMessage: " + ChannelUtil.getPublishName(streamName, streamId));
+        sendMissedMessageBroadcast();
     }
 
     private void sendMissedMessageBroadcast(){

@@ -19,17 +19,20 @@ public class BBPlayer {
     private MediaPlayer mediaPlayer;
     private boolean playListAdded;
     private VoiceMessage actualVoiceMessage;
+    private boolean release;
+    private boolean pause;
 
     public BBPlayer(String url, ListenerBBPlayer listener) throws IOException {
         this.listener = listener;
         this.mediaUrl = url;
         playing = false;
+        release = false;
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnInfoListener(onInfoListener);
         mediaPlayer.setOnErrorListener(onErrorListener);
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setDataSource(url);
 
     }
@@ -51,10 +54,11 @@ public class BBPlayer {
         mediaPlayer.setOnPreparedListener(onPreparedListener);
         mediaPlayer.setOnCompletionListener(onCompletionListener);
         if (!playlist.isEmpty()) {
-            actualVoiceMessage = playlist.getOlderMessages();
+            actualVoiceMessage = playlist.nextMessage();
             mediaPlayer.setDataSource(Red5ProApiInteractor.getURLStream(actualVoiceMessage.getName(), ipAddress));
             mediaPlayer.prepare();
         }
+        release = false;
     }
 
     public boolean isPlaying() {
@@ -62,16 +66,21 @@ public class BBPlayer {
     }
 
     public void stop() {
-        playing = false;
-        mediaPlayer.stop();
-        mediaPlayer.release();
-        listener.onListener(BBPLAYERSTATE.STOPPED);
+        if (playing || pause) {
+            playing = false;
+            pause = false;
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            release = true;
+            listener.onListener(BBPLAYERSTATE.STOPPED);
+        }
     }
 
     public void play() throws IOException {
         playing = true;
+        pause = false;
         if (playListAdded){
-            ((ListenerPlaylistBBPlayer)listener).onMessageCompleted(actualVoiceMessage);
+            listener.onListener(BBPLAYERSTATE.PLAYING);
             mediaPlayer.start();
         } else {
             listener.onListener(BBPLAYERSTATE.PREPARING);
@@ -79,8 +88,16 @@ public class BBPlayer {
         }
     }
 
+    public void pause() {
+        mediaPlayer.pause();
+        playing = false;
+        pause = true;
+    }
+
     private void playNextVoiceMessage() {
+        ((ListenerPlaylistBBPlayer) listener).onMessageCompleted(actualVoiceMessage);
         mediaPlayer.release();
+        release = true;
         try {
             createMediaPlayer();
             play();
@@ -110,6 +127,7 @@ public class BBPlayer {
                 else{
                     stop();
                     listener.onListener(BBPLAYERSTATE.PLAYLIST_EMPTY);
+                    ((ListenerPlaylistBBPlayer) listener).onMessageCompleted(actualVoiceMessage);
                 }
             }
             else {
@@ -154,6 +172,25 @@ public class BBPlayer {
     public void forceStop() {
         if (isPlaying())
             mediaPlayer.stop();
+    }
+
+    public VoiceMessage getCurrentMessage() {
+        return actualVoiceMessage;
+    }
+
+    public int getTimeElapsed() {
+        if (playing) {
+            return mediaPlayer.getCurrentPosition();
+        }
+        return 0;
+    }
+
+    public int getDuration(){
+        return mediaPlayer.getDuration();
+    }
+
+    public boolean isReleased() {
+        return release;
     }
 
     public enum BBPLAYERSTATE {

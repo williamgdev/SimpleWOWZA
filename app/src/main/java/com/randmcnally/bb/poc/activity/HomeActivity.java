@@ -139,10 +139,15 @@ public class HomeActivity extends BaseActivity implements HomeView {
         presenter.setOpenFireServer(((BBApplication) getApplication()).getOpenFireServer(this));
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        presenter.attachView(this);
+    }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onPause() {
+        super.onPause();
         presenter.detachView();
     }
 

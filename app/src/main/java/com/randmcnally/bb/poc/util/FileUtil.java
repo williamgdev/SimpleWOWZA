@@ -10,6 +10,7 @@ import android.util.Log;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.UUID;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -63,7 +64,7 @@ public class FileUtil {
     public static int getMetaDataFileDuration(Context context, String pathStr){
         Uri uri = Uri.parse(pathStr);
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(context,uri);
+        mmr.setDataSource(pathStr, new HashMap<String, String>());
         String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         int millSecond = Integer.parseInt(durationStr);
         return millSecond;

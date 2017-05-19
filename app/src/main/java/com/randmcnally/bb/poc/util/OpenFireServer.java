@@ -276,7 +276,7 @@ public class OpenFireServer implements ConnectionListener {
                     /**
                      * TODO get the value for service domains depend of the name instead of 0.
                      */
-                    groupChatService = multiUserChatManager.getXMPPServiceDomains().get(1);
+                    groupChatService = multiUserChatManager.getXMPPServiceDomains().get(0);
 
                     List<HostedRoom> rooms = multiUserChatManager.getHostedRooms(groupChatService.asDomainBareJid());
                     if (rooms != null)
@@ -362,9 +362,15 @@ public class OpenFireServer implements ConnectionListener {
     private MessageListener messageListener = new MessageListener() {
         @Override
         public void processMessage(Message message) {
+            updateGroupChat(message);
             listener.notifyMessage(message.getSubject(), message.getBody());
         }
     };
+
+    private void updateGroupChat(Message message) {
+        getGroupChatHistoryHashMap().get(message.getSubject()).addMessage(message);
+        groupChatHistoryHashMap.put(message.getSubject(), getGroupChatHistoryHashMap().get(message.getSubject()));
+    }
 
     public interface OpenFireListener<T>{
         void onSuccess(T result);

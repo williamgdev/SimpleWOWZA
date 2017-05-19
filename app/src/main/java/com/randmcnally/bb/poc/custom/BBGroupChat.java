@@ -1,5 +1,7 @@
 package com.randmcnally.bb.poc.custom;
 
+import com.randmcnally.bb.poc.util.ChannelUtil;
+
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
@@ -25,5 +27,9 @@ public class BBGroupChat {
 
     public MultiUserChat getChat() {
         return chat;
+    }
+
+    public void addMessage(Message message){
+        ChannelUtil.addMessageToBBGroupChat(messages, message); //Set the Limitation of messages
     }
 }

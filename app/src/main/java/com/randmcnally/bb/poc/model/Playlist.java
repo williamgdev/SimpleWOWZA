@@ -1,18 +1,24 @@
 package com.randmcnally.bb.poc.model;
 
+import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
+
 import java.io.Serializable;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Stack;
 
 public class Playlist implements Serializable{
-    Stack<VoiceMessage> voiceMessages;
+    Queue<VoiceMessage> voiceMessages;
 
     public Playlist() {
-        voiceMessages = new Stack<>();
+        voiceMessages = new LinkedList<>();
     }
 
-    public VoiceMessage getOlderMessages() {
-        return voiceMessages.pop();
+    public VoiceMessage nextMessage() {
+        return voiceMessages.remove();
     }
 
     /**
@@ -24,7 +30,7 @@ public class Playlist implements Serializable{
         if (voiceMessages.contains(voiceMessage)) {
             return false;
         }
-        return voiceMessages.push(voiceMessage) != null;
+        return voiceMessages.add(voiceMessage);
 
     }
 
@@ -54,5 +60,31 @@ public class Playlist implements Serializable{
 
     public int size() {
         return voiceMessages.size();
+    }
+
+    public static Playlist createFromMessage(List<VoiceMessage> voiceMessages, VoiceMessage currentMessage) {
+        Playlist result = new Playlist();
+        boolean addVoiceMessage = false;
+        for (VoiceMessage voiceMessage :
+                voiceMessages) {
+            if (addVoiceMessage || voiceMessage.equals(currentMessage)){
+                addVoiceMessage = true;
+                result.addMessage(voiceMessage);
+            }
+        }
+        return result;
+    }
+
+    public static Playlist createFromMessage(List<HistoryMessage> history, HistoryMessage currentPlayMessage) {
+        Playlist result = new Playlist();
+        boolean addVoiceMessage = false;
+        for (HistoryMessage historyMessage :
+                history) {
+            if (addVoiceMessage || historyMessage.getVoicemessage().equals(currentPlayMessage.getVoicemessage())){
+                addVoiceMessage = true;
+                result.addMessage(historyMessage.getVoicemessage());
+            }
+        }
+        return result;
     }
 }

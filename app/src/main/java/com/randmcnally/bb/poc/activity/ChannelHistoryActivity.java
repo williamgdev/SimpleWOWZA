@@ -5,18 +5,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.HistoryAdapter;
 import com.randmcnally.bb.poc.model.History;
-import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.presenter.ChannelHistoryPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelHistoryPresenterImpl;
 import com.randmcnally.bb.poc.view.ChannelHistoryView;
-
-import java.util.List;
 
 public class ChannelHistoryActivity extends BaseActivity implements ChannelHistoryView{
 
@@ -24,6 +20,7 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
     private HistoryAdapter channelsAdapter;
     private TextView txtError;
     private ChannelHistoryPresenter channelHistoryPresenter;
+    private HistoryAdapter historyAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +90,9 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
 
     private void extractBundleData(Bundle extras) {
         History history = (History) extras.getSerializable("history");
+        String channelName = extras.getString("channel_name");
         channelHistoryPresenter.setHistory(history);
+        channelHistoryPresenter.setChannelName(channelName);
     }
 
     @Override
@@ -114,7 +113,8 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
     }
 
     private HistoryAdapter getHistoryAdapter() {
-        return new HistoryAdapter(this, channelHistoryPresenter.getVoiceMessages());
+        historyAdapter = new HistoryAdapter(this,channelHistoryPresenter.getHistoryMessages());
+        return historyAdapter;
     }
 
     @Override

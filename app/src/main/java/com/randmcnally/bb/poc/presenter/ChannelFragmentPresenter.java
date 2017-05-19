@@ -23,8 +23,6 @@ public interface ChannelFragmentPresenter extends BasePresenter<ChannelFragmentV
 
     void getMissedMessages(HashMap<String, BBGroupChat> groupChatHistoryHashMap);
 
-    void updateChannelMissedMessages(Channel channel);
-
     void setChannels(List<Channel> favoritesChannels);
 
     void saveChannelsOnDatabase(List<Channel> channels);

@@ -118,20 +118,6 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
     }
 
     @Override
-    public void updateChannelMissedMessages(final Channel channel) {
-        databaseInteractor.readOrCreateHistoryByName(channel.getName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
-            @Override
-            public void onResult(HistoryEntity result) {
-                List<VoiceMessageEntity> voiceMessages = ChannelUtil.voiceMessageEntityToList(result);
-                List<VoiceMessage> missedMessages = ChannelUtil.getMissedMessage(channel.getHistory().getVoiceMessages(), VoiceMessage.createFromVoiceMessagelEntity(voiceMessages));
-                channel.getHistory().setMissedMessages(Playlist.create(missedMessages));
-                updateChannel();
-                Log.d(TAG, "updateChannelMissedMessages: " + channel.getName() + " - " + channel.getHistory().getMissedMessages().size()  + " missed messages" );
-            }
-        });
-    }
-
-    @Override
     public void setChannels(List<Channel> channels) {
         this.channels = ChannelUtil.hasChanges(this.channels, channels);
         saveChannelsOnDatabase(channels);
@@ -192,12 +178,16 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
 
     @Override
     public void getMissedMessages(final HashMap<String, BBGroupChat> groupChatHistoryHashMap) {
-        if (groupChatHistoryHashMap.size() != 0){
+        if (groupChatHistoryHashMap.size() > 0){
             for (Channel channel :
                     channels) {
                 if (groupChatHistoryHashMap.containsKey(channel.getName()) && channel.isFavorite()){ //get the missed messages only if is Favorite
                     channel.setHistory(History.create(groupChatHistoryHashMap.get(channel.getName()).getMessages()));
-                    updateChannelMissedMessages(channel);
+                    ChannelUtil.updateChannelMissedMessages(channel, databaseInteractor);
+
+                    updateChannel();
+                    Log.d(TAG, "updateChannelMissedMessages: " + channel.getName() + " - " + channel.getHistory().getMissedMessages().size()  + " missed messages" );
+
                     saveChannelsOnDatabase(channel);
                 }
             }

@@ -1,11 +1,8 @@
 package com.randmcnally.bb.poc.interactor;
 
-import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoom;
 import com.randmcnally.bb.poc.dto.openfire.ChatRoomResponse;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
-import com.randmcnally.bb.poc.model.Channel;
-import com.randmcnally.bb.poc.model.GroupChat;
 import com.randmcnally.bb.poc.network.OpenFireInterceptor;
 import com.randmcnally.bb.poc.restservice.OpenFireApiService;
 
@@ -19,9 +16,8 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 public class OpenFireApiInteractor {
     public static final String GROUPCHAT_SERVICE = "randmcnally";
-    public static final String XMPP_DOMAIN = "openfire.test";
-//        public static final String HOST_NAME = "192.168.43.212";
-//    public static final String XMPP_DOMAIN = "ip-172-31-6-205.us-west-2.compute.internal";
+//    public static final String XMPP_DOMAIN = "openfire.test";
+    public static final String XMPP_DOMAIN = "ip-172-31-6-205.us-west-2.compute.internal";
 
     private static OpenFireApiInteractor instance;
     private OpenFireApiService apiService;
