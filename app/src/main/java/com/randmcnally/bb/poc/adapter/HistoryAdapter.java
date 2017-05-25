@@ -1,6 +1,7 @@
 package com.randmcnally.bb.poc.adapter;
 
 import android.content.Context;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
@@ -134,6 +135,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         SeekBar seekBar;
         ImageView imagePlayButton;
         private HistoryMessage historyMessage;
+        CountDownTimer timer;
 
         public HistoryViewHolder(View itemView, HistoryAdapter historyAdapter) {
             super(itemView);
@@ -150,14 +152,16 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             txtNameMessage.setText(name);
         }
 
-        public void bindData(HistoryMessage historyMessage) {
+        public void bindData(final HistoryMessage historyMessage) {
             this.historyMessage = historyMessage;
             setText(historyMessage.getVoicemessage().getName());
+            seekBar.setMax((int)(historyMessage.getTimeMilliseconds()));
             if (currentPlayMessage != null) {
                 checkMessageAction();
             } else {
                 String s = "";
             }
+
         }
 
         @Override
@@ -188,7 +192,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
             this.historyMessage.setState(new MessagePause(historyAdapter.getBBPlayer()));
             historyMessage.action();
-            durationHandler.removeCallbacks(updateSeekBarTime);
+//            durationHandler.removeCallbacks(updateSeekBarTime);
+
+            if (timer != null) {
+                timer.cancel();
+            }
         }
 
         private void play() {
@@ -201,30 +209,52 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             }
             currentPlayMessage = historyMessage;
             this.historyMessage.setState(new MessagePlay(historyAdapter));
-            seekBar.setMax((int)(historyMessage.getTimeMilliseconds()));
             imagePlayButton.setImageResource(R.drawable.ic_pause_circle_filled_black_24dp);
             historyMessage.action();
-            durationHandler.post(updateSeekBarTime);
+//            durationHandler.post(updateSeekBarTime);
             //TODO make sure the presenter has updated the history message
+            timer = new CountDownTimer(historyMessage.getTimeMilliseconds(), 10) {
+
+                public void onTick(long millisUntilFinished) {
+                    historyMessage.setRemainingSeconds(bbPlayer.getTimeElapsed());
+                    seekBar.setProgress(historyMessage.getRemainingSeconds());
+                }
+
+                public void onFinish() {
+                    seekBar.setMax((int)(historyMessage.getTimeMilliseconds()));
+                }
+
+            };
+            updateSeekBar();
+        }
+
+        private void updateSeekBar() {
+            timer.start();
         }
 
         private void stop() {
             imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
-            durationHandler.removeCallbacks(updateSeekBarTime);
-            historyMessage.action();
+//            durationHandler.removeCallbacks(updateSeekBarTime);
+            if (timer != null) {
+                timer.cancel();
+            }
+            historyMessage.setRemainingSeconds((int)historyMessage.getTimeMilliseconds());
             seekBar.setProgress((int)historyMessage.getTimeMilliseconds());
+            historyMessage.action();
         }
 
-        final Handler durationHandler = new Handler(Looper.getMainLooper());
-        private Runnable updateSeekBarTime = new Runnable() {
-            public void run() {
-
-                //set seekbar progress using time played
-                if (bbPlayer.getTimeElapsed() > 0)
-                    seekBar.setProgress(bbPlayer.getTimeElapsed());
-
-                durationHandler.postDelayed(this, 100);
-            }
-        };
+//        final Handler durationHandler = new Handler(Looper.getMainLooper());
+//        private Runnable updateSeekBarTime = new Runnable() {
+//            public void run() {
+//
+//                //set seekbar progress using time played
+//                if (bbPlayer.getTimeElapsed() > 0)
+//                    historyMessage.setRemainingSeconds(bbPlayer.getTimeElapsed());
+//                    seekBar.setProgress(historyMessage.getRemainingSeconds());
+//                if (bbPlayer.getTimeElapsed() <= historyMessage.getTimeMilliseconds()) {
+//                    durationHandler.postDelayed(this, 100);
+//                }
+//            }
+//        };
     }
 }

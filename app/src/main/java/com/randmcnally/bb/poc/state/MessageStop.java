@@ -13,7 +13,7 @@ public class MessageStop implements MessageState {
 
     @Override
     public void performAction(HistoryMessage historyMessage) {
-        historyMessage.setRemainingSeconds(0);
+//        historyMessage.setRemainingSeconds(0);
         bbPlayer.stop();
     }
 }

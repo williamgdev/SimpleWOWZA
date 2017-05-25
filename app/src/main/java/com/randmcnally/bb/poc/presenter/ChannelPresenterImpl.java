@@ -97,8 +97,10 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
             channelInteractor.stopListen();
         if (isBroadcasting())
             stopBroadcast();
-        LocalBroadcastManager.getInstance(channelView.getContext()).unregisterReceiver(localNotificationReceiver);
-        channelView = null;
+        if (channelView != null) {
+            LocalBroadcastManager.getInstance(channelView.getContext()).unregisterReceiver(localNotificationReceiver);
+            channelView = null;
+        }
     }
 
     @Override

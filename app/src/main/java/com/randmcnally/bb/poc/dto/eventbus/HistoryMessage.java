@@ -9,11 +9,12 @@ public class HistoryMessage {
     private int position;
     private String duration;
     private int remainingSeconds;
-    private double timeMilliseconds;
+    private long timeMilliseconds;
 
     public HistoryMessage(VoiceMessage voiceMessage, int position) {
         this.voicemessage = voiceMessage;
         this.position = position;
+        timeMilliseconds = 0;
 //        this.state = new MessageStop();
     }
 
@@ -58,11 +59,11 @@ public class HistoryMessage {
         this.remainingSeconds = remainingSeconds;
     }
 
-    public double getTimeMilliseconds() {
+    public long getTimeMilliseconds() {
         return timeMilliseconds;
     }
 
-    public void setTimeMilliseconds(double timeMilliseconds) {
+    public void setTimeMilliseconds(long timeMilliseconds) {
         this.timeMilliseconds = timeMilliseconds;
     }
 

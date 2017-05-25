@@ -224,8 +224,10 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
 
     @Override
     public void detachView() {
-        LocalBroadcastManager.getInstance(channelFragmentView.getContext()).unregisterReceiver(localNotificationReceiver);
-        channelFragmentView = null;
+        if (channelFragmentView != null) {
+            LocalBroadcastManager.getInstance(channelFragmentView.getContext()).unregisterReceiver(localNotificationReceiver);
+            channelFragmentView = null;
+        }
     }
 
     private void showToast(final String message) {
