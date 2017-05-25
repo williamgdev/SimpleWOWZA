@@ -19,7 +19,6 @@ public class MessagePlay implements MessageState{
     @Override
     public void performAction(HistoryMessage historyMessage) {
         this.historyMessage = historyMessage;
-        historyMessage.setDuration(6000);
         try {
             bbPlayer.play();
         } catch (IOException e) {

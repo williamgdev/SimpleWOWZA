@@ -188,9 +188,12 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
             this.historyMessage.setState(new MessagePause(historyAdapter.getBBPlayer()));
             historyMessage.action();
+            durationHandler.removeCallbacks(updateSeekBarTime);
         }
 
         private void play() {
+            // Case when the currentMessage is playing and the user click in another message in order to listen
+            // without pause the current one
             if (currentPlayMessage != null && !(currentPlayMessage.getVoicemessage().equals(historyMessage.getVoicemessage()))) {
                 currentPlayMessage.setState(new MessageStop(bbPlayer));
                 currentPlayMessage.action();
@@ -198,9 +201,9 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             }
             currentPlayMessage = historyMessage;
             this.historyMessage.setState(new MessagePlay(historyAdapter));
-            historyMessage.action();
-            seekBar.setMax(historyMessage.getDuration());
+            seekBar.setMax((int)(historyMessage.getTimeMilliseconds()));
             imagePlayButton.setImageResource(R.drawable.ic_pause_circle_filled_black_24dp);
+            historyMessage.action();
             durationHandler.post(updateSeekBarTime);
             //TODO make sure the presenter has updated the history message
         }
@@ -209,7 +212,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
             durationHandler.removeCallbacks(updateSeekBarTime);
             historyMessage.action();
-            seekBar.setProgress(6000);
+            seekBar.setProgress((int)historyMessage.getTimeMilliseconds());
         }
 
         final Handler durationHandler = new Handler(Looper.getMainLooper());

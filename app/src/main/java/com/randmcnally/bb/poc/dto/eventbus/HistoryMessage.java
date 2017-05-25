@@ -2,14 +2,14 @@ package com.randmcnally.bb.poc.dto.eventbus;
 
 import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.state.MessageState;
-import com.randmcnally.bb.poc.state.MessageStop;
 
 public class HistoryMessage {
     private MessageState state;
     private VoiceMessage voicemessage;
     private int position;
-    private int duration;
+    private String duration;
     private int remainingSeconds;
+    private double timeMilliseconds;
 
     public HistoryMessage(VoiceMessage voiceMessage, int position) {
         this.voicemessage = voiceMessage;
@@ -42,11 +42,11 @@ public class HistoryMessage {
     }
 
 
-    public int getDuration() {
+    public String getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(String duration) {
         this.duration = duration;
     }
 
@@ -56,6 +56,14 @@ public class HistoryMessage {
 
     public void setRemainingSeconds(int remainingSeconds) {
         this.remainingSeconds = remainingSeconds;
+    }
+
+    public double getTimeMilliseconds() {
+        return timeMilliseconds;
+    }
+
+    public void setTimeMilliseconds(double timeMilliseconds) {
+        this.timeMilliseconds = timeMilliseconds;
     }
 
     public void action() {

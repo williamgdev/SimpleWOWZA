@@ -1,21 +1,25 @@
 package com.randmcnally.bb.poc.interactor;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import com.randmcnally.bb.poc.BBApplication;
+import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
 import com.randmcnally.bb.poc.dto.red5pro.LiveStreamResponse;
 import com.randmcnally.bb.poc.dto.red5pro.RecordedFileResponse;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.Playlist;
 import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.restservice.Red5ProApiService;
+import com.randmcnally.bb.poc.util.FlvMetadataRetrieve;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.red5pro.streaming.event.R5ConnectionEvent;
 import com.red5pro.streaming.event.R5ConnectionListener;
 
 import java.util.Date;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -112,6 +116,16 @@ public class Red5ProApiInteractor {
                 listener.onError(t.getMessage());
             }
         };
+    }
+
+    public static void updateDuration(List<HistoryMessage> historyMessages, String ipAddress) throws Exception {
+        for (HistoryMessage historyMessage :
+                historyMessages) {
+            String url = getURLStream(historyMessage.getVoicemessage().getName(), ipAddress);
+            FlvMetadataRetrieve flvMetaData = new FlvMetadataRetrieve(url);
+            historyMessage.setDuration(flvMetaData.getDuration());
+            historyMessage.setTimeMilliseconds(flvMetaData.getTimeMilliseconds());
+        }
     }
 
     public interface LiveStreamApiListener extends BaseApiListener {

@@ -31,6 +31,7 @@ public class FlvMetadataRetrieve {
     private String createdDate;
     private String mimeType;
     private double frameRate;
+    private double timeMilliseconds;
 
     /**
      * Constructs an object with flv as a url
@@ -88,6 +89,7 @@ public class FlvMetadataRetrieve {
             double duration=getDouble(bytes,"duration");
             DecimalFormat f = new DecimalFormat("00");
             setDuration(f.format((int)duration/60)+":"+f.format((int)duration%60));
+            setTimeinMilliseconds(duration);
             setWidth(getDouble(bytes,"width"));
             setHeight(getDouble(bytes,"height"));
             setAudioDataRate(getDouble(bytes,"audiodatarate"));
@@ -108,6 +110,11 @@ public class FlvMetadataRetrieve {
             }
         }
     }
+
+    private void setTimeinMilliseconds(double duration) {
+        this.timeMilliseconds = duration  * 1000;
+    }
+
     private double getDouble(byte[] bytes, String property)
     {
         //Creating a string from the bytes
@@ -261,6 +268,10 @@ public class FlvMetadataRetrieve {
     public String getDuration()
     {
         return duration;
+    }
+
+    public double getTimeMilliseconds() {
+        return timeMilliseconds;
     }
 
     public static void main(String args[]) throws Exception
