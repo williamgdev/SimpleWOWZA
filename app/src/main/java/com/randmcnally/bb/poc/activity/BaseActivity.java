@@ -17,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.randmcnally.bb.poc.R;
+import com.randmcnally.bb.poc.presenter.BasePresenter;
 import com.randmcnally.bb.poc.view.BaseView;
 
 
@@ -36,6 +37,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
 
         initializeUIComponents();
         initializePresenter();
+        getPresenter().attachView(getView());
 
     }
 
@@ -107,6 +109,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseView
         intent.putExtras(bundle);
         startActivity(intent);
     }
+
+    @Override
+    protected void onStop() {
+        getPresenter().detachView();
+        super.onStop();
+    }
+
+    public abstract <T extends BasePresenter> T getPresenter();
+
+    public abstract <T extends BaseView> T getView();
 
     @LayoutRes
     protected abstract int getLayoutID();

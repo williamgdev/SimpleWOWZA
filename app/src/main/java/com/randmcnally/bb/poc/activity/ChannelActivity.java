@@ -22,8 +22,10 @@ import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.custom.BBTouchListener;
 import com.randmcnally.bb.poc.model.Channel;
+import com.randmcnally.bb.poc.presenter.BasePresenter;
 import com.randmcnally.bb.poc.presenter.ChannelPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelPresenterImpl;
+import com.randmcnally.bb.poc.view.BaseView;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.custom.PlayGifView;
 
@@ -65,7 +67,7 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
 //        setToolbarBackIcon(R.drawable.ic_arrow_back_white);
 ////        actionbar.setHomeAsUpIndicator ( R.drawable.ic_action_back );
 
-        updateUI(UIState.LOADING);
+//        updateUI(UIState.LOADING);
 
     }
 
@@ -298,6 +300,16 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
     }
 
     @Override
+    public ChannelPresenter getPresenter() {
+        return presenter;
+    }
+
+    @Override
+    public ChannelView getView() {
+        return this;
+    }
+
+    @Override
     public void showError(String error) {
         txtState.setText(error);
         layoutSpeaker.setVisibility(View.GONE);
@@ -307,19 +319,6 @@ public class ChannelActivity extends BaseActivity implements ChannelView{
         imgBroadcast.setVisibility(View.INVISIBLE);
         gifLoading.setVisibility(View.INVISIBLE);
     }
-
-    @Override
-    protected void onPause() {
-        presenter.detachView();
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        presenter.attachView(this);
-    }
-
 
     private View.OnClickListener speakerClickListener = new View.OnClickListener() {
         @Override

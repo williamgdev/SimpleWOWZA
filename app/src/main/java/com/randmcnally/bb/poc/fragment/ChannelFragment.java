@@ -116,8 +116,8 @@ public class ChannelFragment extends BaseFragment implements DialogTextFragment.
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
         presenter.detachView();
     }
 

@@ -36,7 +36,7 @@ public class ChannelHistoryPresenterImpl implements ChannelHistoryPresenter {
     @Override
     public void detachView() {
         channelHistoryView = null;
-        LocalBroadcastManager.getInstance(channelHistoryView.getContext());
+        LocalBroadcastManager.getInstance(channelHistoryView.getContext().getApplicationContext());
     }
 
     @Override

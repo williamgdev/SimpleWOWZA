@@ -1,7 +1,10 @@
 package com.randmcnally.bb.poc.presenter;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -10,6 +13,7 @@ import android.widget.Toast;
 import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.dto.openfire.UserRequest;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
+import com.randmcnally.bb.poc.interactor.NotificationService;
 import com.randmcnally.bb.poc.interactor.OpenFireApiInteractor;
 import com.randmcnally.bb.poc.model.LiveStream;
 import com.randmcnally.bb.poc.util.ChannelUtil;
@@ -30,9 +34,6 @@ public class HomePresenterImpl implements HomePresenter, OpenFireServer.OpenFire
     @Override
     public void attachView(HomeView homeView) {
         this.homeView = homeView;
-        if (openFireServer != null){
-            openFireServer.setListener(this);
-        }
     }
 
     @Override
@@ -44,9 +45,13 @@ public class HomePresenterImpl implements HomePresenter, OpenFireServer.OpenFire
     public void setOpenFireServer(final OpenFireServer openFireServer) {
         homeView.showProgress();
         this.openFireServer = openFireServer;
-        openFireServer.connectOpenFireServer();
+        openFireServer.connectOpenFireServer(this);
+        onStartService();
+    }
 
-        openFireServer.setListener(this);
+    private void onStartService() {
+        Intent intent = new Intent(homeView.getContext(), NotificationService.class);
+        homeView.getContext().startService(intent);
     }
 
     @Override
@@ -73,7 +78,7 @@ public class HomePresenterImpl implements HomePresenter, OpenFireServer.OpenFire
                     @Override
                     public void onSuccess(String s) {
                         Log.d(TAG, "notifyStatusOpenFireServer: User created successfully");
-                        openFireServer.connectOpenFireServer();
+                        onOpenFireReconnect();
                     }
 
                     @Override
@@ -88,20 +93,8 @@ public class HomePresenterImpl implements HomePresenter, OpenFireServer.OpenFire
         }
     }
 
-    @Override
-    public void notifyMessage(String streamName, String streamId) {
-        streamReceived = new LiveStream(streamName, Integer.parseInt(streamId));
-        ChannelUtil.notifyMessageMissed(streamReceived, databaseInteractor);
-        Log.d(TAG, "notifyMessage: " + ChannelUtil.getPublishName(streamName, streamId));
-        sendMissedMessageBroadcast();
-    }
-
-    private void sendMissedMessageBroadcast(){
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("live_stream", streamReceived);
-        Intent intent = new Intent("RMBB_MISSED_MESSAGE");
-        intent.putExtras(bundle);
-        LocalBroadcastManager.getInstance(homeView.getContext()).sendBroadcast(intent);
+    private void onOpenFireReconnect() {
+        openFireServer.connectOpenFireServer(this);
     }
 
     @Override

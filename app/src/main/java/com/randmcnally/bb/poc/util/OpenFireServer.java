@@ -32,6 +32,7 @@ import needle.Needle;
 public class OpenFireServer implements ConnectionListener {
     private static final String TAG = "OpenFireServer ->";
     private static OpenFireServer instance;
+    private static OpenFireMessageListener openFireMessageListener;
     private DomainBareJid groupChatService;
     private OpenFireServerListener listener;
     private AbstractXMPPConnection connection;
@@ -65,6 +66,11 @@ public class OpenFireServer implements ConnectionListener {
         return instance;
     }
 
+    public static OpenFireServer getInstance(String UID, String ipAddress, OpenFireMessageListener listener) {
+        openFireMessageListener = listener;
+        return getInstance(UID, ipAddress);
+    }
+
     public boolean isConnected() {
         return connection.isConnected();
     }
@@ -86,7 +92,8 @@ public class OpenFireServer implements ConnectionListener {
         return groupChatHistoryHashMap;
     }
 
-    public void connectOpenFireServer() {
+    public void connectOpenFireServer(OpenFireServerListener listener) {
+        this.listener = listener;
         Needle.onBackgroundThread().withThreadPoolSize(Needle.DEFAULT_POOL_SIZE).execute(new Runnable() {
             @Override
             public void run() {
@@ -217,9 +224,6 @@ public class OpenFireServer implements ConnectionListener {
             }
         });
     }
-
-
-
 
     public void sendNotification(final MultiUserChat multiUserChat, String streamName, int id) {
         if (!isAuthenticated()) {
@@ -363,7 +367,7 @@ public class OpenFireServer implements ConnectionListener {
         @Override
         public void processMessage(Message message) {
             updateGroupChat(message);
-            listener.notifyMessage(message.getSubject(), message.getBody());
+            openFireMessageListener.notifyMessage(message.getSubject(), message.getBody());
         }
     };
 
@@ -379,10 +383,10 @@ public class OpenFireServer implements ConnectionListener {
 
     public interface OpenFireServerListener {
         enum STATE {ERROR, CONNECTION_CLOSED, RECONNECTION_SUCCESS, RECONNECTION_FAILED, AUTHENTICATED, NOT_AUTHORIZED, CONNECTED}
-
         void notifyStatusOpenFireServer(STATE state, String message);
+    }
+    public interface OpenFireMessageListener{
         void notifyMessage(String streamName, String streamId);
-
     }
 
 }

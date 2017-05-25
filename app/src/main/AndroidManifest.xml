@@ -32,7 +32,7 @@
             android:screenOrientation="portrait" />
         <activity android:name="com.randmcnally.bb.poc.activity.ChannelHistoryActivity"
             android:screenOrientation="portrait" />
-
+        <service android:name=".interactor.NotificationService" android:enabled="true" android:exported="true"/>
 
     </application>
 

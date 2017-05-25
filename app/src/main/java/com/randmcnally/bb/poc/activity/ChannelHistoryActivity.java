@@ -10,8 +10,10 @@ import android.widget.TextView;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.HistoryAdapter;
 import com.randmcnally.bb.poc.model.History;
+import com.randmcnally.bb.poc.presenter.BasePresenter;
 import com.randmcnally.bb.poc.presenter.ChannelHistoryPresenter;
 import com.randmcnally.bb.poc.presenter.ChannelHistoryPresenterImpl;
+import com.randmcnally.bb.poc.view.BaseView;
 import com.randmcnally.bb.poc.view.ChannelHistoryView;
 
 public class ChannelHistoryActivity extends BaseActivity implements ChannelHistoryView{
@@ -28,6 +30,16 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
 
         setToolbarBackIcon(R.drawable.ic_arrow_back_white);
         setToolbarTitle("History Messages");
+    }
+
+    @Override
+    public ChannelHistoryPresenter getPresenter() {
+        return channelHistoryPresenter;
+    }
+
+    @Override
+    public ChannelHistoryView getView() {
+        return this;
     }
 
     @Override
@@ -93,6 +105,7 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
         String channelName = extras.getString("channel_name");
         channelHistoryPresenter.setHistory(history);
         channelHistoryPresenter.setChannelName(channelName);
+
     }
 
     @Override
@@ -117,9 +130,4 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
         return historyAdapter;
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        channelHistoryPresenter.detachView();
-    }
 }

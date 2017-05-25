@@ -224,8 +224,8 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
 
     @Override
     public void detachView() {
-        channelFragmentView = null;
         LocalBroadcastManager.getInstance(channelFragmentView.getContext()).unregisterReceiver(localNotificationReceiver);
+        channelFragmentView = null;
     }
 
     private void showToast(final String message) {
@@ -242,6 +242,8 @@ public class ChannelFragmentPresenterImpl implements ChannelFragmentPresenter {
         @Override
         public void onReceive(Context context, Intent intent) {
             getMissedMessages(openFireServer.getGroupChatHistoryHashMap());
+            LiveStream streamReceived = (LiveStream) intent.getExtras().getSerializable("live_stream");
+            ChannelUtil.notifyMessageMissed(streamReceived, databaseInteractor);
         }
     };
 }

@@ -7,8 +7,10 @@ import android.support.v4.view.ViewPager;
 import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.adapter.PagerAdapter;
+import com.randmcnally.bb.poc.presenter.BasePresenter;
 import com.randmcnally.bb.poc.presenter.HomePresenter;
 import com.randmcnally.bb.poc.presenter.HomePresenterImpl;
+import com.randmcnally.bb.poc.view.BaseView;
 import com.randmcnally.bb.poc.view.ChannelView;
 import com.randmcnally.bb.poc.view.HomeView;
 
@@ -31,6 +33,16 @@ public class HomeActivity extends BaseActivity implements HomeView {
     @Override
     protected boolean isToolBarLogoAdded() {
         return true;
+    }
+
+    @Override
+    public HomePresenter getPresenter() {
+        return presenter;
+    }
+
+    @Override
+    public HomeView getView() {
+        return this;
     }
 
     @Override
@@ -137,18 +149,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
         presenter.attachView(this);
         presenter.setDatabaseInteractor(((BBApplication) getApplication()).getDatabaseInteractor(this));
         presenter.setOpenFireServer(((BBApplication) getApplication()).getOpenFireServer(this));
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        presenter.attachView(this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        presenter.detachView();
     }
 
 }
