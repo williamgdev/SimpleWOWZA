@@ -21,6 +21,7 @@ import com.red5pro.streaming.event.R5ConnectionListener;
 import java.util.Date;
 import java.util.List;
 
+import needle.Needle;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -118,14 +119,32 @@ public class Red5ProApiInteractor {
         };
     }
 
-    public static void updateDuration(List<HistoryMessage> historyMessages, String ipAddress) throws Exception {
-        for (HistoryMessage historyMessage :
-                historyMessages) {
-            String url = getURLStream(historyMessage.getVoicemessage().getName(), ipAddress);
-            FlvMetadataRetrieve flvMetaData = new FlvMetadataRetrieve(url);
-            historyMessage.setDuration(flvMetaData.getDuration());
-            historyMessage.setTimeMilliseconds(flvMetaData.getTimeMilliseconds());
-        }
+    public static void updateDuration(final List<VoiceMessage> historyMessages, final String ipAddress, final MetadataFileRetrieveListener listener) {
+        Needle.onBackgroundThread().withThreadPoolSize(Needle.DEFAULT_POOL_SIZE).execute(new Runnable() {
+            @Override
+            public void run() {
+                for (VoiceMessage voiceMessage :
+                        historyMessages) {
+                    String url = Red5ProApiInteractor.getURLStream(voiceMessage.getName(), ipAddress);
+                    FlvMetadataRetrieve flvMetaData = null;
+                    try {
+                        flvMetaData = new FlvMetadataRetrieve(url);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        listener.onError(e.getMessage());
+                    }
+                    voiceMessage.setDuration(flvMetaData.getDuration());
+                    voiceMessage.setTimeMilliseconds(flvMetaData.getTimeMilliseconds());
+                    listener.onSuccess();
+                }
+            }
+        });
+
+    }
+
+    public interface MetadataFileRetrieveListener {
+        void onSuccess();
+        void onError(String s);
     }
 
     public interface LiveStreamApiListener extends BaseApiListener {

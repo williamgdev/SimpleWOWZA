@@ -1,10 +1,13 @@
 package com.randmcnally.bb.poc.presenter;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
@@ -19,12 +22,14 @@ import com.randmcnally.bb.poc.util.ChannelUtil;
 import com.randmcnally.bb.poc.util.FileUtil;
 import com.randmcnally.bb.poc.util.OpenFireServer;
 import com.randmcnally.bb.poc.view.ChannelHistoryView;
+import com.randmcnally.bb.poc.view.ChannelView;
 
 import java.util.List;
 
 import needle.Needle;
 
 public class ChannelHistoryPresenterImpl implements ChannelHistoryPresenter {
+    private static final String TAG = "ChannelHistoryPresenter ->";
     private ChannelHistoryView channelHistoryView;
     private History history;
     private OpenFireServer openFireServer;
@@ -48,11 +53,7 @@ public class ChannelHistoryPresenterImpl implements ChannelHistoryPresenter {
     @Override
     public void setHistory(History history) {
         this.history = history;
-        if (getHistoryMessages().size() == 0) {
-            channelHistoryView.showError("There is no messages to show");
-        } else {
-            channelHistoryView.updateHistory();
-        }
+        updateAudioDuration();
     }
 
     @Override
@@ -63,18 +64,6 @@ public class ChannelHistoryPresenterImpl implements ChannelHistoryPresenter {
     @Override
     public List<HistoryMessage> getHistoryMessages() {
         final List<HistoryMessage> historyMessages = ChannelUtil.convertToHistoryMessage(history.getVoiceMessages());
-
-        Needle.onBackgroundThread().withThreadPoolSize(Needle.DEFAULT_POOL_SIZE).execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Red5ProApiInteractor.updateDuration(historyMessages,((BBApplication)channelHistoryView.getContext().getApplicationContext()).IP_ADDRESS);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
         return historyMessages;
     }
 
@@ -86,7 +75,50 @@ public class ChannelHistoryPresenterImpl implements ChannelHistoryPresenter {
     @Override
     public void updateHistory() {
         history = History.create(openFireServer.getGroupChatHistoryHashMap().get(channelName).getMessages());
-        channelHistoryView.updateHistory();
+        updateAudioDuration();
+    }
+
+    private void updateAudioDuration() {
+        Red5ProApiInteractor.updateDuration(history.getVoiceMessages(),
+                ((BBApplication) channelHistoryView.getContext().getApplicationContext()).IP_ADDRESS,
+                new Red5ProApiInteractor.MetadataFileRetrieveListener() {
+                    @Override
+                    public void onSuccess() {
+                        if (getHistoryMessages().size() == 0) {
+                            showError("There is no messages to show");
+                        } else {
+                            updateUI();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String s) {
+                        Log.d(TAG, "onError: " + s);
+                    }
+                });
+    }
+
+    private void updateUI() {
+        if (channelHistoryView != null) {
+            ((Activity) channelHistoryView.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    channelHistoryView.updateHistory();
+                }
+            });
+        }
+    }
+
+    private void showError(final String message) {
+        if (channelHistoryView != null) {
+            ((Activity) channelHistoryView.getContext()).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    channelHistoryView.showError(message);
+                }
+            });
+        }
+
     }
 
     private BroadcastReceiver localNotificationReceiver = new BroadcastReceiver() {

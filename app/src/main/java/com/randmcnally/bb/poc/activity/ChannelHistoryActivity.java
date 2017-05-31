@@ -126,7 +126,7 @@ public class ChannelHistoryActivity extends BaseActivity implements ChannelHisto
     }
 
     private HistoryAdapter getHistoryAdapter() {
-        historyAdapter = new HistoryAdapter(this,channelHistoryPresenter.getHistoryMessages());
+        historyAdapter = new HistoryAdapter(this,channelHistoryPresenter.getHistoryMessages(), (LinearLayoutManager)recyclerView.getLayoutManager());
         return historyAdapter;
     }
 

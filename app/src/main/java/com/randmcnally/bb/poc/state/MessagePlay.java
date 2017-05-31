@@ -1,32 +1,29 @@
 package com.randmcnally.bb.poc.state;
 
-import com.randmcnally.bb.poc.adapter.HistoryAdapter;
-import com.randmcnally.bb.poc.custom.BBPlayer;
-import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
-import com.randmcnally.bb.poc.util.FileUtil;
+import android.widget.SeekBar;
 
-import java.io.IOException;
+import com.randmcnally.bb.poc.adapter.HistoryAdapter;
+import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
 
 public class MessagePlay implements MessageState{
+    private final HistoryAdapter historyAdapter;
     private HistoryMessage historyMessage;
-    private BBPlayer bbPlayer;
 
     public MessagePlay(HistoryAdapter historyAdapter) {
-        this.bbPlayer = historyAdapter.getBBPlayer();
-//        historyMessage.setDuration(FileUtil.getMetaDataFileDuration(historyAdapter.getContext(), "http://192.168.43.212:5080/live/streams/randmcnally_1.flv"));
+        this.historyAdapter = historyAdapter;
     }
 
     @Override
-    public void performAction(HistoryMessage historyMessage) {
+    public void performAction(HistoryMessage historyMessage,SeekBar seekBar) {
         this.historyMessage = historyMessage;
-        try {
-            bbPlayer.play();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        historyAdapter.playHistoryMessage(historyMessage, seekBar);
 
     }
 
+    @Override
+    public void updateUI(HistoryAdapter.HistoryViewHolder viewHolder) {
+        viewHolder.play();
+    }
 
 
 }

@@ -1,6 +1,5 @@
 package com.randmcnally.bb.poc.custom;
 
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 
 import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
@@ -19,14 +18,12 @@ public class BBPlayer {
     private MediaPlayer mediaPlayer;
     private boolean playListAdded;
     private VoiceMessage actualVoiceMessage;
-    private boolean release;
     private boolean pause;
 
     public BBPlayer(String url, ListenerBBPlayer listener) throws IOException {
         this.listener = listener;
         this.mediaUrl = url;
         playing = false;
-        release = false;
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnInfoListener(onInfoListener);
         mediaPlayer.setOnErrorListener(onErrorListener);
@@ -58,7 +55,6 @@ public class BBPlayer {
             mediaPlayer.setDataSource(Red5ProApiInteractor.getURLStream(actualVoiceMessage.getName(), ipAddress));
             mediaPlayer.prepare();
         }
-        release = false;
     }
 
     public boolean isPlaying() {
@@ -70,8 +66,8 @@ public class BBPlayer {
             playing = false;
             pause = false;
             mediaPlayer.stop();
-            mediaPlayer.release();
-            release = true;
+            mediaPlayer.reset();
+            mediaPlayer = null;
             listener.onListener(BBPLAYERSTATE.STOPPED);
         }
     }
@@ -95,9 +91,8 @@ public class BBPlayer {
     }
 
     private void playNextVoiceMessage() {
-        ((ListenerPlaylistBBPlayer) listener).onMessageCompleted(actualVoiceMessage);
-        mediaPlayer.release();
-        release = true;
+        ((ListenerPlaylistBBPlayer) listener).onMessageCompleted(actualVoiceMessage, mediaPlayer.getCurrentPosition());
+        stop();
         try {
             createMediaPlayer();
             play();
@@ -127,7 +122,7 @@ public class BBPlayer {
                 else{
                     stop();
                     listener.onListener(BBPLAYERSTATE.PLAYLIST_EMPTY);
-                    ((ListenerPlaylistBBPlayer) listener).onMessageCompleted(actualVoiceMessage);
+                    ((ListenerPlaylistBBPlayer) listener).onMessageCompleted(actualVoiceMessage, 0);
                 }
             }
             else {
@@ -189,8 +184,8 @@ public class BBPlayer {
         return mediaPlayer.getDuration();
     }
 
-    public boolean isReleased() {
-        return release;
+    public String getAudioUrl() {
+        return mediaUrl;
     }
 
     public enum BBPLAYERSTATE {
@@ -202,7 +197,7 @@ public class BBPlayer {
     }
 
     public interface ListenerPlaylistBBPlayer extends ListenerBBPlayer{
-        void onMessageCompleted(VoiceMessage voiceMessage);
+        void onMessageCompleted(VoiceMessage voiceMessage, int currentPosition);
     }
 
 }

@@ -1,9 +1,6 @@
 package com.randmcnally.bb.poc.adapter;
 
 import android.content.Context;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,36 +8,40 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.support.v7.widget.LinearLayoutManager;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.randmcnally.bb.poc.BBApplication;
 import com.randmcnally.bb.poc.R;
 import com.randmcnally.bb.poc.custom.BBPlayer;
 import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
 import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
-import com.randmcnally.bb.poc.model.Playlist;
-import com.randmcnally.bb.poc.model.VoiceMessage;
+import com.randmcnally.bb.poc.interactor.TimerInteractor;
 import com.randmcnally.bb.poc.state.MessagePause;
 import com.randmcnally.bb.poc.state.MessagePlay;
 import com.randmcnally.bb.poc.state.MessageStop;
-import com.randmcnally.bb.poc.util.FileUtil;
 
 import java.io.IOException;
 import java.util.List;
 
-public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> implements BBPlayer.ListenerPlaylistBBPlayer{
+import needle.Needle;
+
+
+public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> implements BBPlayer.ListenerBBPlayer{
     private static final String TAG = "HistoryAdapter ->";
     private final List<HistoryMessage> history;
     private final Context context;
-    private BBPlayer bbPlayer;
+    private TimerInteractor timerInteractor;
+    private final LinearLayoutManager layoutManager;
     private HistoryMessage currentPlayMessage;
+    private BBPlayer bbPlayer;
+    private SeekBar seekBar;
 
-    public HistoryAdapter(Context context, List<HistoryMessage> history) {
+    public HistoryAdapter(Context context, List<HistoryMessage> history, LinearLayoutManager layoutManager) {
         this.context = context;
         this.history = history;
-
+        this.layoutManager = layoutManager;
     }
 
     @Override
@@ -60,106 +61,111 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         return history.size();
     }
 
-    public HistoryMessage getCurrentPlayMessage() {
-        return currentPlayMessage;
-    }
-
-    public BBPlayer getBBPlayer(){
-        if (bbPlayer == null || bbPlayer.isReleased()) {
-            try {
-                bbPlayer = new BBPlayer(
-                        Playlist.createFromMessage(history, currentPlayMessage),
-                        ((BBApplication) context.getApplicationContext()).IP_ADDRESS,
-                        this);
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(context, "Player found a error!", Toast.LENGTH_SHORT).show();
-            }
-        }
-        return bbPlayer;
-    }
-
-
-
-    @Override
-    public void onListener(BBPlayer.BBPLAYERSTATE state) {
-            switch (state) {
-                case PLAYING:
-                    if (currentPlayMessage.getState() instanceof MessageStop) {
-                        Log.d(TAG, "onListener: PLAYING");
-                        currentPlayMessage = history.get(currentPlayMessage.getPosition() + 1);
-                        currentPlayMessage.setState(new MessagePlay(this));
-                        this.notifyItemChanged(currentPlayMessage.getPosition());
-                    }
-
-                    break;
-                case AUDIO_STREAM_COMPLETED:
-                    break;
-                case AUDIO_STREAM_END:
-                    break;
-                case AUDIO_STREAM_START:
-                    break;
-                case INFO_UNKNOWN:
-                    break;
-                case ERROR_UNKNOWN:
-                    break;
-                case STOPPED:
-                    break;
-                case PLAYLIST_EMPTY:
-                    break;
-                case PREPARING:
-                    break;
-            }
-
-    }
-
-    @Override
-    public void onMessageCompleted(VoiceMessage voiceMessage) {
-        Log.d(TAG, "onMessageCompleted: ");
-        if (currentPlayMessage.getVoicemessage().equals(voiceMessage)){
-            currentPlayMessage.setState(new MessageStop(bbPlayer));
-            this.notifyItemChanged(currentPlayMessage.getPosition());
-        } else {
-            String s = "";
-        }
-    }
 
     public Context getContext() {
         return context;
     }
 
-    public class HistoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public void pauseMessage(HistoryMessage historyMessage) {
+        currentPlayMessage = historyMessage;
+        if (bbPlayer.isPlaying()) {
+            bbPlayer.pause();
+        }
+        if (historyMessage.getPosition() >= layoutManager.findFirstVisibleItemPosition() &&
+                historyMessage.getPosition() <= layoutManager.findLastVisibleItemPosition()) {
+            timerInteractor.pause();
+        }
+    }
+
+    public void playHistoryMessage(HistoryMessage historyMessage, SeekBar seekBar) {
+        this.seekBar = seekBar;
+        currentPlayMessage = historyMessage;
+        timerInteractor = TimerInteractor.getInstance(Math.round(currentPlayMessage.getVoicemessage().getTimeMilliseconds()) + 100, 10);
+        try {
+            bbPlayer = new BBPlayer(
+                    Red5ProApiInteractor.getURLStream(historyMessage.getVoicemessage().getName(), ((BBApplication) context.getApplicationContext()).IP_ADDRESS),
+                    this);
+            bbPlayer.play();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "pauseMessage: ", e.getCause());
+        }
+    }
+
+    public void stopHistoryMessage(HistoryMessage historyMessage) {
+        currentPlayMessage = historyMessage;
+        bbPlayer.stop();
+    }
+
+    @Override
+    public void onListener(BBPlayer.BBPLAYERSTATE state) {
+        switch (state) {
+            case PLAYING:
+                break;
+            case AUDIO_STREAM_COMPLETED:
+                currentPlayMessage.setState(new MessageStop(this));
+                if (currentPlayMessage.getPosition() >= layoutManager.findFirstVisibleItemPosition() &&
+                        currentPlayMessage.getPosition() <= layoutManager.findLastVisibleItemPosition()) {
+                    timerInteractor.stop();
+                }
+                notifyItemChanged(currentPlayMessage.getPosition());
+                if (currentPlayMessage.getPosition() < history.size() - 1){ //play the next Message
+                    HistoryMessage nextMessage = history.get(currentPlayMessage.getPosition() + 1);
+                    nextMessage.setState(new MessagePlay(this));
+                    notifyItemChanged(nextMessage.getPosition());
+                }
+                break;
+            case AUDIO_STREAM_END:
+                if (currentPlayMessage.getPosition() >= layoutManager.findFirstVisibleItemPosition() &&
+                        currentPlayMessage.getPosition() <= layoutManager.findLastVisibleItemPosition()) {
+                    try {
+                        timerInteractor.play(seekBar, bbPlayer);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.d(TAG, "onListener: Error");
+                    }
+                }
+                break;
+            case AUDIO_STREAM_START:
+                break;
+            case INFO_UNKNOWN:
+                break;
+            case ERROR_UNKNOWN:
+                break;
+            case STOPPED:
+                break;
+            case PLAYLIST_EMPTY:
+                break;
+            case PREPARING:
+                break;
+        }
+    }
+
+    public class HistoryViewHolder extends RecyclerView.ViewHolder  implements View.OnClickListener {
         private final HistoryAdapter historyAdapter;
         LinearLayout layoutControl;
         TextView txtNameMessage;
         SeekBar seekBar;
         ImageView imagePlayButton;
         private HistoryMessage historyMessage;
-        CountDownTimer timer;
 
         public HistoryViewHolder(View itemView, HistoryAdapter historyAdapter) {
             super(itemView);
             this.historyAdapter = historyAdapter;
             layoutControl = (LinearLayout) itemView.findViewById(R.id.channel_history_layout_control);
             txtNameMessage = (TextView) itemView.findViewById(R.id.channel_history_txt_name);
-            seekBar = (SeekBar) itemView.findViewById(R.id.channel_history_seek_bar); //TODO update the seek bar when the audio file is playing
+            seekBar = (SeekBar) itemView.findViewById(R.id.channel_history_seek_bar);
             imagePlayButton = (ImageView) itemView.findViewById(R.id.channel_history_play_button);
             imagePlayButton.setOnClickListener(this);
             txtNameMessage.setOnClickListener(this);
         }
 
-        public void setText(String name) {
-            txtNameMessage.setText(name);
-        }
-
         public void bindData(final HistoryMessage historyMessage) {
             this.historyMessage = historyMessage;
-            setText(historyMessage.getVoicemessage().getName());
-            seekBar.setMax((int)(historyMessage.getTimeMilliseconds()));
+            txtNameMessage.setText(historyMessage.getVoicemessage().getName());
+            seekBar.setMax((int) historyMessage.getVoicemessage().getTimeMilliseconds());
             if (currentPlayMessage != null) {
-                checkMessageAction();
-            } else {
-                String s = "";
+                historyMessage.getState().updateUI(this);
             }
 
         }
@@ -169,92 +175,37 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             switch(v.getId()){
                 case R.id.channel_history_play_button:
                 case R.id.channel_history_txt_name:
-                    if (! (this.historyMessage.getState() instanceof MessagePlay)) {
-                        play();
+                    if ((historyMessage.getState() instanceof MessagePlay)) {
+                        historyMessage.setState(new MessagePause(historyAdapter));
                     } else {
-                        pause();
+                        if (currentPlayMessage != null &&
+                                ! currentPlayMessage.getVoicemessage().equals(historyMessage.getVoicemessage()) &&
+                                currentPlayMessage.getState() instanceof MessagePlay){
+                            currentPlayMessage.setState(new MessageStop(historyAdapter));
+                            currentPlayMessage.getState().updateUI(this);
+                        }
+                        historyMessage.setState(new MessagePlay(historyAdapter));
                     }
+                    historyMessage.getState().updateUI(this);
                     break;
             }
         }
 
-        private void checkMessageAction() {
-            if (historyMessage.getState() instanceof MessagePlay) {
-                play();
-            } else if (historyMessage.getState() instanceof MessageStop){
-                stop();
-            } else if(historyMessage.getState() instanceof MessagePause){
-                pause();
-            }
-        }
-
-        private void pause() {
+        public void pause() {
             imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
-            this.historyMessage.setState(new MessagePause(historyAdapter.getBBPlayer()));
-            historyMessage.action();
-//            durationHandler.removeCallbacks(updateSeekBarTime);
-
-            if (timer != null) {
-                timer.cancel();
-            }
+            historyMessage.action(seekBar);
         }
 
-        private void play() {
-            // Case when the currentMessage is playing and the user click in another message in order to listen
-            // without pause the current one
-            if (currentPlayMessage != null && !(currentPlayMessage.getVoicemessage().equals(historyMessage.getVoicemessage()))) {
-                currentPlayMessage.setState(new MessageStop(bbPlayer));
-                currentPlayMessage.action();
-                historyAdapter.notifyItemChanged(currentPlayMessage.getPosition());
-            }
-            currentPlayMessage = historyMessage;
-            this.historyMessage.setState(new MessagePlay(historyAdapter));
+        public void play() {
             imagePlayButton.setImageResource(R.drawable.ic_pause_circle_filled_black_24dp);
-            historyMessage.action();
-//            durationHandler.post(updateSeekBarTime);
-            //TODO make sure the presenter has updated the history message
-            timer = new CountDownTimer(historyMessage.getTimeMilliseconds(), 10) {
-
-                public void onTick(long millisUntilFinished) {
-                    historyMessage.setRemainingSeconds(bbPlayer.getTimeElapsed());
-                    seekBar.setProgress(historyMessage.getRemainingSeconds());
-                }
-
-                public void onFinish() {
-                    seekBar.setMax((int)(historyMessage.getTimeMilliseconds()));
-                }
-
-            };
-            updateSeekBar();
+            historyMessage.action(seekBar);
         }
 
-        private void updateSeekBar() {
-            timer.start();
-        }
-
-        private void stop() {
+        public void stop() {
             imagePlayButton.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
-//            durationHandler.removeCallbacks(updateSeekBarTime);
-            if (timer != null) {
-                timer.cancel();
-            }
-            historyMessage.setRemainingSeconds((int)historyMessage.getTimeMilliseconds());
-            seekBar.setProgress((int)historyMessage.getTimeMilliseconds());
-            historyMessage.action();
+            historyMessage.action(seekBar);
+            seekBar.setProgress((int) historyMessage.getVoicemessage().getTimeMilliseconds());
         }
 
-//        final Handler durationHandler = new Handler(Looper.getMainLooper());
-//        private Runnable updateSeekBarTime = new Runnable() {
-//            public void run() {
-//
-//                //set seekbar progress using time played
-//                if (bbPlayer.getTimeElapsed() > 0)
-//                    historyMessage.setRemainingSeconds(bbPlayer.getTimeElapsed());
-//                    seekBar.setProgress(historyMessage.getRemainingSeconds());
-//                if (bbPlayer.getTimeElapsed() <= historyMessage.getTimeMilliseconds()) {
-//                    durationHandler.postDelayed(this, 100);
-//                }
-//            }
-//        };
     }
 }

@@ -1,5 +1,7 @@
 package com.randmcnally.bb.poc.dto.eventbus;
 
+import android.widget.SeekBar;
+
 import com.randmcnally.bb.poc.model.VoiceMessage;
 import com.randmcnally.bb.poc.state.MessageState;
 
@@ -7,14 +9,13 @@ public class HistoryMessage {
     private MessageState state;
     private VoiceMessage voicemessage;
     private int position;
-    private String duration;
-    private int remainingSeconds;
-    private long timeMilliseconds;
+    private double remainingSeconds;
 
     public HistoryMessage(VoiceMessage voiceMessage, int position) {
         this.voicemessage = voiceMessage;
         this.position = position;
-        timeMilliseconds = 0;
+
+
 //        this.state = new MessageStop();
     }
 
@@ -42,32 +43,15 @@ public class HistoryMessage {
         this.voicemessage = voicemessage;
     }
 
-
-    public String getDuration() {
-        return duration;
-    }
-
-    public void setDuration(String duration) {
-        this.duration = duration;
-    }
-
-    public int getRemainingSeconds() {
+    public double getRemainingSeconds() {
         return remainingSeconds;
     }
 
-    public void setRemainingSeconds(int remainingSeconds) {
+    public void setRemainingSeconds(double remainingSeconds) {
         this.remainingSeconds = remainingSeconds;
     }
 
-    public long getTimeMilliseconds() {
-        return timeMilliseconds;
-    }
-
-    public void setTimeMilliseconds(long timeMilliseconds) {
-        this.timeMilliseconds = timeMilliseconds;
-    }
-
-    public void action() {
-        state.performAction(this);
+    public void action(SeekBar seekBar) {
+        state.performAction(this, seekBar);
     }
 }

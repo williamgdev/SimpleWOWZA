@@ -18,6 +18,26 @@ public class VoiceMessage implements Serializable {
 
     private float fileSize;
 
+    private double timeMilliseconds;
+
+    private String duration;
+
+    public double getTimeMilliseconds() {
+        return timeMilliseconds;
+    }
+
+    public void setTimeMilliseconds(double timeMilliseconds) {
+        this.timeMilliseconds = timeMilliseconds;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
+
     public float getFileSize() {
         return fileSize;
     }

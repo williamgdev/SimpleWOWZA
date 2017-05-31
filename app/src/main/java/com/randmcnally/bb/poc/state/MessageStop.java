@@ -1,19 +1,25 @@
 package com.randmcnally.bb.poc.state;
 
+import android.widget.SeekBar;
+
 import com.randmcnally.bb.poc.adapter.HistoryAdapter;
 import com.randmcnally.bb.poc.custom.BBPlayer;
 import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
 
 public class MessageStop implements MessageState {
-    BBPlayer bbPlayer;
+    private final HistoryAdapter historyAdapter;
 
-    public MessageStop(BBPlayer bbPlayer) {
-        this.bbPlayer = bbPlayer;
+    public MessageStop(HistoryAdapter historyAdapter) {
+        this.historyAdapter = historyAdapter;
     }
 
     @Override
-    public void performAction(HistoryMessage historyMessage) {
-//        historyMessage.setRemainingSeconds(0);
-        bbPlayer.stop();
+    public void performAction(HistoryMessage historyMessage, SeekBar seekBar) {
+        historyAdapter.stopHistoryMessage(historyMessage);
+    }
+
+    @Override
+    public void updateUI(HistoryAdapter.HistoryViewHolder viewHolder) {
+        viewHolder.stop();
     }
 }

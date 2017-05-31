@@ -177,7 +177,7 @@ public class ChannelPresenterImpl implements ChannelPresenter, ChannelInteractor
                 try {
                     final BBPlayer bbPlayer = new BBPlayer(activeChannel.getHistory().getMissedMessages(), ipAddress, new BBPlayer.ListenerPlaylistBBPlayer() {
                         @Override
-                        public void onMessageCompleted(final VoiceMessage voiceMessage) {
+                        public void onMessageCompleted(final VoiceMessage voiceMessage, int currentPosition) {
                             Log.d(TAG, "onListener: MESSAGE_COMPLETE");
                             databaseInteractor.readOrCreateHistoryByName(activeChannel.getName(), new DatabaseInteractor.DatabaseListener<HistoryEntity>() {
                                 @Override

@@ -12,6 +12,7 @@ import com.randmcnally.bb.poc.dao.HistoryEntity;
 import com.randmcnally.bb.poc.dao.VoiceMessageEntity;
 import com.randmcnally.bb.poc.dto.eventbus.HistoryMessage;
 import com.randmcnally.bb.poc.interactor.DatabaseInteractor;
+import com.randmcnally.bb.poc.interactor.Red5ProApiInteractor;
 import com.randmcnally.bb.poc.model.Channel;
 import com.randmcnally.bb.poc.model.History;
 import com.randmcnally.bb.poc.model.LiveStream;
